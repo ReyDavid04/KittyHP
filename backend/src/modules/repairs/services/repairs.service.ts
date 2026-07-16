@@ -1,0 +1,20 @@
+import { Injectable } from '@nestjs/common';
+import { CreateRepairDto } from '../dto/create-repair.dto';
+import { RepairRepository } from '../repositories/repair.repository';
+import { CreateRepairUseCase } from '../use-cases/create-repair.use-case';
+
+@Injectable()
+export class RepairsService {
+  constructor(
+    private readonly repairRepository: RepairRepository,
+    private readonly createRepairUseCase: CreateRepairUseCase,
+  ) {}
+
+  create(createRepairDto: CreateRepairDto) {
+    return this.createRepairUseCase.execute(createRepairDto, this.repairRepository);
+  }
+
+  findAll() {
+    return this.repairRepository.findAll();
+  }
+}

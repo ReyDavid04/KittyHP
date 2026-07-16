@@ -1,0 +1,29 @@
+:root {
+  color-scheme: light;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  --bg: #f4f7fb;
+  --surface: #ffffff;
+  --text: #102033;
+  --muted: #5c6b7f;
+  --primary: #0057b8;
+  --border: #d7e0ea;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: linear-gradient(180deg, #eef4fb 0%, #f8fbfe 100%);
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
