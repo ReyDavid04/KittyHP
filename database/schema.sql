@@ -21,3 +21,4 @@ CREATE TABLE repairs (
   KEY idx_repairs_top_issue (top_issue),
   KEY idx_repairs_category (category)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

@@ -53,3 +53,4 @@ export class RepairEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
+

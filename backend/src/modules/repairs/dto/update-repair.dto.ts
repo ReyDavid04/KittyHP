@@ -1,33 +1,34 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
-export class CreateRepairDto {
+export class UpdateRepairDto {
   @IsDateString()
-  recordDate!: string;
+  @IsOptional()
+  recordDate?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
-  topIssue!: string;
+  topIssue?: string;
 
-  @IsNumber()
+  @IsOptional()
   @Type(() => Number)
   @Min(0)
-  failureQty!: number;
+  failureQty?: number;
 
-  @IsNumber()
+  @IsOptional()
   @Type(() => Number)
   @Min(0)
-  buildQty!: number;
+  buildQty?: number;
 
-  @IsNumber()
+  @IsOptional()
   @Type(() => Number)
   @Min(0)
-  frPercentage!: number;
+  frPercentage?: number;
 
   @IsString()
-  @IsNotEmpty()
-  category!: string;
+  @IsOptional()
+  category?: string;
 
   @IsBoolean()
   @Type(() => Boolean)
@@ -62,4 +63,3 @@ export class CreateRepairDto {
   @IsOptional()
   evidencePicture?: string | null;
 }
-

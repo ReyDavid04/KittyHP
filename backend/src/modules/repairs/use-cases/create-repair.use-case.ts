@@ -8,3 +8,4 @@ export class CreateRepairUseCase {
     return repairRepository.create(createRepairDto);
   }
 }
+
