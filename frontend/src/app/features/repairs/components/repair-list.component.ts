@@ -57,7 +57,7 @@ interface RepairColumnDefinition {
   standalone: true,
   imports: [CommonModule],
   templateUrl: './repair-list.component.html',
-  styleUrl: './repair-list.component.css',
+  styleUrls: ['./repair-list.component.css', './repair-list-thumbnail.css'],
 })
 export class RepairListComponent {
   @Input() repairs: RepairReport[] | null = [];
