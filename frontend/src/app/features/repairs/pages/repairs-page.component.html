@@ -1,8 +1,15 @@
-<section class="page">
-  <section class="workspace">
-    <div class="workspace-header">
-      <div class="toolbar">
-        <label class="search-field" for="globalSearch">
+<section class="page" style="min-height: calc(100dvh - 50px);">
+  <section
+    class="workspace"
+    style="display: flex; flex-direction: column; min-height: calc(100dvh - 50px); background: #fff;"
+  >
+    <div class="workspace-header" style="justify-content: flex-start; flex: 0 0 auto;">
+      <div class="toolbar" style="justify-content: flex-start; width: 100%; max-width: none;">
+        <label
+          class="search-field"
+          for="globalSearch"
+          style="flex: 0 1 520px; max-width: 520px;"
+        >
           <span class="search-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
               <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
@@ -37,6 +44,7 @@
     </div>
 
     <app-repair-list
+      style="display: block; flex: 1 1 auto; min-height: 0;"
       [repairs]="pagedRepairs"
       [filters]="filters"
       [availableValues]="availableValues"
@@ -47,7 +55,7 @@
       (remove)="removeRepair($event)"
     ></app-repair-list>
 
-    <footer class="pagination" *ngIf="filteredRepairs.length">
+    <footer class="pagination" style="flex: 0 0 auto;" *ngIf="filteredRepairs.length">
       <div class="pagination-meta">
         <div class="page-size">
           <span>Filas por página</span>
