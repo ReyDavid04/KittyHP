@@ -71,19 +71,19 @@ export class RepairListComponent {
   @Output() sortChange = new EventEmitter<RepairSort>();
 
   readonly columns: RepairColumnDefinition[] = [
-    { key: 'recordDate', label: 'Fecha', className: 'date-column' },
+    { key: 'recordDate', label: 'Date', className: 'date-column' },
     { key: 'topIssue', label: 'Top issue', className: 'issue-column' },
     { key: 'failureQty', label: 'Failure qty', className: 'number-column', numeric: true },
     { key: 'buildQty', label: 'Build qty', className: 'number-column', numeric: true },
     { key: 'frPercentage', label: 'F/R', className: 'rate-column', numeric: true },
-    { key: 'category', label: 'Categoría' },
+    { key: 'category', label: 'Category' },
     { key: 'returnStatus', label: 'Return', className: 'return-column' },
     { key: 'failPicture', label: 'Fail picture', className: 'image-column', filterable: false },
     { key: 'majorPart', label: 'Major part' },
     { key: 'repairResult', label: 'Repair result', className: 'text-column' },
     { key: 'failureFactor', label: 'Failure factor', className: 'text-column' },
-    { key: 'actions', label: 'Acciones', className: 'text-column' },
-    { key: 'evidencePicture', label: 'Evidencia', className: 'image-column', filterable: false },
+    { key: 'actions', label: 'Actions', className: 'text-column' },
+    { key: 'evidencePicture', label: 'Evidence', className: 'image-column', filterable: false },
   ];
 
   activeFilterKey: RepairColumnKey | null = null;
