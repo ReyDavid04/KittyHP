@@ -77,3 +77,11 @@ button {
 ::selection {
   background: rgba(47, 126, 199, 0.2);
 }
+
+.workspace-title {
+  display: none !important;
+}
+
+.workspace-header {
+  justify-content: flex-end !important;
+}
