@@ -45,3 +45,21 @@ tbody td:nth-child(7) {
 tbody td:nth-child(7) .truncate {
   max-width: 80px;
 }
+
+:host {
+  display: block;
+  height: 100%;
+  min-height: 0;
+}
+
+.table-shell {
+  height: 100%;
+  min-height: 0;
+  background: #fff;
+}
+
+.table-wrap {
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+}
