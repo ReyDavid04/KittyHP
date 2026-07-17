@@ -86,7 +86,7 @@ button {
   justify-content: flex-end !important;
 }
 
-/* Repair editor: keep Fail picture at the right of the first two rows. */
+/* Repair editor: image panels share the same width and span two rows. */
 app-repair-form .form-grid {
   grid-template-columns: repeat(15, minmax(0, 1fr)) !important;
 }
@@ -97,37 +97,37 @@ app-repair-form .grid-date {
 }
 
 app-repair-form .grid-top-issue {
-  grid-column: 3 / span 4 !important;
+  grid-column: 3 / span 6 !important;
   grid-row: 1 !important;
 }
 
 app-repair-form .grid-failure-qty {
-  grid-column: 7 / span 2 !important;
-  grid-row: 1 !important;
-}
-
-app-repair-form .grid-build-qty {
   grid-column: 9 / span 2 !important;
   grid-row: 1 !important;
 }
 
-app-repair-form .grid-fr {
-  grid-column: 11 / span 2 !important;
-  grid-row: 1 !important;
-}
-
 app-repair-form .grid-category {
-  grid-column: 1 / span 6 !important;
+  grid-column: 1 / span 3 !important;
   grid-row: 2 !important;
 }
 
 app-repair-form .grid-return {
-  grid-column: 7 / span 6 !important;
+  grid-column: 4 / span 3 !important;
+  grid-row: 2 !important;
+}
+
+app-repair-form .grid-build-qty {
+  grid-column: 7 / span 2 !important;
+  grid-row: 2 !important;
+}
+
+app-repair-form .grid-fr {
+  grid-column: 9 / span 2 !important;
   grid-row: 2 !important;
 }
 
 app-repair-form .grid-fail-picture {
-  grid-column: 13 / 16 !important;
+  grid-column: 11 / 16 !important;
   grid-row: 1 / span 2 !important;
   align-self: stretch !important;
   flex-direction: column !important;
@@ -162,19 +162,40 @@ app-repair-form .grid-failure-factor {
   grid-row: 3 !important;
 }
 
-app-repair-form .grid-evidence {
-  grid-column: 11 / span 5 !important;
-  grid-row: 3 !important;
-}
-
 app-repair-form .grid-repair-result {
-  grid-column: 1 / 8 !important;
+  grid-column: 1 / span 5 !important;
   grid-row: 4 !important;
 }
 
 app-repair-form .grid-actions {
-  grid-column: 8 / 16 !important;
+  grid-column: 6 / span 5 !important;
   grid-row: 4 !important;
+}
+
+app-repair-form .grid-evidence {
+  grid-column: 11 / 16 !important;
+  grid-row: 3 / span 2 !important;
+  align-self: stretch !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+app-repair-form .grid-evidence .image-preview {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  height: 138px !important;
+}
+
+app-repair-form .grid-evidence .upload-icon {
+  align-self: center;
+}
+
+app-repair-form .grid-evidence .upload-content {
+  text-align: center;
 }
 
 @media (max-width: 1180px) {
@@ -207,7 +228,8 @@ app-repair-form .grid-actions {
     grid-row: auto !important;
   }
 
-  app-repair-form .grid-fail-picture {
+  app-repair-form .grid-fail-picture,
+  app-repair-form .grid-evidence {
     flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
@@ -215,13 +237,15 @@ app-repair-form .grid-actions {
     min-height: 148px !important;
   }
 
-  app-repair-form .grid-fail-picture .image-preview {
+  app-repair-form .grid-fail-picture .image-preview,
+  app-repair-form .grid-evidence .image-preview {
     flex: 0 0 210px !important;
     width: 210px !important;
     height: 118px !important;
   }
 
-  app-repair-form .grid-fail-picture .upload-content {
+  app-repair-form .grid-fail-picture .upload-content,
+  app-repair-form .grid-evidence .upload-content {
     text-align: left;
   }
 }
@@ -248,19 +272,22 @@ app-repair-form .grid-actions {
     grid-row: auto !important;
   }
 
-  app-repair-form .grid-fail-picture {
+  app-repair-form .grid-fail-picture,
+  app-repair-form .grid-evidence {
     flex-direction: column !important;
     align-items: stretch !important;
     min-height: 0 !important;
   }
 
-  app-repair-form .grid-fail-picture .image-preview {
+  app-repair-form .grid-fail-picture .image-preview,
+  app-repair-form .grid-evidence .image-preview {
     flex-basis: auto !important;
     width: 100% !important;
     height: 210px !important;
   }
 
-  app-repair-form .grid-fail-picture .upload-content {
+  app-repair-form .grid-fail-picture .upload-content,
+  app-repair-form .grid-evidence .upload-content {
     text-align: left;
   }
 }
