@@ -65,14 +65,12 @@
               <ng-container *ngSwitchCase="'failPicture'">
                 <a *ngIf="repair.failPicture; else noImage" class="image-link" [href]="repair.failPicture" target="_blank" rel="noopener">
                   <img [src]="repair.failPicture" alt="Evidencia de falla" class="thumbnail">
-                  <span>Ver</span>
                 </a>
               </ng-container>
 
               <ng-container *ngSwitchCase="'evidencePicture'">
                 <a *ngIf="repair.evidencePicture; else noImage" class="image-link" [href]="repair.evidencePicture" target="_blank" rel="noopener">
                   <img [src]="repair.evidencePicture" alt="Evidencia de reparación" class="thumbnail">
-                  <span>Ver</span>
                 </a>
               </ng-container>
 
