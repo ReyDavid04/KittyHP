@@ -127,9 +127,9 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
       .app-content {
         width: 100%;
-        max-width: 1920px;
-        margin: 0 auto;
-        padding: 12px 18px 28px;
+        max-width: none;
+        margin: 0;
+        padding: 0;
       }
 
       @media (max-width: 760px) {
@@ -144,7 +144,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         }
 
         .app-content {
-          padding: 10px 10px 22px;
+          padding: 0;
         }
       }
     `,
