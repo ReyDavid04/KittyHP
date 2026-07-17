@@ -86,7 +86,7 @@ button {
   justify-content: flex-end !important;
 }
 
-/* Repair editor: image panels share the same width and span two rows. */
+/* Repair editor: image panels share the same dimensions and span two rows. */
 app-repair-form .form-grid {
   grid-template-columns: repeat(15, minmax(0, 1fr)) !important;
 }
@@ -129,31 +129,6 @@ app-repair-form .grid-fr {
 app-repair-form .grid-fail-picture {
   grid-column: 11 / 16 !important;
   grid-row: 1 / span 2 !important;
-  align-self: stretch !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  justify-content: center !important;
-  gap: 10px !important;
-  height: 100% !important;
-  min-height: 0 !important;
-}
-
-app-repair-form .grid-fail-picture .image-preview {
-  flex: 0 0 auto !important;
-  width: 100% !important;
-  height: 138px !important;
-}
-
-app-repair-form .grid-fail-picture .upload-icon {
-  align-self: center;
-}
-
-app-repair-form .grid-fail-picture .upload-content {
-  text-align: center;
-}
-
-app-repair-form .upload-zone .file-name {
-  display: none !important;
 }
 
 app-repair-form .grid-major-part {
@@ -179,27 +154,49 @@ app-repair-form .grid-actions {
 app-repair-form .grid-evidence {
   grid-column: 11 / 16 !important;
   grid-row: 3 / span 2 !important;
+}
+
+app-repair-form .grid-fail-picture,
+app-repair-form .grid-evidence {
   align-self: stretch !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  justify-content: center !important;
-  gap: 10px !important;
-  height: 100% !important;
-  min-height: 0 !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  width: 100% !important;
+  height: 276px !important;
+  min-height: 276px !important;
+  padding: 18px !important;
 }
 
+app-repair-form .grid-fail-picture .image-preview,
 app-repair-form .grid-evidence .image-preview {
   flex: 0 0 auto !important;
   width: 100% !important;
-  height: 138px !important;
+  height: 180px !important;
+  margin: 0 !important;
 }
 
+app-repair-form .grid-fail-picture .image-preview img,
+app-repair-form .grid-evidence .image-preview img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+app-repair-form .grid-fail-picture .upload-icon,
 app-repair-form .grid-evidence .upload-icon {
   align-self: center;
 }
 
+app-repair-form .grid-fail-picture .upload-content,
 app-repair-form .grid-evidence .upload-content {
-  text-align: center;
+  width: 100%;
+  text-align: center !important;
+}
+
+app-repair-form .upload-zone .file-name {
+  display: none !important;
 }
 
 @media (max-width: 1180px) {
@@ -247,11 +244,6 @@ app-repair-form .grid-evidence .upload-content {
     width: 210px !important;
     height: 118px !important;
   }
-
-  app-repair-form .grid-fail-picture .upload-content,
-  app-repair-form .grid-evidence .upload-content {
-    text-align: left;
-  }
 }
 
 @media (max-width: 720px) {
@@ -280,6 +272,7 @@ app-repair-form .grid-evidence .upload-content {
   app-repair-form .grid-evidence {
     flex-direction: column !important;
     align-items: stretch !important;
+    height: auto !important;
     min-height: 0 !important;
   }
 
@@ -289,14 +282,9 @@ app-repair-form .grid-evidence .upload-content {
     width: 100% !important;
     height: 210px !important;
   }
-
-  app-repair-form .grid-fail-picture .upload-content,
-  app-repair-form .grid-evidence .upload-content {
-    text-align: left;
-  }
 }
 
-/* Preview state: show only the title above the selected image. */
+/* Preview state: show only a centered title above the selected image. */
 app-repair-form .upload-zone.has-file {
   flex-direction: column !important;
   align-items: stretch !important;
@@ -304,7 +292,17 @@ app-repair-form .upload-zone.has-file {
 
 app-repair-form .upload-zone.has-file .upload-content {
   order: 1;
-  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+
+app-repair-form .upload-zone.has-file .upload-content strong {
+  display: block;
+  width: 100%;
+  text-align: center !important;
 }
 
 app-repair-form .upload-zone.has-file .upload-content > span {
