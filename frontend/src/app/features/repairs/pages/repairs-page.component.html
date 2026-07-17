@@ -1,11 +1,10 @@
 <section class="page">
   <header class="page-heading">
     <div class="heading-copy">
-      <p class="overline">Manufacturing quality</p>
       <h1>Reportes de reparación</h1>
-      <p class="page-description">
+      <!-- <p class="page-description">
         Consulta fallas, resultados de reparación y evidencia en un solo espacio.
-      </p>
+      </p> -->
     </div>
 
     <button type="button" class="create-button" (click)="openNewRepair()">
@@ -68,10 +67,6 @@
             <option [value]="50">50</option>
           </select>
         </div>
-
-        <span class="page-info">
-          Página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong>
-        </span>
       </div>
 
       <div class="pager-wrap">
@@ -93,7 +88,7 @@
 
       <div class="pagination-total">
         <span class="total-records">
-          Total: <strong>{{ repairs.length | number }}</strong> registros
+          <strong>{{ repairs.length | number }}</strong> registros
         </span>
       </div>
     </footer>

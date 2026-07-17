@@ -12,7 +12,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
           <span class="brand-mark" aria-hidden="true">K</span>
           <span class="brand-copy">
             <strong>KittyHP</strong>
-            <small>Repair Intelligence</small>
           </span>
         </a>
 
