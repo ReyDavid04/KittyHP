@@ -326,3 +326,20 @@ app-repair-form .upload-zone.has-file .image-preview {
   flex: 0 0 auto !important;
   width: 100% !important;
 }
+
+/* Repair editor footer: keep only the save action at the right. */
+app-repair-form .form-actions {
+  justify-content: flex-end !important;
+}
+
+app-repair-form .form-actions > div:first-child,
+app-repair-form .cancel-button {
+  display: none !important;
+}
+
+app-repair-form .action-buttons {
+  display: flex !important;
+  justify-content: flex-end !important;
+  width: 100% !important;
+  margin-left: auto !important;
+}
