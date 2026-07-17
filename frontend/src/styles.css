@@ -203,6 +203,14 @@ app-repair-form .upload-zone .file-name {
   display: none !important;
 }
 
+@media (min-width: 1181px) {
+  app-repair-form .grid-repair-result textarea,
+  app-repair-form .grid-actions textarea {
+    height: 128px !important;
+    min-height: 128px !important;
+  }
+}
+
 @media (max-width: 1180px) {
   app-repair-form .form-grid {
     grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
