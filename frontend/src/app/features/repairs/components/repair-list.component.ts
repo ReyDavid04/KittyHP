@@ -35,20 +35,12 @@ export interface RepairColumnFilters {
   evidencePicture: string[];
 }
 
-export interface RepairColumnValues {
-  recordDate: string[];
-  topIssue: string[];
-  failureQty: string[];
-  buildQty: string[];
-  frPercentage: string[];
-  category: string[];
-  returnStatus: string[];
-  failPicture: string[];
-  majorPart: string[];
-  repairResult: string[];
-  failureFactor: string[];
-  actions: string[];
-  evidencePicture: string[];
+export interface RepairColumnValues extends RepairColumnFilters {}
+
+interface RepairColumnDefinition {
+  key: RepairColumnKey;
+  label: string;
+  className?: string;
 }
 
 @Component({
@@ -61,82 +53,25 @@ export interface RepairColumnValues {
         <table>
           <thead>
             <tr>
-              <th class="date-column sticky-left">
+              <th
+                *ngFor="let column of columns; trackBy: trackByColumn"
+                [ngClass]="column.className"
+                [class.sticky-left]="column.key === 'recordDate'"
+              >
                 <div class="th-cell">
-                  <span>Fecha</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('recordDate')" aria-label="Filtrar por fecha" (click)="toggleFilter('recordDate')">⌄</button>
-                </div>
-              </th>
-              <th class="issue-column">
-                <div class="th-cell">
-                  <span>Top issue</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('topIssue')" aria-label="Filtrar por top issue" (click)="toggleFilter('topIssue')">⌄</button>
-                </div>
-              </th>
-              <th class="number-column">
-                <div class="th-cell">
-                  <span>Failure qty</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('failureQty')" aria-label="Filtrar por failure quantity" (click)="toggleFilter('failureQty')">⌄</button>
-                </div>
-              </th>
-              <th class="number-column">
-                <div class="th-cell">
-                  <span>Build qty</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('buildQty')" aria-label="Filtrar por build quantity" (click)="toggleFilter('buildQty')">⌄</button>
-                </div>
-              </th>
-              <th class="rate-column">
-                <div class="th-cell">
-                  <span>F/R</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('frPercentage')" aria-label="Filtrar por failure rate" (click)="toggleFilter('frPercentage')">⌄</button>
-                </div>
-              </th>
-              <th>
-                <div class="th-cell">
-                  <span>Categoría</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('category')" aria-label="Filtrar por categoría" (click)="toggleFilter('category')">⌄</button>
-                </div>
-              </th>
-              <th>
-                <div class="th-cell">
-                  <span>Return</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('returnStatus')" aria-label="Filtrar por return" (click)="toggleFilter('returnStatus')">⌄</button>
-                </div>
-              </th>
-              <th class="image-column">
-                <div class="th-cell">
-                  <span>Fail picture</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('failPicture')" aria-label="Filtrar por fail picture" (click)="toggleFilter('failPicture')">⌄</button>
-                </div>
-              </th>
-              <th>
-                <div class="th-cell">
-                  <span>Major part</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('majorPart')" aria-label="Filtrar por major part" (click)="toggleFilter('majorPart')">⌄</button>
-                </div>
-              </th>
-              <th class="text-column">
-                <div class="th-cell">
-                  <span>Repair result</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('repairResult')" aria-label="Filtrar por repair result" (click)="toggleFilter('repairResult')">⌄</button>
-                </div>
-              </th>
-              <th class="text-column">
-                <div class="th-cell">
-                  <span>Failure factor</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('failureFactor')" aria-label="Filtrar por failure factor" (click)="toggleFilter('failureFactor')">⌄</button>
-                </div>
-              </th>
-              <th class="text-column">
-                <div class="th-cell">
-                  <span>Acciones</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('actions')" aria-label="Filtrar por acciones" (click)="toggleFilter('actions')">⌄</button>
-                </div>
-              </th>
-              <th class="image-column">
-                <div class="th-cell">
-                  <span>Evidencia</span>
-                  <button type="button" class="filter-button" [class.active]="isFiltered('evidencePicture')" aria-label="Filtrar por evidencia" (click)="toggleFilter('evidencePicture')">⌄</button>
+                  <span>{{ column.label }}</span>
+                  <button
+                    type="button"
+                    class="filter-button"
+                    [class.active]="isFiltered(column.key)"
+                    [attr.aria-label]="'Filtrar por ' + column.label"
+                    [attr.aria-expanded]="activeFilterKey === column.key"
+                    (click)="toggleFilter(column.key, $event)"
+                  >
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                      <path d="M5 7h14l-5.5 6.2v4.3l-3 1.5v-5.8L5 7Z"></path>
+                    </svg>
+                  </button>
                 </div>
               </th>
               <th class="actions-column sticky-right"><span>Opciones</span></th>
@@ -145,40 +80,53 @@ export interface RepairColumnValues {
 
           <tbody>
             <tr *ngFor="let repair of repairs; trackBy: trackByRepairId">
-              <td class="sticky-left">
-                <span class="date-value">{{ repair.recordDate }}</span>
+              <td
+                *ngFor="let column of columns; trackBy: trackByColumn"
+                [class.sticky-left]="column.key === 'recordDate'"
+              >
+                <ng-container [ngSwitch]="column.key">
+                  <span *ngSwitchCase="'recordDate'" class="date-value">{{ repair.recordDate }}</span>
+
+                  <strong *ngSwitchCase="'topIssue'" class="issue-value" [title]="repair.topIssue">
+                    {{ repair.topIssue }}
+                  </strong>
+
+                  <span *ngSwitchCase="'failureQty'" class="numeric-value">{{ repair.failureQty | number }}</span>
+                  <span *ngSwitchCase="'buildQty'" class="numeric-value">{{ repair.buildQty | number }}</span>
+
+                  <span *ngSwitchCase="'frPercentage'" class="rate-pill">
+                    {{ repair.frPercentage | number: '1.2-2' }}%
+                  </span>
+
+                  <span *ngSwitchCase="'category'" class="category-pill">{{ repair.category }}</span>
+
+                  <span *ngSwitchCase="'returnStatus'" class="status-pill" [class.empty]="!repair.returnStatus">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    {{ repair.returnStatus || 'Sin retorno' }}
+                  </span>
+
+                  <ng-container *ngSwitchCase="'failPicture'">
+                    <a *ngIf="repair.failPicture; else noImage" class="image-link" [href]="repair.failPicture" target="_blank" rel="noopener">
+                      <img [src]="repair.failPicture" alt="Evidencia de falla" class="thumbnail">
+                      <span>Ver</span>
+                    </a>
+                  </ng-container>
+
+                  <ng-container *ngSwitchCase="'evidencePicture'">
+                    <a *ngIf="repair.evidencePicture; else noImage" class="image-link" [href]="repair.evidencePicture" target="_blank" rel="noopener">
+                      <img [src]="repair.evidencePicture" alt="Evidencia de reparación" class="thumbnail">
+                      <span>Ver</span>
+                    </a>
+                  </ng-container>
+
+                  <span *ngSwitchDefault class="truncate" [title]="valueForColumn(repair, column.key)">
+                    {{ valueForColumn(repair, column.key) || '—' }}
+                  </span>
+                </ng-container>
+
+                <ng-template #noImage><span class="empty-value">Sin imagen</span></ng-template>
               </td>
-              <td>
-                <strong class="issue-value" [title]="repair.topIssue">{{ repair.topIssue }}</strong>
-              </td>
-              <td class="numeric-cell">{{ repair.failureQty | number }}</td>
-              <td class="numeric-cell">{{ repair.buildQty | number }}</td>
-              <td><span class="rate-pill">{{ repair.frPercentage | number: '1.2-2' }}%</span></td>
-              <td><span class="category-pill">{{ repair.category }}</span></td>
-              <td>
-                <span class="status-pill" [class.empty]="!repair.returnStatus">
-                  <span class="status-dot" aria-hidden="true"></span>
-                  {{ repair.returnStatus || 'Sin retorno' }}
-                </span>
-              </td>
-              <td>
-                <a *ngIf="repair.failPicture; else noFail" class="image-link" [href]="repair.failPicture" target="_blank" rel="noopener">
-                  <img [src]="repair.failPicture" alt="Evidencia de falla" class="thumbnail">
-                  <span>Ver</span>
-                </a>
-                <ng-template #noFail><span class="empty-value">Sin imagen</span></ng-template>
-              </td>
-              <td><span class="truncate" [title]="repair.majorPart || ''">{{ repair.majorPart || '—' }}</span></td>
-              <td><span class="truncate wide" [title]="repair.repairResult || ''">{{ repair.repairResult || '—' }}</span></td>
-              <td><span class="truncate wide" [title]="repair.failureFactor || ''">{{ repair.failureFactor || '—' }}</span></td>
-              <td><span class="truncate wide" [title]="repair.actions || ''">{{ repair.actions || '—' }}</span></td>
-              <td>
-                <a *ngIf="repair.evidencePicture; else noEvidence" class="image-link" [href]="repair.evidencePicture" target="_blank" rel="noopener">
-                  <img [src]="repair.evidencePicture" alt="Evidencia de reparación" class="thumbnail">
-                  <span>Ver</span>
-                </a>
-                <ng-template #noEvidence><span class="empty-value">Sin imagen</span></ng-template>
-              </td>
+
               <td class="sticky-right actions-cell">
                 <div class="row-actions">
                   <button type="button" class="icon-button edit" aria-label="Editar reporte" title="Editar" (click)="edit.emit(repair)">
@@ -205,36 +153,62 @@ export interface RepairColumnValues {
       </ng-template>
 
       <div *ngIf="activeFilterKey" class="filter-backdrop" (click)="closeFilter()"></div>
-      <aside class="filter-popover" *ngIf="activeFilterKey as key" role="dialog" aria-modal="true" [attr.aria-label]="'Filtrar ' + headerLabel(key)">
+
+      <aside
+        class="filter-popover"
+        *ngIf="activeFilterKey as key"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'Filtrar ' + headerLabel(key)"
+        [style.top.px]="filterPosition.top"
+        [style.left.px]="filterPosition.left"
+      >
         <header class="filter-header">
           <div>
-            <span>Filtrar columna</span>
+            <span>Filtro de columna</span>
             <strong>{{ headerLabel(key) }}</strong>
           </div>
           <button type="button" class="close-filter" aria-label="Cerrar filtro" (click)="closeFilter()">×</button>
         </header>
 
-        <label class="filter-search">
-          <span aria-hidden="true">⌕</span>
-          <input type="search" [value]="filterSearch" (input)="filterSearch = $any($event.target).value" placeholder="Buscar valores">
-        </label>
+        <button *ngIf="isFiltered(key)" type="button" class="clear-column-filter" (click)="clearColumnFilter(key)">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"></path></svg>
+          Borrar filtro de “{{ headerLabel(key) }}”
+        </button>
 
-        <div class="filter-tools">
-          <button type="button" (click)="selectAll()">Seleccionar todos</button>
-          <button type="button" (click)="clearSelection()">Limpiar</button>
+        <div class="select-all-row">
+          <label>
+            <input
+              type="checkbox"
+              [checked]="allSelected(key)"
+              [indeterminate]="someSelected(key)"
+              (change)="toggleAll(key)"
+            >
+            <span>Seleccionar todo</span>
+          </label>
+          <span class="selection-count">{{ draftValues.length }} de {{ availableFilterValues(key).length }}</span>
         </div>
 
         <div class="filter-options">
-          <label *ngFor="let option of visibleOptions(key)">
+          <label
+            *ngFor="let option of availableFilterValues(key); trackBy: trackByOption"
+            [class.selected]="isChecked(option)"
+          >
             <input type="checkbox" [checked]="isChecked(option)" (change)="toggleOption(option)">
             <span>{{ displayOption(option) }}</span>
           </label>
-          <p *ngIf="!visibleOptions(key).length" class="no-options">No se encontraron valores.</p>
+
+          <div *ngIf="!availableFilterValues(key).length" class="no-options">
+            Esta columna no contiene valores disponibles.
+          </div>
         </div>
 
         <footer class="filter-footer">
-          <button type="button" class="cancel-filter" (click)="closeFilter()">Cancelar</button>
-          <button type="button" class="apply-filter" (click)="applyFilter()">Aplicar filtro</button>
+          <span *ngIf="!draftValues.length" class="selection-warning">Selecciona al menos un valor</span>
+          <div class="filter-actions">
+            <button type="button" class="cancel-filter" (click)="closeFilter()">Cancelar</button>
+            <button type="button" class="apply-filter" [disabled]="!draftValues.length" (click)="applyFilter()">Aceptar</button>
+          </div>
         </footer>
       </aside>
     </section>
@@ -307,14 +281,22 @@ export interface RepairColumnValues {
         display: grid;
         flex: 0 0 auto;
         place-items: center;
-        width: 24px;
-        height: 24px;
-        padding: 0 0 3px;
+        width: 25px;
+        height: 25px;
+        padding: 0;
         border: 1px solid transparent;
-        border-radius: 7px;
+        border-radius: 6px;
         color: #7c8999;
         background: transparent;
         cursor: pointer;
+      }
+
+      .filter-button svg {
+        width: 14px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linejoin: round;
+        stroke-width: 1.7;
       }
 
       .filter-button:hover {
@@ -324,40 +306,18 @@ export interface RepairColumnValues {
       }
 
       .filter-button.active {
-        border-color: rgba(47, 126, 199, 0.28);
-        color: var(--primary);
-        background: var(--primary-soft);
+        border-color: var(--primary);
+        color: #fff;
+        background: var(--primary);
       }
 
-      .date-column {
-        width: 116px;
-        min-width: 116px;
-      }
-
-      .issue-column {
-        min-width: 190px;
-      }
-
-      .number-column {
-        min-width: 118px;
-      }
-
-      .rate-column {
-        min-width: 92px;
-      }
-
-      .image-column {
-        min-width: 112px;
-      }
-
-      .text-column {
-        min-width: 190px;
-      }
-
-      .actions-column {
-        width: 92px;
-        min-width: 92px;
-      }
+      .date-column { width: 116px; min-width: 116px; }
+      .issue-column { min-width: 190px; }
+      .number-column { min-width: 118px; }
+      .rate-column { min-width: 92px; }
+      .image-column { min-width: 112px; }
+      .text-column { min-width: 190px; }
+      .actions-column { width: 92px; min-width: 92px; }
 
       .sticky-left {
         position: sticky;
@@ -366,7 +326,8 @@ export interface RepairColumnValues {
         box-shadow: 8px 0 14px -14px rgba(18, 35, 55, 0.45);
       }
 
-      th.sticky-left {
+      th.sticky-left,
+      th.sticky-right {
         z-index: 8;
         background: #f6f8fb;
       }
@@ -378,41 +339,7 @@ export interface RepairColumnValues {
         box-shadow: -8px 0 14px -14px rgba(18, 35, 55, 0.45);
       }
 
-      th.sticky-right {
-        z-index: 8;
-        background: #f6f8fb;
-      }
-
-      .date-value {
-        display: inline-flex;
-        align-items: center;
-        min-height: 27px;
-        padding: 0 8px;
-        border-radius: 8px;
-        color: #4d5c70;
-        font-size: 0.72rem;
-        font-weight: 650;
-        background: #f1f4f8;
-        white-space: nowrap;
-      }
-
-      .issue-value {
-        display: block;
-        overflow: hidden;
-        max-width: 220px;
-        color: var(--text);
-        font-size: 0.8rem;
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .numeric-cell {
-        color: var(--text);
-        font-variant-numeric: tabular-nums;
-        font-weight: 650;
-      }
-
+      .date-value,
       .rate-pill,
       .category-pill,
       .status-pill {
@@ -427,33 +354,32 @@ export interface RepairColumnValues {
         white-space: nowrap;
       }
 
-      .rate-pill {
-        color: var(--primary);
-        background: var(--primary-soft);
+      .date-value {
+        border-radius: 8px;
+        color: #4d5c70;
+        background: #f1f4f8;
       }
 
-      .category-pill {
-        color: #536176;
-        background: #eef2f6;
+      .issue-value {
+        display: block;
+        overflow: hidden;
+        max-width: 220px;
+        color: var(--text);
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
-      .status-pill {
-        gap: 7px;
-        color: var(--success);
-        background: var(--success-soft);
+      .numeric-value {
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+        font-weight: 650;
       }
 
-      .status-pill.empty {
-        color: var(--muted);
-        background: #f0f3f6;
-      }
-
-      .status-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-      }
+      .rate-pill { color: var(--primary); background: var(--primary-soft); }
+      .category-pill { color: #536176; background: #eef2f6; }
+      .status-pill { gap: 7px; color: var(--success); background: var(--success-soft); }
+      .status-pill.empty { color: var(--muted); background: #f0f3f6; }
+      .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
       .thumbnail {
         width: 34px;
@@ -474,36 +400,18 @@ export interface RepairColumnValues {
         text-decoration: none;
       }
 
-      .image-link:hover span {
-        text-decoration: underline;
-      }
-
-      .empty-value {
-        color: #929eae;
-        font-size: 0.72rem;
-      }
+      .empty-value { color: #929eae; font-size: 0.72rem; }
 
       .truncate {
         display: block;
         overflow: hidden;
-        max-width: 150px;
+        max-width: 190px;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .truncate.wide {
-        max-width: 190px;
-      }
-
-      .actions-cell {
-        background: #fff;
-      }
-
-      .row-actions {
-        display: flex;
-        justify-content: center;
-        gap: 7px;
-      }
+      .actions-cell { background: #fff; }
+      .row-actions { display: flex; justify-content: center; gap: 7px; }
 
       .icon-button {
         display: grid;
@@ -515,10 +423,10 @@ export interface RepairColumnValues {
         border-radius: 9px;
         background: #fff;
         cursor: pointer;
-        transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
       }
 
-      .icon-button svg {
+      .icon-button svg,
+      .clear-column-filter svg {
         width: 15px;
         fill: none;
         stroke: currentColor;
@@ -527,23 +435,10 @@ export interface RepairColumnValues {
         stroke-width: 1.7;
       }
 
-      .icon-button.edit {
-        color: var(--primary);
-      }
-
-      .icon-button.edit:hover {
-        border-color: rgba(47, 126, 199, 0.35);
-        background: var(--primary-soft);
-      }
-
-      .icon-button.delete {
-        color: var(--danger);
-      }
-
-      .icon-button.delete:hover {
-        border-color: rgba(180, 35, 58, 0.28);
-        background: var(--danger-soft);
-      }
+      .icon-button.edit { color: var(--primary); }
+      .icon-button.edit:hover { border-color: rgba(47, 126, 199, 0.35); background: var(--primary-soft); }
+      .icon-button.delete { color: var(--danger); }
+      .icon-button.delete:hover { border-color: rgba(180, 35, 58, 0.28); background: var(--danger-soft); }
 
       .empty-state {
         display: grid;
@@ -564,49 +459,29 @@ export interface RepairColumnValues {
         background: var(--primary-soft);
       }
 
-      .empty-icon svg {
-        width: 28px;
-        fill: none;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 1.6;
-      }
-
-      .empty-state h3 {
-        margin: 0 0 7px;
-        font-size: 1rem;
-      }
-
-      .empty-state p {
-        max-width: 390px;
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.82rem;
-      }
+      .empty-icon svg { width: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; }
+      .empty-state h3 { margin: 0 0 7px; font-size: 1rem; }
+      .empty-state p { margin: 0; color: var(--muted); font-size: 0.82rem; }
 
       .filter-backdrop {
         position: fixed;
         inset: 0;
         z-index: 80;
-        background: rgba(18, 35, 55, 0.2);
-        backdrop-filter: blur(2px);
+        background: rgba(18, 35, 55, 0.12);
       }
 
       .filter-popover {
         position: fixed;
-        top: 104px;
-        right: 28px;
         z-index: 90;
         display: grid;
-        grid-template-rows: auto auto auto minmax(100px, 1fr) auto;
-        width: min(360px, calc(100vw - 32px));
-        max-height: min(620px, calc(100dvh - 132px));
+        grid-template-rows: auto auto auto minmax(120px, 1fr) auto;
+        width: min(330px, calc(100vw - 24px));
+        max-height: min(520px, calc(100dvh - 24px));
         overflow: hidden;
-        border: 1px solid var(--border);
-        border-radius: 18px;
+        border: 1px solid #cfd8e3;
+        border-radius: 8px;
         background: #fff;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 18px 42px rgba(18, 35, 55, 0.2);
       }
 
       .filter-header {
@@ -614,159 +489,136 @@ export interface RepairColumnValues {
         align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 17px 18px;
+        padding: 14px 15px;
         border-bottom: 1px solid var(--border);
+        background: #f7f9fc;
       }
 
-      .filter-header > div {
-        display: grid;
-        gap: 3px;
-      }
-
-      .filter-header span {
-        color: var(--muted);
-        font-size: 0.67rem;
-        font-weight: 700;
-        letter-spacing: 0.07em;
-        text-transform: uppercase;
-      }
-
-      .filter-header strong {
-        font-size: 0.95rem;
-      }
+      .filter-header > div { display: grid; gap: 2px; }
+      .filter-header span { color: var(--muted); font-size: 0.63rem; font-weight: 700; text-transform: uppercase; }
+      .filter-header strong { font-size: 0.9rem; }
 
       .close-filter {
         display: grid;
         place-items: center;
-        width: 32px;
-        height: 32px;
+        width: 29px;
+        height: 29px;
         padding: 0;
         border: 1px solid var(--border);
-        border-radius: 9px;
+        border-radius: 6px;
         color: var(--muted);
-        font-size: 1.1rem;
+        font-size: 1rem;
         background: #fff;
         cursor: pointer;
       }
 
-      .filter-search {
-        position: relative;
+      .clear-column-filter {
         display: flex;
         align-items: center;
-        margin: 14px 16px 9px;
+        gap: 8px;
+        padding: 10px 15px;
+        border: 0;
+        border-bottom: 1px solid var(--border);
+        color: var(--primary);
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-align: left;
+        background: #fff;
+        cursor: pointer;
       }
 
-      .filter-search > span {
-        position: absolute;
-        left: 12px;
-        z-index: 1;
-        color: var(--muted);
-      }
+      .clear-column-filter:hover { background: var(--primary-soft); }
 
-      .filter-search input {
-        width: 100%;
-        height: 40px;
-        padding: 0 12px 0 35px;
-        border: 1px solid var(--border);
-        border-radius: 11px;
-        color: var(--text);
-        background: var(--surface-subtle);
-      }
-
-      .filter-tools {
+      .select-all-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 16px 9px;
+        gap: 12px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--border);
       }
 
-      .filter-tools button {
-        padding: 4px 0;
-        border: 0;
-        color: var(--primary);
-        font-size: 0.71rem;
-        font-weight: 700;
-        background: transparent;
+      .select-all-row label,
+      .filter-options label {
+        display: flex;
+        align-items: center;
+        gap: 9px;
         cursor: pointer;
+      }
+
+      .select-all-row label { color: var(--text); font-size: 0.76rem; font-weight: 700; }
+      .selection-count { color: var(--muted); font-size: 0.68rem; white-space: nowrap; }
+
+      .select-all-row input,
+      .filter-options input {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: var(--primary);
       }
 
       .filter-options {
         display: grid;
         align-content: start;
-        gap: 3px;
+        gap: 2px;
         overflow: auto;
-        padding: 4px 12px 14px;
+        padding: 7px 8px;
       }
 
       .filter-options label {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-height: 36px;
-        padding: 7px 8px;
-        border-radius: 9px;
+        min-height: 34px;
+        padding: 6px 8px;
+        border-radius: 5px;
         color: #435066;
-        font-size: 0.76rem;
-        cursor: pointer;
+        font-size: 0.75rem;
       }
 
-      .filter-options label:hover {
-        background: var(--surface-subtle);
-      }
-
-      .filter-options input {
-        width: 16px;
-        height: 16px;
-        accent-color: var(--primary);
-      }
+      .filter-options label:hover { background: #f2f6fb; }
+      .filter-options label.selected { color: var(--text); background: #edf4fc; }
+      .filter-options label span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
       .no-options {
-        padding: 24px 10px;
+        padding: 28px 12px;
         color: var(--muted);
-        font-size: 0.76rem;
+        font-size: 0.75rem;
         text-align: center;
       }
 
       .filter-footer {
         display: flex;
-        justify-content: flex-end;
-        gap: 9px;
-        padding: 13px 16px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        min-height: 58px;
+        padding: 10px 12px;
         border-top: 1px solid var(--border);
-        background: var(--surface-subtle);
+        background: #f7f9fc;
       }
 
-      .filter-footer button {
-        min-height: 38px;
-        padding: 8px 13px;
-        border-radius: 10px;
-        font-size: 0.76rem;
+      .selection-warning { color: var(--danger); font-size: 0.66rem; }
+      .filter-actions { display: flex; gap: 7px; margin-left: auto; }
+
+      .filter-actions button {
+        min-height: 34px;
+        padding: 7px 12px;
+        border-radius: 7px;
+        font-size: 0.73rem;
         font-weight: 700;
         cursor: pointer;
       }
 
-      .cancel-filter {
-        border: 1px solid var(--border);
-        color: var(--text);
-        background: #fff;
-      }
-
-      .apply-filter {
-        border: 1px solid var(--primary);
-        color: #fff;
-        background: var(--primary);
-      }
+      .cancel-filter { border: 1px solid var(--border); color: var(--text); background: #fff; }
+      .apply-filter { border: 1px solid var(--primary); color: #fff; background: var(--primary); }
+      .apply-filter:disabled { opacity: 0.45; cursor: not-allowed; }
 
       @media (max-width: 720px) {
-        .table-wrap {
-          max-height: none;
-        }
+        .table-wrap { max-height: none; }
 
         .filter-popover {
-          top: auto;
+          top: auto !important;
           right: 12px;
           bottom: 12px;
-          left: 12px;
+          left: 12px !important;
           width: auto;
           max-height: calc(100dvh - 24px);
         }
@@ -777,59 +629,80 @@ export interface RepairColumnValues {
 export class RepairListComponent {
   @Input() repairs: RepairReport[] | null = [];
   @Input() filters: RepairColumnFilters = this.emptyFilters();
-  @Input() availableValues: RepairColumnValues = {
-    recordDate: [],
-    topIssue: [],
-    failureQty: [],
-    buildQty: [],
-    frPercentage: [],
-    category: [],
-    returnStatus: [],
-    failPicture: [],
-    majorPart: [],
-    repairResult: [],
-    failureFactor: [],
-    actions: [],
-    evidencePicture: [],
-  };
+  @Input() availableValues: RepairColumnValues = this.emptyFilters();
 
   @Output() edit = new EventEmitter<RepairReport>();
   @Output() remove = new EventEmitter<string>();
   @Output() filterChange = new EventEmitter<{ key: RepairColumnKey; values: string[] }>();
 
+  readonly columns: RepairColumnDefinition[] = [
+    { key: 'recordDate', label: 'Fecha', className: 'date-column' },
+    { key: 'topIssue', label: 'Top issue', className: 'issue-column' },
+    { key: 'failureQty', label: 'Failure qty', className: 'number-column' },
+    { key: 'buildQty', label: 'Build qty', className: 'number-column' },
+    { key: 'frPercentage', label: 'F/R', className: 'rate-column' },
+    { key: 'category', label: 'Categoría' },
+    { key: 'returnStatus', label: 'Return' },
+    { key: 'failPicture', label: 'Fail picture', className: 'image-column' },
+    { key: 'majorPart', label: 'Major part' },
+    { key: 'repairResult', label: 'Repair result', className: 'text-column' },
+    { key: 'failureFactor', label: 'Failure factor', className: 'text-column' },
+    { key: 'actions', label: 'Acciones', className: 'text-column' },
+    { key: 'evidencePicture', label: 'Evidencia', className: 'image-column' },
+  ];
+
   activeFilterKey: RepairColumnKey | null = null;
-  filterSearch = '';
   draftValues: string[] = [];
+  filterPosition: { top: number | null; left: number | null } = { top: null, left: null };
 
   trackByRepairId(_: number, repair: RepairReport): string {
     return repair.id;
   }
 
-  toggleFilter(key: RepairColumnKey): void {
+  trackByColumn(_: number, column: RepairColumnDefinition): RepairColumnKey {
+    return column.key;
+  }
+
+  trackByOption(_: number, option: string): string {
+    return option;
+  }
+
+  toggleFilter(key: RepairColumnKey, event: MouseEvent): void {
+    event.stopPropagation();
+
     if (this.activeFilterKey === key) {
       this.closeFilter();
       return;
     }
 
+    const trigger = event.currentTarget as HTMLElement;
+    this.positionFilter(trigger);
     this.activeFilterKey = key;
-    this.filterSearch = '';
     this.draftValues = [...(this.filters[key].length ? this.filters[key] : this.availableFilterValues(key))];
   }
 
   closeFilter(): void {
     this.activeFilterKey = null;
-    this.filterSearch = '';
     this.draftValues = [];
+    this.filterPosition = { top: null, left: null };
   }
 
-  selectAll(): void {
-    if (this.activeFilterKey) {
-      this.draftValues = [...this.availableFilterValues(this.activeFilterKey)];
-    }
+  clearColumnFilter(key: RepairColumnKey): void {
+    this.filterChange.emit({ key, values: [] });
+    this.closeFilter();
   }
 
-  clearSelection(): void {
-    this.draftValues = [];
+  allSelected(key: RepairColumnKey): boolean {
+    const total = this.availableFilterValues(key).length;
+    return total > 0 && this.draftValues.length === total;
+  }
+
+  someSelected(key: RepairColumnKey): boolean {
+    return this.draftValues.length > 0 && !this.allSelected(key);
+  }
+
+  toggleAll(key: RepairColumnKey): void {
+    this.draftValues = this.allSelected(key) ? [] : [...this.availableFilterValues(key)];
   }
 
   isChecked(option: string): boolean {
@@ -843,7 +716,7 @@ export class RepairListComponent {
   }
 
   applyFilter(): void {
-    if (!this.activeFilterKey) {
+    if (!this.activeFilterKey || !this.draftValues.length) {
       return;
     }
 
@@ -854,9 +727,8 @@ export class RepairListComponent {
     this.closeFilter();
   }
 
-  visibleOptions(key: RepairColumnKey): string[] {
-    const search = this.filterSearch.trim().toLowerCase();
-    return this.availableFilterValues(key).filter((value) => this.displayOption(value).toLowerCase().includes(search));
+  availableFilterValues(key: RepairColumnKey): string[] {
+    return this.availableValues[key] ?? [];
   }
 
   displayOption(value: string): string {
@@ -868,27 +740,26 @@ export class RepairListComponent {
   }
 
   headerLabel(key: RepairColumnKey): string {
-    const labels: Record<RepairColumnKey, string> = {
-      recordDate: 'Fecha',
-      topIssue: 'Top issue',
-      failureQty: 'Failure quantity',
-      buildQty: 'Build quantity',
-      frPercentage: 'Failure rate',
-      category: 'Categoría',
-      returnStatus: 'Return',
-      failPicture: 'Fail picture',
-      majorPart: 'Major part',
-      repairResult: 'Repair result',
-      failureFactor: 'Failure factor',
-      actions: 'Acciones',
-      evidencePicture: 'Evidencia',
-    };
-
-    return labels[key];
+    return this.columns.find((column) => column.key === key)?.label ?? key;
   }
 
-  private availableFilterValues(key: RepairColumnKey): string[] {
-    return this.availableValues[key] ?? [];
+  valueForColumn(repair: RepairReport, key: RepairColumnKey): string {
+    return String((repair as unknown as Record<string, unknown>)[key] ?? '');
+  }
+
+  private positionFilter(trigger: HTMLElement): void {
+    if (window.innerWidth <= 720) {
+      this.filterPosition = { top: null, left: null };
+      return;
+    }
+
+    const width = 330;
+    const margin = 12;
+    const rect = trigger.getBoundingClientRect();
+    const left = Math.min(Math.max(margin, rect.right - width), window.innerWidth - width - margin);
+    const top = Math.min(rect.bottom + 7, Math.max(margin, window.innerHeight - 520 - margin));
+
+    this.filterPosition = { top, left };
   }
 
   private emptyFilters(): RepairColumnFilters {
