@@ -88,25 +88,33 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             <input type="text" formControlName="returnStatus" placeholder="YES, NO o estatus">
           </label>
 
-          <label class="upload-zone field-span-3" [class.has-file]="failPictureFile || repair?.failPicture">
+          <label class="upload-zone field-span-3" [class.has-file]="failPicturePreviewUrl">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
-            <span class="upload-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path>
-              </svg>
-            </span>
-            <span class="upload-content">
-              <strong>Fail picture</strong>
-              <span *ngIf="!failPictureFile">Selecciona una imagen de la falla</span>
-              <span class="file-name" *ngIf="failPictureFile">{{ failPictureFile.name }}</span>
-              <a
-                *ngIf="repair?.failPicture && !failPictureFile"
-                [href]="repair!.failPicture!"
-                target="_blank"
-                rel="noopener"
-                (click)="$event.stopPropagation()"
-              >Ver imagen actual</a>
-            </span>
+
+            <ng-container *ngIf="failPicturePreviewUrl as preview; else failPictureEmpty">
+              <span class="image-preview">
+                <img [src]="preview" alt="Vista previa de la imagen de falla">
+                <span class="image-change">Cambiar imagen</span>
+              </span>
+              <span class="upload-content">
+                <strong>Fail picture</strong>
+                <span class="file-name" *ngIf="failPictureFile">{{ failPictureFile.name }}</span>
+                <span *ngIf="!failPictureFile">Imagen actual del reporte</span>
+                <span>Haz clic en el recuadro para reemplazarla.</span>
+              </span>
+            </ng-container>
+
+            <ng-template #failPictureEmpty>
+              <span class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path>
+                </svg>
+              </span>
+              <span class="upload-content">
+                <strong>Fail picture</strong>
+                <span>Selecciona una imagen de la falla</span>
+              </span>
+            </ng-template>
           </label>
 
           <label class="field">
@@ -137,25 +145,33 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             ></textarea>
           </label>
 
-          <label class="upload-zone field-full" [class.has-file]="evidencePictureFile || repair?.evidencePicture">
+          <label class="upload-zone field-full" [class.has-file]="evidencePicturePreviewUrl">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'evidencePicture')">
-            <span class="upload-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false">
-                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path>
-              </svg>
-            </span>
-            <span class="upload-content">
-              <strong>Evidence</strong>
-              <span *ngIf="!evidencePictureFile">Selecciona la evidencia final de la reparación</span>
-              <span class="file-name" *ngIf="evidencePictureFile">{{ evidencePictureFile.name }}</span>
-              <a
-                *ngIf="repair?.evidencePicture && !evidencePictureFile"
-                [href]="repair!.evidencePicture!"
-                target="_blank"
-                rel="noopener"
-                (click)="$event.stopPropagation()"
-              >Ver imagen actual</a>
-            </span>
+
+            <ng-container *ngIf="evidencePicturePreviewUrl as preview; else evidencePictureEmpty">
+              <span class="image-preview">
+                <img [src]="preview" alt="Vista previa de la evidencia final">
+                <span class="image-change">Cambiar imagen</span>
+              </span>
+              <span class="upload-content">
+                <strong>Evidence</strong>
+                <span class="file-name" *ngIf="evidencePictureFile">{{ evidencePictureFile.name }}</span>
+                <span *ngIf="!evidencePictureFile">Evidencia actual del reporte</span>
+                <span>Haz clic en el recuadro para reemplazarla.</span>
+              </span>
+            </ng-container>
+
+            <ng-template #evidencePictureEmpty>
+              <span class="upload-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path>
+                </svg>
+              </span>
+              <span class="upload-content">
+                <strong>Evidence</strong>
+                <span>Selecciona la evidencia final de la reparación</span>
+              </span>
+            </ng-template>
           </label>
         </div>
       </div>
@@ -179,21 +195,18 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
   styles: [
     `
       .form-shell {
-        overflow: hidden;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.98);
-        box-shadow: var(--shadow-md);
+        overflow: visible;
+        background: transparent;
       }
 
       .form-body {
-        padding: 24px 28px;
+        padding: 32px 36px 38px;
       }
 
       .form-grid {
         display: grid;
         grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 18px;
+        gap: 22px;
       }
 
       .field-span-2 {
@@ -211,7 +224,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       .field {
         display: grid;
         align-content: start;
-        gap: 7px;
+        gap: 8px;
         min-width: 0;
         color: #455267;
         font-size: 0.76rem;
@@ -240,13 +253,13 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       .field input {
-        height: 42px;
-        padding: 0 12px;
+        height: 46px;
+        padding: 0 14px;
       }
 
       .field textarea {
-        min-height: 105px;
-        padding: 11px 12px;
+        min-height: 118px;
+        padding: 13px 14px;
         line-height: 1.5;
         resize: vertical;
       }
@@ -288,7 +301,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
       .suffix-input > span {
         position: absolute;
-        right: 12px;
+        right: 14px;
         color: var(--primary);
         font-weight: 800;
       }
@@ -297,26 +310,28 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         position: relative;
         display: flex;
         align-items: center;
-        gap: 14px;
-        min-height: 92px;
-        padding: 16px 18px;
+        gap: 20px;
+        min-height: 148px;
+        padding: 18px;
+        overflow: hidden;
         border: 1px dashed var(--border-strong);
         border-radius: 12px;
         color: var(--text);
         background: var(--surface-subtle);
         cursor: pointer;
-        transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+        transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
       }
 
       .upload-zone:hover {
         border-color: var(--accent);
         background: #f5f9fe;
+        box-shadow: 0 0 0 3px rgba(47, 126, 199, 0.07);
       }
 
       .upload-zone.has-file {
         border-style: solid;
-        border-color: rgba(20, 125, 100, 0.3);
-        background: var(--success-soft);
+        border-color: rgba(47, 126, 199, 0.24);
+        background: #fff;
       }
 
       .upload-zone > input {
@@ -331,15 +346,15 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         display: grid;
         flex: 0 0 auto;
         place-items: center;
-        width: 42px;
-        height: 42px;
+        width: 46px;
+        height: 46px;
         border-radius: 12px;
         color: var(--primary);
         background: var(--primary-soft);
       }
 
       .upload-icon svg {
-        width: 20px;
+        width: 21px;
         fill: none;
         stroke: currentColor;
         stroke-linecap: round;
@@ -347,17 +362,57 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         stroke-width: 1.7;
       }
 
+      .image-preview {
+        position: relative;
+        display: block;
+        flex: 0 0 210px;
+        width: 210px;
+        height: 118px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: var(--surface-muted);
+      }
+
+      .image-preview img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: #f3f6f9;
+      }
+
+      .image-change {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        padding: 7px 10px;
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 750;
+        text-align: center;
+        background: rgba(18, 35, 55, 0.76);
+        opacity: 0;
+        transition: opacity 150ms ease;
+      }
+
+      .upload-zone:hover .image-change {
+        opacity: 1;
+      }
+
       .upload-content {
         display: grid;
         min-width: 0;
-        gap: 3px;
+        gap: 5px;
         color: var(--muted);
-        font-size: 0.72rem;
+        font-size: 0.73rem;
+        line-height: 1.4;
       }
 
       .upload-content strong {
         color: var(--text);
-        font-size: 0.8rem;
+        font-size: 0.84rem;
       }
 
       .file-name {
@@ -368,17 +423,6 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         white-space: nowrap;
       }
 
-      .upload-zone a {
-        width: max-content;
-        color: var(--primary);
-        font-weight: 700;
-        text-decoration: none;
-      }
-
-      .upload-zone a:hover {
-        text-decoration: underline;
-      }
-
       .form-actions {
         position: sticky;
         bottom: 0;
@@ -387,9 +431,9 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        padding: 15px 28px;
+        padding: 18px 36px;
         border-top: 1px solid var(--border);
-        background: rgba(248, 250, 252, 0.96);
+        background: rgba(248, 250, 252, 0.97);
         backdrop-filter: blur(14px);
       }
 
@@ -467,12 +511,12 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
       @media (max-width: 720px) {
         .form-body {
-          padding: 18px 14px;
+          padding: 22px 18px 28px;
         }
 
         .form-grid {
           grid-template-columns: 1fr;
-          gap: 14px;
+          gap: 16px;
         }
 
         .field-span-2,
@@ -482,13 +526,22 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         }
 
         .upload-zone {
-          min-height: 88px;
+          align-items: stretch;
+          flex-direction: column;
+          min-height: 0;
+          padding: 14px;
+        }
+
+        .image-preview {
+          flex-basis: auto;
+          width: 100%;
+          height: 210px;
         }
 
         .form-actions {
           align-items: stretch;
           flex-direction: column;
-          padding: 14px;
+          padding: 14px 18px;
         }
 
         .action-buttons {
@@ -506,6 +559,8 @@ export class RepairFormComponent implements OnChanges {
 
   failPictureFile: File | null = null;
   evidencePictureFile: File | null = null;
+  failPicturePreview = '';
+  evidencePicturePreview = '';
 
   readonly form = new FormBuilder().nonNullable.group({
     recordDate: ['', Validators.required],
@@ -523,10 +578,20 @@ export class RepairFormComponent implements OnChanges {
     actions: [''],
   });
 
+  get failPicturePreviewUrl(): string {
+    return this.failPicturePreview || this.repair?.failPicture || '';
+  }
+
+  get evidencePicturePreviewUrl(): string {
+    return this.evidencePicturePreview || this.repair?.evidencePicture || '';
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['repair']) {
       this.failPictureFile = null;
       this.evidencePictureFile = null;
+      this.failPicturePreview = '';
+      this.evidencePicturePreview = '';
       this.form.reset({
         recordDate: this.repair?.recordDate ?? '',
         topIssue: this.repair?.topIssue ?? '',
@@ -554,6 +619,16 @@ export class RepairFormComponent implements OnChanges {
     } else {
       this.evidencePictureFile = file;
     }
+
+    if (!file) {
+      this.setPreview(field, '');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => this.setPreview(field, typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => this.setPreview(field, '');
+    reader.readAsDataURL(file);
   }
 
   submit(): void {
@@ -581,5 +656,13 @@ export class RepairFormComponent implements OnChanges {
       failPictureFile: this.failPictureFile,
       evidencePictureFile: this.evidencePictureFile,
     });
+  }
+
+  private setPreview(field: 'failPicture' | 'evidencePicture', value: string): void {
+    if (field === 'failPicture') {
+      this.failPicturePreview = value;
+    } else {
+      this.evidencePicturePreview = value;
+    }
   }
 }
