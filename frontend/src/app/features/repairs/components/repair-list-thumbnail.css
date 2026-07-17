@@ -32,3 +32,16 @@
   width: 18px;
   height: 18px;
 }
+
+.return-column,
+tbody td:nth-child(7) {
+  width: 92px;
+  min-width: 92px;
+  max-width: 92px;
+  padding-right: 6px;
+  padding-left: 6px;
+}
+
+tbody td:nth-child(7) .truncate {
+  max-width: 80px;
+}
