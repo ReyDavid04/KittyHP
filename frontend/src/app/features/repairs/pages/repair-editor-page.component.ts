@@ -42,17 +42,17 @@ import { RepairFormComponent } from '../components/repair-form.component';
     `
       .editor-page {
         width: 100%;
-        max-width: 1600px;
-        margin: 0 auto;
-        padding: 26px 32px 38px;
+        max-width: none;
+        margin: 0;
+        padding: 0;
       }
 
       .editor-workspace {
         overflow: hidden;
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.98);
-        box-shadow: var(--shadow-md);
+        border: 0;
+        border-radius: 0;
+        background: #fff;
+        box-shadow: none;
       }
 
       .page-heading {
@@ -150,11 +150,11 @@ import { RepairFormComponent } from '../components/repair-form.component';
 
       @media (max-width: 720px) {
         .editor-page {
-          padding: 14px 10px 24px;
+          padding: 0;
         }
 
         .editor-workspace {
-          border-radius: 14px;
+          border-radius: 0;
         }
 
         .page-heading {
