@@ -11,7 +11,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
     <form class="form-shell" [formGroup]="form" (ngSubmit)="submit()">
       <div class="form-body">
         <div class="form-grid">
-          <label class="field">
+          <label class="field grid-date">
             <span>Date <b>*</b></span>
             <input
               type="date"
@@ -23,7 +23,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             </small>
           </label>
 
-          <label class="field field-span-3">
+          <label class="field grid-top-issue">
             <span>Top issue <b>*</b></span>
             <input
               type="text"
@@ -36,7 +36,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             </small>
           </label>
 
-          <label class="field">
+          <label class="field grid-failure-qty">
             <span>Failure qty <b>*</b></span>
             <input
               type="number"
@@ -46,7 +46,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             >
           </label>
 
-          <label class="field">
+          <label class="field grid-build-qty">
             <span>Build qty <b>*</b></span>
             <input
               type="number"
@@ -56,7 +56,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             >
           </label>
 
-          <label class="field">
+          <label class="field grid-fr">
             <span>F/R <b>*</b></span>
             <div class="suffix-input">
               <input
@@ -70,7 +70,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             </div>
           </label>
 
-          <label class="field">
+          <label class="field grid-category">
             <span>Category <b>*</b></span>
             <input
               type="text"
@@ -83,12 +83,12 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             </small>
           </label>
 
-          <label class="field">
+          <label class="field grid-return">
             <span>Return</span>
             <input type="text" formControlName="returnStatus" placeholder="YES, NO o estatus">
           </label>
 
-          <label class="upload-zone field-span-3" [class.has-file]="failPicturePreviewUrl">
+          <label class="upload-zone grid-fail-picture" [class.has-file]="failPicturePreviewUrl">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
 
             <ng-container *ngIf="failPicturePreviewUrl as preview; else failPictureEmpty">
@@ -117,17 +117,17 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             </ng-template>
           </label>
 
-          <label class="field">
+          <label class="field grid-major-part">
             <span>Major part</span>
             <input type="text" formControlName="majorPart" placeholder="Parte principal afectada">
           </label>
 
-          <label class="field field-span-3">
+          <label class="field grid-repair-result">
             <span>Repair result</span>
             <input type="text" formControlName="repairResult" placeholder="Resultado de la reparación">
           </label>
 
-          <label class="field field-span-2">
+          <label class="field grid-half">
             <span>Failure factor</span>
             <textarea
               rows="4"
@@ -136,7 +136,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             ></textarea>
           </label>
 
-          <label class="field field-span-2">
+          <label class="field grid-half">
             <span>Actions</span>
             <textarea
               rows="4"
@@ -145,7 +145,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             ></textarea>
           </label>
 
-          <label class="upload-zone field-full" [class.has-file]="evidencePicturePreviewUrl">
+          <label class="upload-zone grid-full" [class.has-file]="evidencePicturePreviewUrl">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'evidencePicture')">
 
             <ng-container *ngIf="evidencePicturePreviewUrl as preview; else evidencePictureEmpty">
@@ -205,19 +205,47 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
       .form-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(12, minmax(0, 1fr));
         gap: 22px;
+        align-items: start;
       }
 
-      .field-span-2 {
+      .grid-date,
+      .grid-failure-qty,
+      .grid-build-qty,
+      .grid-fr {
         grid-column: span 2;
       }
 
-      .field-span-3 {
+      .grid-top-issue {
+        grid-column: span 4;
+      }
+
+      .grid-category {
         grid-column: span 3;
       }
 
-      .field-full {
+      .grid-return {
+        grid-column: span 2;
+      }
+
+      .grid-fail-picture {
+        grid-column: span 7;
+      }
+
+      .grid-major-part {
+        grid-column: span 3;
+      }
+
+      .grid-repair-result {
+        grid-column: span 9;
+      }
+
+      .grid-half {
+        grid-column: span 6;
+      }
+
+      .grid-full {
         grid-column: 1 / -1;
       }
 
@@ -379,7 +407,6 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         width: 100%;
         height: 100%;
         object-fit: contain;
-        background: #f3f6f9;
       }
 
       .image-change {
@@ -495,16 +522,29 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         cursor: not-allowed;
       }
 
-      @media (max-width: 1080px) {
+      @media (max-width: 1180px) {
         .form-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-columns: repeat(6, minmax(0, 1fr));
         }
 
-        .field-span-3 {
-          grid-column: span 1;
+        .grid-date,
+        .grid-failure-qty,
+        .grid-build-qty,
+        .grid-fr,
+        .grid-category,
+        .grid-return,
+        .grid-major-part {
+          grid-column: span 2;
         }
 
-        .field-full {
+        .grid-top-issue,
+        .grid-repair-result,
+        .grid-half,
+        .grid-fail-picture {
+          grid-column: span 4;
+        }
+
+        .grid-full {
           grid-column: 1 / -1;
         }
       }
@@ -519,9 +559,18 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
           gap: 16px;
         }
 
-        .field-span-2,
-        .field-span-3,
-        .field-full {
+        .grid-date,
+        .grid-top-issue,
+        .grid-failure-qty,
+        .grid-build-qty,
+        .grid-fr,
+        .grid-category,
+        .grid-return,
+        .grid-fail-picture,
+        .grid-major-part,
+        .grid-repair-result,
+        .grid-half,
+        .grid-full {
           grid-column: auto;
         }
 
