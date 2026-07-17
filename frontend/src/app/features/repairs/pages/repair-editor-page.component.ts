@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
@@ -20,6 +20,16 @@ import { RepairFormComponent } from '../components/repair-form.component';
           </button>
 
           <h1>{{ repairId ? 'Editar reporte de reparación' : 'Crear reporte de reparación' }}</h1>
+
+          <button
+            type="button"
+            class="header-save-button"
+            [disabled]="isSaveDisabled"
+            (click)="submitRepair()"
+          >
+            <span aria-hidden="true">✓</span>
+            {{ repairId ? 'Guardar cambios' : 'Guardar reporte' }}
+          </button>
         </header>
 
         <div class="loading-card" *ngIf="isLoading" aria-live="polite">
@@ -99,6 +109,7 @@ import { RepairFormComponent } from '../components/repair-form.component';
       }
 
       h1 {
+        flex: 1 1 auto;
         margin: 0;
         color: var(--text);
         font-size: clamp(1.15rem, 1.6vw, 1.4rem);
@@ -107,8 +118,49 @@ import { RepairFormComponent } from '../components/repair-form.component';
         letter-spacing: -0.025em;
       }
 
+      .header-save-button {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 36px;
+        margin-left: auto;
+        padding: 6px 13px;
+        border: 1px solid var(--primary);
+        border-radius: 9px;
+        color: #fff;
+        font-size: 0.73rem;
+        font-weight: 750;
+        background: var(--primary);
+        box-shadow: 0 7px 16px rgba(22, 76, 140, 0.18);
+        cursor: pointer;
+        transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+      }
+
+      .header-save-button:hover:not(:disabled) {
+        border-color: var(--primary-strong);
+        background: var(--primary-strong);
+        transform: translateY(-1px);
+      }
+
+      .header-save-button:disabled {
+        border-color: #aeb8c5;
+        background: #aeb8c5;
+        box-shadow: none;
+        cursor: not-allowed;
+      }
+
+      .header-save-button span {
+        color: inherit;
+      }
+
       app-repair-form {
         display: block;
+      }
+
+      :host ::ng-deep app-repair-form .form-actions {
+        display: none !important;
       }
 
       .loading-card {
@@ -172,11 +224,19 @@ import { RepairFormComponent } from '../components/repair-form.component';
         h1 {
           font-size: 1.05rem;
         }
+
+        .header-save-button {
+          min-height: 32px;
+          padding: 5px 9px;
+          font-size: 0.68rem;
+        }
       }
     `,
   ],
 })
 export class RepairEditorPageComponent {
+  @ViewChild(RepairFormComponent) private repairForm?: RepairFormComponent;
+
   private readonly repairReportsApi = inject(RepairReportsApiService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -192,6 +252,14 @@ export class RepairEditorPageComponent {
         this.isLoading = false;
       });
     }
+  }
+
+  get isSaveDisabled(): boolean {
+    return this.isLoading || !this.repairForm || this.repairForm.form.invalid;
+  }
+
+  submitRepair(): void {
+    this.repairForm?.submit();
   }
 
   saveRepair(payload: RepairUpsertPayload): void {
