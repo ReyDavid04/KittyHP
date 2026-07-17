@@ -18,9 +18,6 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
               formControlName="recordDate"
               [class.invalid]="form.controls.recordDate.invalid && form.controls.recordDate.touched"
             >
-            <small *ngIf="form.controls.recordDate.invalid && form.controls.recordDate.touched">
-              La fecha es obligatoria.
-            </small>
           </label>
 
           <label class="field grid-top-issue">
@@ -31,9 +28,6 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
               placeholder="Describe la falla principal"
               [class.invalid]="form.controls.topIssue.invalid && form.controls.topIssue.touched"
             >
-            <small *ngIf="form.controls.topIssue.invalid && form.controls.topIssue.touched">
-              El top issue es obligatorio.
-            </small>
           </label>
 
           <label class="field grid-failure-qty">
@@ -78,32 +72,44 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
               placeholder="Ej. MB, LCD, Cover"
               [class.invalid]="form.controls.category.invalid && form.controls.category.touched"
             >
-            <small *ngIf="form.controls.category.invalid && form.controls.category.touched">
-              La categoría es obligatoria.
-            </small>
           </label>
 
           <label class="field grid-return">
-            <span>Return</span>
-            <input type="text" formControlName="returnStatus" placeholder="YES, NO o estatus">
+            <span>Return <b>*</b></span>
+            <input
+              type="text"
+              formControlName="returnStatus"
+              placeholder="YES, NO o estatus"
+              [class.invalid]="form.controls.returnStatus.invalid && form.controls.returnStatus.touched"
+            >
           </label>
 
           <label class="field grid-major-part">
-            <span>Major part</span>
-            <input type="text" formControlName="majorPart" placeholder="Parte principal afectada">
+            <span>Major part <b>*</b></span>
+            <input
+              type="text"
+              formControlName="majorPart"
+              placeholder="Parte principal afectada"
+              [class.invalid]="form.controls.majorPart.invalid && form.controls.majorPart.touched"
+            >
           </label>
 
           <label class="field grid-failure-factor">
-            <span>Failure factor</span>
+            <span>Failure factor <b>*</b></span>
             <textarea
               class="compact-textarea"
               rows="1"
               formControlName="failureFactor"
               placeholder="Factor o causa de la falla"
+              [class.invalid]="form.controls.failureFactor.invalid && form.controls.failureFactor.touched"
             ></textarea>
           </label>
 
-          <label class="upload-zone grid-fail-picture" [class.has-file]="failPicturePreviewUrl">
+          <label
+            class="upload-zone grid-fail-picture"
+            [class.has-file]="failPicturePreviewUrl"
+            [class.invalid]="form.controls.failPicture.invalid && form.controls.failPicture.touched"
+          >
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
 
             <ng-container *ngIf="failPicturePreviewUrl as preview; else failPictureEmpty">
@@ -112,10 +118,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
                 <span class="image-change">Cambiar imagen</span>
               </span>
               <span class="upload-content">
-                <strong>Fail picture</strong>
-                <span class="file-name" *ngIf="failPictureFile">{{ failPictureFile.name }}</span>
-                <span *ngIf="!failPictureFile">Imagen actual del reporte</span>
-                <span>Haz clic en el recuadro para reemplazarla.</span>
+                <strong>Fail picture <b>*</b></strong>
               </span>
             </ng-container>
 
@@ -126,31 +129,37 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
                 </svg>
               </span>
               <span class="upload-content">
-                <strong>Fail picture</strong>
+                <strong>Fail picture <b>*</b></strong>
                 <span>Selecciona una imagen de la falla</span>
               </span>
             </ng-template>
           </label>
 
           <label class="field grid-repair-result">
-            <span>Repair result</span>
+            <span>Repair result <b>*</b></span>
             <textarea
               rows="4"
               formControlName="repairResult"
               placeholder="Resultado de la reparación"
+              [class.invalid]="form.controls.repairResult.invalid && form.controls.repairResult.touched"
             ></textarea>
           </label>
 
           <label class="field grid-actions">
-            <span>Actions</span>
+            <span>Actions <b>*</b></span>
             <textarea
               rows="4"
               formControlName="actions"
               placeholder="Detalla las acciones realizadas"
+              [class.invalid]="form.controls.actions.invalid && form.controls.actions.touched"
             ></textarea>
           </label>
 
-          <label class="upload-zone grid-evidence" [class.has-file]="evidencePicturePreviewUrl">
+          <label
+            class="upload-zone grid-evidence"
+            [class.has-file]="evidencePicturePreviewUrl"
+            [class.invalid]="form.controls.evidencePicture.invalid && form.controls.evidencePicture.touched"
+          >
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'evidencePicture')">
 
             <ng-container *ngIf="evidencePicturePreviewUrl as preview; else evidencePictureEmpty">
@@ -159,10 +168,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
                 <span class="image-change">Cambiar imagen</span>
               </span>
               <span class="upload-content">
-                <strong>Evidence</strong>
-                <span class="file-name" *ngIf="evidencePictureFile">{{ evidencePictureFile.name }}</span>
-                <span *ngIf="!evidencePictureFile">Evidencia actual del reporte</span>
-                <span>Haz clic en el recuadro para reemplazarla.</span>
+                <strong>Evidence <b>*</b></strong>
               </span>
             </ng-container>
 
@@ -173,7 +179,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
                 </svg>
               </span>
               <span class="upload-content">
-                <strong>Evidence</strong>
+                <strong>Evidence <b>*</b></strong>
                 <span>Selecciona la evidencia final de la reparación</span>
               </span>
             </ng-template>
@@ -182,13 +188,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       </div>
 
       <footer class="form-actions">
-        <div>
-          <strong>{{ repair ? 'Actualización de reporte' : 'Nuevo reporte de reparación' }}</strong>
-          <span>Los campos marcados con * son obligatorios.</span>
-        </div>
-
         <div class="action-buttons">
-          <button type="button" class="cancel-button" (click)="cancel.emit()">Cancelar</button>
           <button type="submit" class="save-button" [disabled]="form.invalid">
             <span aria-hidden="true">✓</span>
             {{ repair ? 'Guardar cambios' : 'Guardar reporte' }}
@@ -257,7 +257,8 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         min-height: 18px;
       }
 
-      .field b {
+      .field b,
+      .upload-content b {
         color: var(--danger);
         font-weight: 700;
       }
@@ -307,15 +308,10 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       .field input.invalid,
-      .field textarea.invalid {
-        border-color: rgba(180, 35, 58, 0.55);
+      .field textarea.invalid,
+      .upload-zone.invalid {
+        border-color: rgba(180, 35, 58, 0.65);
         background: #fffafb;
-      }
-
-      .field small {
-        color: var(--danger);
-        font-size: 0.68rem;
-        font-weight: 600;
       }
 
       .suffix-input {
@@ -449,77 +445,41 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         font-size: 0.84rem;
       }
 
-      .file-name {
-        overflow: hidden;
-        color: var(--success);
-        font-weight: 700;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
       .form-actions {
         position: sticky;
         bottom: 0;
         z-index: 10;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 20px;
+        justify-content: flex-end;
         padding: 18px 36px;
         border-top: 1px solid var(--border);
         background: rgba(248, 250, 252, 0.97);
         backdrop-filter: blur(14px);
       }
 
-      .form-actions > div:first-child {
-        display: grid;
-        gap: 3px;
-      }
-
-      .form-actions strong {
-        font-size: 0.78rem;
-      }
-
-      .form-actions span {
-        color: var(--muted);
-        font-size: 0.69rem;
-      }
-
       .action-buttons {
         display: flex;
         align-items: center;
-        gap: 10px;
+        justify-content: flex-end;
+        width: 100%;
       }
 
-      .action-buttons button {
+      .save-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         min-height: 40px;
         padding: 8px 15px;
+        border: 1px solid var(--primary);
         border-radius: 10px;
+        color: #fff;
         font-size: 0.78rem;
         font-weight: 750;
-        cursor: pointer;
-      }
-
-      .cancel-button {
-        border: 1px solid var(--border);
-        color: var(--text);
-        background: #fff;
-      }
-
-      .save-button {
-        border: 1px solid var(--primary);
-        color: #fff;
         background: var(--primary);
         box-shadow: 0 7px 16px rgba(22, 76, 140, 0.18);
-      }
-
-      .save-button span {
-        color: inherit;
-        font-size: 0.8rem;
+        cursor: pointer;
       }
 
       .save-button:disabled {
@@ -598,14 +558,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         }
 
         .form-actions {
-          align-items: stretch;
-          flex-direction: column;
           padding: 14px 18px;
-        }
-
-        .action-buttons {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
         }
       }
     `,
@@ -628,13 +581,13 @@ export class RepairFormComponent implements OnChanges {
     failureQty: [0, [Validators.required, Validators.min(0)]],
     buildQty: [0, [Validators.required, Validators.min(0)]],
     frPercentage: [0, [Validators.required, Validators.min(0)]],
-    returnStatus: [''],
-    majorPart: [''],
-    repairResult: [''],
-    failureFactor: [''],
-    failPicture: [''],
-    evidencePicture: [''],
-    actions: [''],
+    returnStatus: ['', Validators.required],
+    majorPart: ['', Validators.required],
+    repairResult: ['', Validators.required],
+    failureFactor: ['', Validators.required],
+    failPicture: ['', Validators.required],
+    evidencePicture: ['', Validators.required],
+    actions: ['', Validators.required],
   });
 
   get failPicturePreviewUrl(): string {
@@ -672,11 +625,18 @@ export class RepairFormComponent implements OnChanges {
   onFileSelected(event: Event, field: 'failPicture' | 'evidencePicture'): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
+    const existingValue = field === 'failPicture'
+      ? this.repair?.failPicture ?? ''
+      : this.repair?.evidencePicture ?? '';
 
     if (field === 'failPicture') {
       this.failPictureFile = file;
+      this.form.controls.failPicture.setValue(file?.name ?? existingValue);
+      this.form.controls.failPicture.markAsTouched();
     } else {
       this.evidencePictureFile = file;
+      this.form.controls.evidencePicture.setValue(file?.name ?? existingValue);
+      this.form.controls.evidencePicture.markAsTouched();
     }
 
     if (!file) {
@@ -705,12 +665,12 @@ export class RepairFormComponent implements OnChanges {
       failureQty: Number(formValue.failureQty),
       buildQty: Number(formValue.buildQty),
       frPercentage: Number(formValue.frPercentage),
-      returnStatus: formValue.returnStatus || null,
+      returnStatus: formValue.returnStatus,
       failPicture: this.repair?.failPicture ?? null,
-      majorPart: formValue.majorPart || null,
-      repairResult: formValue.repairResult || null,
-      failureFactor: formValue.failureFactor || null,
-      actions: formValue.actions || null,
+      majorPart: formValue.majorPart,
+      repairResult: formValue.repairResult,
+      failureFactor: formValue.failureFactor,
+      actions: formValue.actions,
       evidencePicture: this.repair?.evidencePicture ?? null,
       failPictureFile: this.failPictureFile,
       evidencePictureFile: this.evidencePictureFile,
