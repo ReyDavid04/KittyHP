@@ -43,13 +43,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         top: 0;
         z-index: 50;
         display: grid;
-        grid-template-columns: minmax(210px, auto) 1fr;
+        grid-template-columns: minmax(160px, auto) 1fr;
         align-items: center;
-        gap: 28px;
-        min-height: 72px;
-        padding: 0 28px;
+        gap: 18px;
+        min-height: 50px;
+        padding: 0 18px;
         border-bottom: 1px solid rgba(200, 211, 223, 0.9);
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.92);
         box-shadow: 0 1px 0 rgba(18, 35, 55, 0.02);
         backdrop-filter: blur(18px);
       }
@@ -57,7 +57,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: 11px;
+        gap: 8px;
         width: max-content;
         color: inherit;
         text-decoration: none;
@@ -66,47 +66,38 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       .brand-mark {
         display: grid;
         place-items: center;
-        width: 38px;
-        height: 38px;
-        border-radius: 12px;
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
         color: #fff;
-        font-size: 1.05rem;
+        font-size: 0.84rem;
         font-weight: 800;
         background: linear-gradient(145deg, var(--primary), var(--accent));
-        box-shadow: 0 8px 18px rgba(22, 76, 140, 0.22);
+        box-shadow: 0 5px 12px rgba(22, 76, 140, 0.18);
       }
 
       .brand-copy {
         display: grid;
-        gap: 1px;
       }
 
       .brand-copy strong {
-        font-size: 0.98rem;
+        font-size: 0.9rem;
         letter-spacing: -0.01em;
-      }
-
-      .brand-copy small {
-        color: var(--muted);
-        font-size: 0.68rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
       }
 
       .main-nav {
         display: flex;
         align-items: stretch;
-        height: 72px;
+        height: 50px;
       }
 
       .main-nav a {
         position: relative;
         display: inline-flex;
         align-items: center;
-        padding: 0 4px;
+        padding: 0 3px;
         color: var(--muted);
-        font-size: 0.88rem;
+        font-size: 0.8rem;
         font-weight: 650;
         text-decoration: none;
       }
@@ -116,8 +107,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         right: 0;
         bottom: 0;
         left: 0;
-        height: 3px;
-        border-radius: 3px 3px 0 0;
+        height: 2px;
+        border-radius: 2px 2px 0 0;
         background: var(--primary);
         content: '';
         opacity: 0;
@@ -138,14 +129,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         width: 100%;
         max-width: 1920px;
         margin: 0 auto;
-        padding: 26px 28px 40px;
+        padding: 12px 18px 28px;
       }
 
       @media (max-width: 760px) {
         .app-header {
           grid-template-columns: 1fr;
-          min-height: 64px;
-          padding: 0 16px;
+          min-height: 48px;
+          padding: 0 12px;
         }
 
         .main-nav {
@@ -153,7 +144,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         }
 
         .app-content {
-          padding: 18px 14px 28px;
+          padding: 10px 10px 22px;
         }
       }
     `,
