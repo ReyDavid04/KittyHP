@@ -4,7 +4,7 @@
     style="display: flex; flex-direction: column; min-height: calc(100dvh - 50px); background: #fff;"
   >
     <div class="workspace-header" style="justify-content: flex-start; flex: 0 0 auto;">
-      <div class="toolbar" style="justify-content: flex-start; width: 100%; max-width: none;">
+      <div class="toolbar" style="justify-content: flex-start; width: 100%; max-width: none; flex-wrap: wrap;">
         <label
           class="search-field"
           for="globalSearch"
@@ -30,6 +30,43 @@
             (click)="setSearch('')"
           >×</button>
         </label>
+
+        <div
+          class="date-range-filter"
+          style="display: flex; align-items: center; gap: 6px; flex: 0 0 auto; flex-wrap: wrap;"
+          aria-label="Filtro por rango de fechas"
+        >
+          <label style="display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.72rem;">
+            <span>Desde</span>
+            <input
+              type="date"
+              [value]="dateFrom"
+              [attr.max]="dateTo || null"
+              (change)="setDateFrom($any($event.target).value)"
+              style="height: 38px; padding: 0 9px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface-subtle);"
+            >
+          </label>
+
+          <label style="display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.72rem;">
+            <span>Hasta</span>
+            <input
+              type="date"
+              [value]="dateTo"
+              [attr.min]="dateFrom || null"
+              (change)="setDateTo($any($event.target).value)"
+              style="height: 38px; padding: 0 9px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface-subtle);"
+            >
+          </label>
+
+          <button
+            *ngIf="dateFrom || dateTo"
+            type="button"
+            aria-label="Limpiar rango de fechas"
+            title="Limpiar rango de fechas"
+            (click)="clearDateRange()"
+            style="display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); background: #fff; cursor: pointer;"
+          >×</button>
+        </div>
 
         <button *ngIf="activeFilterCount" type="button" class="secondary-button" (click)="clearFilters()">
           Limpiar filtros
