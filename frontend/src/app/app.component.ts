@@ -21,11 +21,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             Reportes
           </a>
         </nav>
-
-        <div class="environment">
-          <span class="status-dot" aria-hidden="true"></span>
-          <span>Sistema activo</span>
-        </div>
       </header>
 
       <main class="app-content">
@@ -49,7 +44,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         top: 0;
         z-index: 50;
         display: grid;
-        grid-template-columns: minmax(210px, auto) 1fr auto;
+        grid-template-columns: minmax(210px, auto) 1fr;
         align-items: center;
         gap: 28px;
         min-height: 72px;
@@ -140,27 +135,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         transform: scaleX(1);
       }
 
-      .environment {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 11px;
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        color: var(--muted);
-        font-size: 0.76rem;
-        font-weight: 600;
-        background: var(--surface-subtle);
-      }
-
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--success);
-        box-shadow: 0 0 0 4px rgba(20, 125, 100, 0.12);
-      }
-
       .app-content {
         width: 100%;
         max-width: 1920px;
@@ -170,21 +144,13 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
       @media (max-width: 760px) {
         .app-header {
-          grid-template-columns: 1fr auto;
+          grid-template-columns: 1fr;
           min-height: 64px;
           padding: 0 16px;
         }
 
         .main-nav {
           display: none;
-        }
-
-        .environment span:last-child {
-          display: none;
-        }
-
-        .environment {
-          padding: 8px;
         }
 
         .app-content {
