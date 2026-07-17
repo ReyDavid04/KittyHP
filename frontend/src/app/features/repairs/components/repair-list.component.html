@@ -1,0 +1,196 @@
+<section class="table-shell">
+  <div class="table-wrap" *ngIf="repairs?.length; else emptyState">
+    <table>
+      <thead>
+        <tr>
+          <th
+            *ngFor="let column of columns; trackBy: trackByColumn"
+            [ngClass]="column.className"
+            [class.sticky-left]="column.key === 'recordDate'"
+          >
+            <div class="th-cell">
+              <span class="column-title">
+                {{ column.label }}
+                <span *ngIf="sortDirection(column.key) as direction" class="sort-indicator" aria-hidden="true">
+                  {{ direction === 'asc' ? '↑' : '↓' }}
+                </span>
+              </span>
+
+              <button
+                *ngIf="column.filterable !== false"
+                type="button"
+                class="filter-button"
+                [class.active]="isFiltered(column.key) || isSorted(column.key)"
+                [attr.aria-label]="'Filtrar u ordenar por ' + column.label"
+                [attr.aria-expanded]="activeFilterKey === column.key"
+                (click)="toggleFilter(column.key, $event)"
+              >
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                  <path d="M5 7h14l-5.5 6.2v4.3l-3 1.5v-5.8L5 7Z"></path>
+                </svg>
+              </button>
+            </div>
+          </th>
+          <th class="actions-column sticky-right"><span>Opciones</span></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let repair of repairs; trackBy: trackByRepairId">
+          <td
+            *ngFor="let column of columns; trackBy: trackByColumn"
+            [class.sticky-left]="column.key === 'recordDate'"
+          >
+            <ng-container [ngSwitch]="column.key">
+              <span *ngSwitchCase="'recordDate'" class="date-value">{{ repair.recordDate }}</span>
+
+              <strong *ngSwitchCase="'topIssue'" class="issue-value" [title]="repair.topIssue">
+                {{ repair.topIssue }}
+              </strong>
+
+              <span *ngSwitchCase="'failureQty'" class="numeric-value">{{ repair.failureQty | number }}</span>
+              <span *ngSwitchCase="'buildQty'" class="numeric-value">{{ repair.buildQty | number }}</span>
+
+              <span *ngSwitchCase="'frPercentage'" class="rate-pill">
+                {{ repair.frPercentage | number: '1.2-2' }}%
+              </span>
+
+              <span *ngSwitchCase="'category'" class="category-pill">{{ repair.category }}</span>
+
+              <span *ngSwitchCase="'returnStatus'" class="status-pill" [class.empty]="!repair.returnStatus">
+                <span class="status-dot" aria-hidden="true"></span>
+                {{ repair.returnStatus || 'Sin retorno' }}
+              </span>
+
+              <ng-container *ngSwitchCase="'failPicture'">
+                <a *ngIf="repair.failPicture; else noImage" class="image-link" [href]="repair.failPicture" target="_blank" rel="noopener">
+                  <img [src]="repair.failPicture" alt="Evidencia de falla" class="thumbnail">
+                  <span>Ver</span>
+                </a>
+              </ng-container>
+
+              <ng-container *ngSwitchCase="'evidencePicture'">
+                <a *ngIf="repair.evidencePicture; else noImage" class="image-link" [href]="repair.evidencePicture" target="_blank" rel="noopener">
+                  <img [src]="repair.evidencePicture" alt="Evidencia de reparación" class="thumbnail">
+                  <span>Ver</span>
+                </a>
+              </ng-container>
+
+              <span *ngSwitchDefault class="truncate" [title]="valueForColumn(repair, column.key)">
+                {{ valueForColumn(repair, column.key) || '—' }}
+              </span>
+            </ng-container>
+
+            <ng-template #noImage><span class="empty-value">Sin imagen</span></ng-template>
+          </td>
+
+          <td class="sticky-right actions-cell">
+            <div class="row-actions">
+              <button type="button" class="icon-button edit" aria-label="Editar reporte" title="Editar" (click)="edit.emit(repair)">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16 4 20Zm10.8-13.6 2.8 2.8"></path></svg>
+              </button>
+              <button type="button" class="icon-button delete" aria-label="Eliminar reporte" title="Eliminar" (click)="remove.emit(repair.id)">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"></path></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #emptyState>
+    <div class="empty-state">
+      <div class="empty-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false"><path d="M7 3h10l3 3v15H4V3h3Zm2 6h6m-6 4h6m-6 4h4"></path></svg>
+      </div>
+      <h3>No hay reportes para mostrar</h3>
+      <p>Crea un reporte o ajusta la búsqueda y los filtros activos.</p>
+    </div>
+  </ng-template>
+
+  <div *ngIf="activeFilterKey" class="filter-backdrop" (click)="closeFilter()"></div>
+
+  <aside
+    class="filter-popover"
+    *ngIf="activeFilterKey as key"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Filtrar u ordenar ' + headerLabel(key)"
+    [style.top.px]="filterPosition.top"
+    [style.left.px]="filterPosition.left"
+  >
+    <header class="filter-header">
+      <div>
+        <span>Filtro de columna</span>
+        <strong>{{ headerLabel(key) }}</strong>
+      </div>
+      <button type="button" class="close-filter" aria-label="Cerrar filtro" (click)="closeFilter()">×</button>
+    </header>
+
+    <div class="sort-menu">
+      <button type="button" [class.active]="sortDirection(key) === 'asc'" (click)="applySort(key, 'asc')">
+        <span class="sort-symbol" aria-hidden="true">↑</span>
+        <span>{{ ascendingLabel(key) }}</span>
+      </button>
+      <button type="button" [class.active]="sortDirection(key) === 'desc'" (click)="applySort(key, 'desc')">
+        <span class="sort-symbol" aria-hidden="true">↓</span>
+        <span>{{ descendingLabel(key) }}</span>
+      </button>
+      <button *ngIf="isSorted(key)" type="button" class="clear-sort" (click)="clearSort()">
+        Quitar ordenamiento
+      </button>
+    </div>
+
+    <button *ngIf="isFiltered(key)" type="button" class="clear-column-filter" (click)="clearColumnFilter(key)">
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19"></path></svg>
+      Borrar filtro de “{{ headerLabel(key) }}”
+    </button>
+
+    <label class="filter-search">
+      <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path></svg>
+      <input
+        type="search"
+        [value]="filterSearch"
+        (input)="filterSearch = $any($event.target).value"
+        [placeholder]="'Buscar en ' + headerLabel(key)"
+      >
+      <button *ngIf="filterSearch" type="button" aria-label="Limpiar búsqueda" (click)="filterSearch = ''">×</button>
+    </label>
+
+    <div class="select-all-row">
+      <label>
+        <input
+          type="checkbox"
+          [checked]="allVisibleSelected(key)"
+          [indeterminate]="someVisibleSelected(key)"
+          (change)="toggleAllVisible(key)"
+        >
+        <span>Seleccionar todo</span>
+      </label>
+      <span class="selection-count">{{ draftValues.length }} de {{ availableFilterValues(key).length }}</span>
+    </div>
+
+    <div class="filter-options">
+      <label
+        *ngFor="let option of visibleFilterValues(key); trackBy: trackByOption"
+        [class.selected]="isChecked(option)"
+      >
+        <input type="checkbox" [checked]="isChecked(option)" (change)="toggleOption(option)">
+        <span>{{ displayOption(option) }}</span>
+      </label>
+
+      <div *ngIf="!visibleFilterValues(key).length" class="no-options">
+        No se encontraron valores con esa búsqueda.
+      </div>
+    </div>
+
+    <footer class="filter-footer">
+      <span *ngIf="!draftValues.length" class="selection-warning">Selecciona al menos un valor</span>
+      <div class="filter-actions">
+        <button type="button" class="cancel-filter" (click)="closeFilter()">Cancelar</button>
+        <button type="button" class="apply-filter" [disabled]="!draftValues.length" (click)="applyFilter()">Aceptar</button>
+      </div>
+    </footer>
+  </aside>
+</section>
