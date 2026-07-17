@@ -31,44 +31,6 @@ import {
         </button>
       </header>
 
-      <div class="stats-grid" aria-label="Resumen de reportes">
-        <article class="stat-card">
-          <div class="stat-icon reports" aria-hidden="true">R</div>
-          <div>
-            <span class="stat-label">Reportes registrados</span>
-            <strong>{{ repairs.length | number }}</strong>
-            <small>Historial disponible</small>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-icon failures" aria-hidden="true">F</div>
-          <div>
-            <span class="stat-label">Unidades con falla</span>
-            <strong>{{ totalFailures | number }}</strong>
-            <small>Failure quantity acumulada</small>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-icon builds" aria-hidden="true">B</div>
-          <div>
-            <span class="stat-label">Build quantity</span>
-            <strong>{{ totalBuild | number }}</strong>
-            <small>Volumen registrado</small>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <div class="stat-icon rate" aria-hidden="true">%</div>
-          <div>
-            <span class="stat-label">F/R promedio</span>
-            <strong>{{ averageFailureRate | number: '1.2-2' }}%</strong>
-            <small>Promedio de los reportes</small>
-          </div>
-        </article>
-      </div>
-
       <section class="workspace">
         <div class="workspace-header">
           <div class="workspace-title">
@@ -233,83 +195,6 @@ import {
         background: rgba(255, 255, 255, 0.14);
       }
 
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .stat-card {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        min-width: 0;
-        padding: 17px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.92);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .stat-icon {
-        display: grid;
-        flex: 0 0 auto;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 13px;
-        font-size: 0.78rem;
-        font-weight: 800;
-      }
-
-      .stat-icon.reports {
-        color: var(--primary);
-        background: var(--primary-soft);
-      }
-
-      .stat-icon.failures {
-        color: var(--danger);
-        background: var(--danger-soft);
-      }
-
-      .stat-icon.builds {
-        color: var(--success);
-        background: var(--success-soft);
-      }
-
-      .stat-icon.rate {
-        color: var(--warning);
-        background: var(--warning-soft);
-      }
-
-      .stat-card > div:last-child {
-        display: grid;
-        min-width: 0;
-      }
-
-      .stat-label {
-        overflow: hidden;
-        color: var(--muted);
-        font-size: 0.75rem;
-        font-weight: 650;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .stat-card strong {
-        margin: 2px 0 1px;
-        font-size: 1.45rem;
-        letter-spacing: -0.04em;
-      }
-
-      .stat-card small {
-        overflow: hidden;
-        color: var(--muted);
-        font-size: 0.69rem;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
       .workspace {
         overflow: hidden;
         border: 1px solid var(--border);
@@ -379,7 +264,7 @@ import {
       .search-field input {
         width: 100%;
         height: 42px;
-        padding: 0 40px 0 40px;
+        padding: 0 40px;
         border: 1px solid var(--border);
         border-radius: 12px;
         color: var(--text);
@@ -516,10 +401,6 @@ import {
       }
 
       @media (max-width: 1120px) {
-        .stats-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
         .workspace-header {
           align-items: stretch;
           flex-direction: column;
@@ -539,10 +420,6 @@ import {
 
         .create-button {
           width: 100%;
-        }
-
-        .stats-grid {
-          grid-template-columns: 1fr;
         }
 
         .workspace-header {
@@ -601,23 +478,6 @@ export class RepairsPageComponent {
 
   constructor() {
     this.loadRepairs();
-  }
-
-  get totalFailures(): number {
-    return this.repairs.reduce((total, repair) => total + Number(repair.failureQty || 0), 0);
-  }
-
-  get totalBuild(): number {
-    return this.repairs.reduce((total, repair) => total + Number(repair.buildQty || 0), 0);
-  }
-
-  get averageFailureRate(): number {
-    if (!this.repairs.length) {
-      return 0;
-    }
-
-    const total = this.repairs.reduce((sum, repair) => sum + Number(repair.frPercentage || 0), 0);
-    return total / this.repairs.length;
   }
 
   get activeFilterCount(): number {
