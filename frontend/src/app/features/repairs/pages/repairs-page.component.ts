@@ -24,6 +24,8 @@ export class RepairsPageComponent {
 
   repairs: RepairReport[] = [];
   searchTerm = '';
+  dateFrom = '';
+  dateTo = '';
   currentPage = 1;
   pageSize = 8;
   sort: RepairSort = { key: null, direction: null };
@@ -37,7 +39,9 @@ export class RepairsPageComponent {
   }
 
   get activeFilterCount(): number {
-    return Object.values(this.filters).filter((values) => values.length > 0).length;
+    const columnFilterCount = Object.values(this.filters).filter((values) => values.length > 0).length;
+    const dateFilterCount = this.dateFrom || this.dateTo ? 1 : 0;
+    return columnFilterCount + dateFilterCount;
   }
 
   get filteredRepairs(): RepairReport[] {
@@ -61,6 +65,16 @@ export class RepairsPageComponent {
         .toLowerCase();
 
       if (search && !searchableValues.includes(search)) {
+        return false;
+      }
+
+      const recordDate = this.normalizeRecordDate(repair.recordDate);
+
+      if (this.dateFrom && (!recordDate || recordDate < this.dateFrom)) {
+        return false;
+      }
+
+      if (this.dateTo && (!recordDate || recordDate > this.dateTo)) {
         return false;
       }
 
@@ -138,6 +152,32 @@ export class RepairsPageComponent {
     this.currentPage = 1;
   }
 
+  setDateFrom(value: string): void {
+    this.dateFrom = value;
+
+    if (this.dateTo && value && this.dateTo < value) {
+      this.dateTo = value;
+    }
+
+    this.currentPage = 1;
+  }
+
+  setDateTo(value: string): void {
+    this.dateTo = value;
+
+    if (this.dateFrom && value && this.dateFrom > value) {
+      this.dateFrom = value;
+    }
+
+    this.currentPage = 1;
+  }
+
+  clearDateRange(): void {
+    this.dateFrom = '';
+    this.dateTo = '';
+    this.currentPage = 1;
+  }
+
   updateFilter(key: RepairColumnKey, values: string[]): void {
     this.filters = { ...this.filters, [key]: values };
     this.currentPage = 1;
@@ -150,7 +190,7 @@ export class RepairsPageComponent {
 
   clearFilters(): void {
     this.filters = this.createEmptyFilters();
-    this.currentPage = 1;
+    this.clearDateRange();
   }
 
   goToPage(page: number): void {
@@ -216,6 +256,23 @@ export class RepairsPageComponent {
 
   private isNumericKey(key: RepairColumnKey): boolean {
     return key === 'failureQty' || key === 'buildQty' || key === 'frPercentage';
+  }
+
+  private normalizeRecordDate(value: unknown): string {
+    const raw = String(value ?? '').trim();
+    const isoDate = raw.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+
+    if (isoDate) {
+      return isoDate;
+    }
+
+    const timestamp = Date.parse(raw);
+
+    if (Number.isNaN(timestamp)) {
+      return '';
+    }
+
+    return new Date(timestamp).toISOString().slice(0, 10);
   }
 
   private createEmptyFilters(): RepairColumnFilters {
