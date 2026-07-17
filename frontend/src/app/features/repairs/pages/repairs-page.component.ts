@@ -9,471 +9,14 @@ import {
   RepairColumnKey,
   RepairColumnValues,
   RepairListComponent,
+  RepairSort,
 } from '../components/repair-list.component';
 
 @Component({
   standalone: true,
   imports: [CommonModule, RepairListComponent],
-  template: `
-    <section class="page">
-      <header class="page-heading">
-        <div class="heading-copy">
-          <p class="overline">Manufacturing quality</p>
-          <h1>Reportes de reparación</h1>
-          <p class="page-description">
-            Consulta fallas, resultados de reparación y evidencia en un solo espacio.
-          </p>
-        </div>
-
-        <button type="button" class="create-button" (click)="openNewRepair()">
-          <span class="button-icon" aria-hidden="true">+</span>
-          Crear reporte
-        </button>
-      </header>
-
-      <section class="workspace">
-        <div class="workspace-header">
-          <div class="toolbar">
-            <label class="search-field" for="globalSearch">
-              <span class="search-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false">
-                  <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
-                </svg>
-              </span>
-              <input
-                id="globalSearch"
-                type="search"
-                [value]="searchTerm"
-                (input)="setSearch($any($event.target).value)"
-                placeholder="Buscar issue, categoría, parte..."
-              >
-              <button
-                *ngIf="searchTerm"
-                type="button"
-                class="clear-search"
-                aria-label="Limpiar búsqueda"
-                (click)="setSearch('')"
-              >×</button>
-            </label>
-
-            <button *ngIf="activeFilterCount" type="button" class="secondary-button" (click)="clearFilters()">
-              Limpiar filtros
-              <span>{{ activeFilterCount }}</span>
-            </button>
-          </div>
-        </div>
-
-        <app-repair-list
-          [repairs]="pagedRepairs"
-          [filters]="filters"
-          [availableValues]="availableValues"
-          (filterChange)="updateFilter($event.key, $event.values)"
-          (edit)="openEditRepair($event)"
-          (remove)="removeRepair($event)"
-        ></app-repair-list>
-
-        <footer class="pagination" *ngIf="filteredRepairs.length">
-          <div class="pagination-meta">
-            <div class="page-size">
-              <span>Filas por página</span>
-              <select [value]="pageSize" (change)="setPageSize($any($event.target).value)">
-                <option [value]="8">8</option>
-                <option [value]="12">12</option>
-                <option [value]="20">20</option>
-                <option [value]="50">50</option>
-              </select>
-            </div>
-
-            <span class="page-info">
-              Página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong>
-            </span>
-          </div>
-
-          <div class="pager-wrap">
-            <div class="pager" aria-label="Paginación">
-              <button type="button" aria-label="Primera página" [disabled]="currentPage === 1" (click)="goToPage(1)">«</button>
-              <button type="button" aria-label="Página anterior" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
-              <button
-                *ngFor="let pageNumber of pageButtons"
-                type="button"
-                class="page-button"
-                [class.active]="pageNumber === currentPage"
-                [attr.aria-current]="pageNumber === currentPage ? 'page' : null"
-                (click)="goToPage(pageNumber)"
-              >{{ pageNumber }}</button>
-              <button type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
-              <button type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
-            </div>
-          </div>
-
-          <div class="pagination-total">
-            <span class="total-records">
-              Total: <strong>{{ repairs.length | number }}</strong> registros
-            </span>
-          </div>
-        </footer>
-      </section>
-    </section>
-  `,
-  styles: [
-    `
-      .page {
-        display: grid;
-        gap: 14px;
-      }
-
-      .page-heading {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        min-height: 76px;
-      }
-
-      .heading-copy {
-        min-width: 0;
-      }
-
-      .overline {
-        margin: 0 0 3px;
-        color: var(--primary);
-        font-size: 0.62rem;
-        font-weight: 750;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      h1,
-      p {
-        margin-top: 0;
-      }
-
-      h1 {
-        margin-bottom: 3px;
-        font-size: clamp(1.3rem, 2vw, 1.7rem);
-        line-height: 1.08;
-        letter-spacing: -0.03em;
-      }
-
-      .page-description {
-        max-width: 660px;
-        margin-bottom: 0;
-        color: var(--muted);
-        font-size: 0.82rem;
-        line-height: 1.35;
-      }
-
-      .create-button,
-      .secondary-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        min-height: 36px;
-        padding: 7px 12px;
-        border-radius: 10px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
-      }
-
-      .create-button {
-        flex: 0 0 auto;
-        border: 1px solid var(--primary);
-        color: #fff;
-        background: var(--primary);
-        box-shadow: 0 6px 14px rgba(22, 76, 140, 0.18);
-      }
-
-      .create-button:hover {
-        background: var(--primary-strong);
-        box-shadow: 0 9px 20px rgba(22, 76, 140, 0.22);
-        transform: translateY(-1px);
-      }
-
-      .button-icon {
-        display: grid;
-        place-items: center;
-        width: 18px;
-        height: 18px;
-        border-radius: 5px;
-        font-size: 1rem;
-        font-weight: 400;
-        background: rgba(255, 255, 255, 0.14);
-      }
-
-      .workspace {
-        overflow: hidden;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.94);
-        box-shadow: var(--shadow-md);
-      }
-
-      .workspace-header {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding: 14px 20px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .toolbar {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 10px;
-        width: min(100%, 480px);
-      }
-
-      .search-field {
-        position: relative;
-        display: flex;
-        align-items: center;
-        flex: 1 1 320px;
-        min-width: 220px;
-      }
-
-      .search-field input {
-        width: 100%;
-        height: 42px;
-        padding: 0 40px;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        color: var(--text);
-        background: var(--surface-subtle);
-        transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
-      }
-
-      .search-field input::placeholder {
-        color: #8b97a8;
-      }
-
-      .search-field input:focus {
-        border-color: rgba(47, 126, 199, 0.7);
-        background: #fff;
-      }
-
-      .search-icon {
-        position: absolute;
-        left: 13px;
-        z-index: 1;
-        display: grid;
-        place-items: center;
-        width: 18px;
-        color: var(--muted);
-        pointer-events: none;
-      }
-
-      .search-icon svg {
-        width: 18px;
-        fill: none;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-width: 1.8;
-      }
-
-      .clear-search {
-        position: absolute;
-        right: 8px;
-        width: 27px;
-        height: 27px;
-        border: 0;
-        border-radius: 8px;
-        color: var(--muted);
-        font-size: 1rem;
-        background: transparent;
-        cursor: pointer;
-      }
-
-      .secondary-button {
-        border: 1px solid var(--border);
-        color: var(--text);
-        background: #fff;
-        white-space: nowrap;
-      }
-
-      .secondary-button span {
-        display: grid;
-        place-items: center;
-        min-width: 20px;
-        height: 20px;
-        padding: 0 5px;
-        border-radius: 999px;
-        color: var(--primary);
-        font-size: 0.68rem;
-        background: var(--primary-soft);
-      }
-
-      .pagination {
-        display: grid;
-        grid-template-columns: minmax(250px, 1fr) auto minmax(250px, 1fr);
-        align-items: center;
-        gap: 18px;
-        padding: 14px 18px;
-        border-top: 1px solid var(--border);
-        color: var(--muted);
-        background: var(--surface-subtle);
-      }
-
-      .pagination-meta {
-        display: flex;
-        align-items: center;
-        justify-self: start;
-        gap: 18px;
-        min-width: 0;
-      }
-
-      .page-size,
-      .pager {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-      }
-
-      .page-size,
-      .page-info,
-      .total-records {
-        font-size: 0.76rem;
-      }
-
-      .page-size,
-      .page-info,
-      .total-records {
-        white-space: nowrap;
-      }
-
-      .page-size select {
-        height: 34px;
-        padding: 0 28px 0 10px;
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        color: var(--text);
-        background: #fff;
-      }
-
-      .pager-wrap {
-        display: flex;
-        justify-content: center;
-        justify-self: center;
-      }
-
-      .pager {
-        justify-content: center;
-      }
-
-      .pager button {
-        display: grid;
-        place-items: center;
-        min-width: 34px;
-        height: 34px;
-        padding: 0 9px;
-        border: 1px solid var(--border);
-        border-radius: 9px;
-        color: var(--muted);
-        background: #fff;
-        cursor: pointer;
-      }
-
-      .pager button:hover:not(:disabled) {
-        border-color: var(--border-strong);
-        color: var(--primary);
-      }
-
-      .pager button.active {
-        border-color: var(--primary);
-        color: #fff;
-        background: var(--primary);
-      }
-
-      .pager button:disabled {
-        opacity: 0.42;
-        cursor: not-allowed;
-      }
-
-      .pagination-total {
-        display: flex;
-        justify-content: flex-end;
-        justify-self: end;
-      }
-
-      .total-records {
-        color: var(--text);
-      }
-
-      @media (max-width: 1120px) {
-        .workspace-header {
-          align-items: stretch;
-        }
-
-        .toolbar {
-          width: 100%;
-          max-width: none;
-        }
-
-        .pagination {
-          grid-template-columns: 1fr auto;
-        }
-
-        .pager-wrap {
-          grid-column: 1 / -1;
-          grid-row: 2;
-        }
-      }
-
-      @media (max-width: 720px) {
-        .page-heading {
-          align-items: stretch;
-          flex-direction: column;
-          gap: 10px;
-          min-height: 0;
-        }
-
-        .create-button {
-          width: 100%;
-        }
-
-        .workspace-header {
-          padding: 12px 15px;
-        }
-
-        .toolbar {
-          align-items: stretch;
-          flex-direction: column;
-        }
-
-        .search-field {
-          flex-basis: auto;
-          min-width: 0;
-        }
-
-        .pagination {
-          grid-template-columns: 1fr;
-          gap: 12px;
-          justify-items: center;
-        }
-
-        .pagination-meta {
-          flex-direction: column;
-          justify-self: center;
-          gap: 10px;
-        }
-
-        .pager-wrap {
-          grid-column: auto;
-          grid-row: auto;
-          justify-self: center;
-          max-width: 100%;
-          overflow-x: auto;
-        }
-
-        .pagination-total {
-          justify-self: center;
-        }
-      }
-    `,
-  ],
+  templateUrl: './repairs-page.component.html',
+  styleUrl: './repairs-page.component.css',
 })
 export class RepairsPageComponent {
   readonly repairReportsApi = inject(RepairReportsApiService);
@@ -483,24 +26,11 @@ export class RepairsPageComponent {
   searchTerm = '';
   currentPage = 1;
   pageSize = 8;
+  sort: RepairSort = { key: null, direction: null };
 
   filters: RepairColumnFilters = this.createEmptyFilters();
 
-  availableValues: RepairColumnValues = {
-    recordDate: [],
-    topIssue: [],
-    failureQty: [],
-    buildQty: [],
-    frPercentage: [],
-    category: [],
-    returnStatus: [],
-    failPicture: [],
-    majorPart: [],
-    repairResult: [],
-    failureFactor: [],
-    actions: [],
-    evidencePicture: [],
-  };
+  availableValues: RepairColumnValues = this.createEmptyFilters();
 
   constructor() {
     this.loadRepairs();
@@ -513,7 +43,7 @@ export class RepairsPageComponent {
   get filteredRepairs(): RepairReport[] {
     const search = this.searchTerm.trim().toLowerCase();
 
-    return this.repairs.filter((repair) => {
+    const filtered = this.repairs.filter((repair) => {
       const searchableValues = [
         repair.recordDate,
         repair.topIssue,
@@ -522,12 +52,10 @@ export class RepairsPageComponent {
         String(repair.frPercentage),
         repair.category,
         repair.returnStatus ?? '',
-        repair.failPicture ?? '',
         repair.majorPart ?? '',
         repair.repairResult ?? '',
         repair.failureFactor ?? '',
         repair.actions ?? '',
-        repair.evidencePicture ?? '',
       ]
         .join(' ')
         .toLowerCase();
@@ -545,6 +73,8 @@ export class RepairsPageComponent {
         return values.includes(repairValue);
       });
     });
+
+    return this.sortRepairs(filtered);
   }
 
   get totalPages(): number {
@@ -558,6 +88,7 @@ export class RepairsPageComponent {
 
   get pageButtons(): number[] {
     const total = this.totalPages;
+
     if (total <= 7) {
       return Array.from({ length: total }, (_, index) => index + 1);
     }
@@ -612,6 +143,11 @@ export class RepairsPageComponent {
     this.currentPage = 1;
   }
 
+  updateSort(sort: RepairSort): void {
+    this.sort = sort;
+    this.currentPage = 1;
+  }
+
   clearFilters(): void {
     this.filters = this.createEmptyFilters();
     this.currentPage = 1;
@@ -624,6 +160,62 @@ export class RepairsPageComponent {
   setPageSize(value: string): void {
     this.pageSize = Number(value);
     this.currentPage = 1;
+  }
+
+  private sortRepairs(repairs: RepairReport[]): RepairReport[] {
+    const { key, direction } = this.sort;
+
+    if (!key || !direction) {
+      return repairs;
+    }
+
+    const multiplier = direction === 'asc' ? 1 : -1;
+
+    return repairs
+      .map((repair, index) => ({ repair, index }))
+      .sort((first, second) => {
+        const comparison = this.compareRepairValues(first.repair, second.repair, key, multiplier);
+        return comparison === 0 ? first.index - second.index : comparison;
+      })
+      .map(({ repair }) => repair);
+  }
+
+  private compareRepairValues(
+    first: RepairReport,
+    second: RepairReport,
+    key: RepairColumnKey,
+    multiplier: number,
+  ): number {
+    const firstRaw = (first as unknown as Record<string, unknown>)[key];
+    const secondRaw = (second as unknown as Record<string, unknown>)[key];
+    const firstBlank = firstRaw === null || firstRaw === undefined || String(firstRaw).trim() === '';
+    const secondBlank = secondRaw === null || secondRaw === undefined || String(secondRaw).trim() === '';
+
+    if (firstBlank && secondBlank) return 0;
+    if (firstBlank) return 1;
+    if (secondBlank) return -1;
+
+    if (this.isNumericKey(key)) {
+      return (Number(firstRaw) - Number(secondRaw)) * multiplier;
+    }
+
+    if (key === 'recordDate') {
+      const firstDate = Date.parse(String(firstRaw));
+      const secondDate = Date.parse(String(secondRaw));
+
+      if (!Number.isNaN(firstDate) && !Number.isNaN(secondDate)) {
+        return (firstDate - secondDate) * multiplier;
+      }
+    }
+
+    return String(firstRaw).localeCompare(String(secondRaw), undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    }) * multiplier;
+  }
+
+  private isNumericKey(key: RepairColumnKey): boolean {
+    return key === 'failureQty' || key === 'buildQty' || key === 'frPercentage';
   }
 
   private createEmptyFilters(): RepairColumnFilters {
@@ -670,12 +262,12 @@ export class RepairsPageComponent {
       frPercentage: unique('frPercentage'),
       category: unique('category'),
       returnStatus: unique('returnStatus'),
-      failPicture: unique('failPicture'),
+      failPicture: [],
       majorPart: unique('majorPart'),
       repairResult: unique('repairResult'),
       failureFactor: unique('failureFactor'),
       actions: unique('actions'),
-      evidencePicture: unique('evidencePicture'),
+      evidencePicture: [],
     };
   }
 }
