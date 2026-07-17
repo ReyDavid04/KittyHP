@@ -31,14 +31,19 @@
           >×</button>
         </label>
 
-        <button type="button" class="create-button" (click)="openNewRepair()">
-          <span class="button-icon" aria-hidden="true">+</span>
-          Crear reporte
-        </button>
-
         <button *ngIf="activeFilterCount" type="button" class="secondary-button" (click)="clearFilters()">
           Limpiar filtros
           <span>{{ activeFilterCount }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="create-button"
+          style="margin-left: auto;"
+          (click)="openNewRepair()"
+        >
+          <span class="button-icon" aria-hidden="true">+</span>
+          Crear reporte
         </button>
       </div>
     </div>
