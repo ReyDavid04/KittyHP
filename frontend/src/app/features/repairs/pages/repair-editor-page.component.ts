@@ -17,23 +17,7 @@ import { RepairFormComponent } from '../components/repair-form.component';
       </nav>
 
       <header class="page-heading">
-        <div class="heading-copy">
-          <button type="button" class="back-button" aria-label="Volver a reportes" (click)="goBack()">
-            <svg viewBox="0 0 24 24" focusable="false"><path d="m15 18-6-6 6-6"></path></svg>
-          </button>
-          <div>
-            <p class="overline">Repair management</p>
-            <h1>{{ repairId ? 'Editar reporte de reparación' : 'Crear reporte de reparación' }}</h1>
-            <p class="description">
-              {{ repairId ? 'Actualiza la información, diagnóstico y evidencia del registro.' : 'Registra la falla, el análisis y la evidencia del proceso de reparación.' }}
-            </p>
-          </div>
-        </div>
-
-        <span class="mode-badge" [class.editing]="repairId">
-          <span aria-hidden="true"></span>
-          {{ repairId ? 'Modo edición' : 'Nuevo registro' }}
-        </span>
+        <h1>{{ repairId ? 'Editar reporte de reparación' : 'Crear reporte de reparación' }}</h1>
       </header>
 
       <div class="loading-card" *ngIf="isLoading" aria-live="polite">
@@ -55,7 +39,7 @@ import { RepairFormComponent } from '../components/repair-form.component';
     `
       .editor-page {
         display: grid;
-        gap: 20px;
+        gap: 16px;
         max-width: 1540px;
         margin: 0 auto;
       }
@@ -83,98 +67,15 @@ import { RepairFormComponent } from '../components/repair-form.component';
       }
 
       .page-heading {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 24px;
-      }
-
-      .heading-copy {
-        display: flex;
-        align-items: flex-start;
-        gap: 14px;
-      }
-
-      .back-button {
-        display: grid;
-        flex: 0 0 auto;
-        place-items: center;
-        width: 42px;
-        height: 42px;
-        margin-top: 2px;
-        padding: 0;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        color: var(--primary);
-        background: #fff;
-        box-shadow: var(--shadow-sm);
-        cursor: pointer;
-      }
-
-      .back-button:hover {
-        border-color: rgba(47, 126, 199, 0.35);
-        background: var(--primary-soft);
-      }
-
-      .back-button svg {
-        width: 19px;
-        fill: none;
-        stroke: currentColor;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-        stroke-width: 1.8;
-      }
-
-      .overline {
-        margin: 0 0 6px;
-        color: var(--primary);
-        font-size: 0.69rem;
-        font-weight: 750;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
+        display: block;
       }
 
       h1 {
-        margin: 0 0 7px;
-        font-size: clamp(1.45rem, 2.4vw, 2rem);
-        line-height: 1.2;
-        letter-spacing: -0.035em;
-      }
-
-      .description {
-        max-width: 720px;
         margin: 0;
-        color: var(--muted);
-        font-size: 0.86rem;
-        line-height: 1.5;
-      }
-
-      .mode-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        min-height: 34px;
-        padding: 0 12px;
-        border: 1px solid rgba(20, 125, 100, 0.18);
-        border-radius: 999px;
-        color: var(--success);
-        font-size: 0.72rem;
-        font-weight: 750;
-        background: var(--success-soft);
-        white-space: nowrap;
-      }
-
-      .mode-badge.editing {
-        border-color: rgba(47, 126, 199, 0.2);
-        color: var(--primary);
-        background: var(--primary-soft);
-      }
-
-      .mode-badge > span {
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: currentColor;
+        font-size: clamp(1.45rem, 2.4vw, 2rem);
+        font-weight: 800;
+        line-height: 1.15;
+        letter-spacing: -0.035em;
       }
 
       .loading-card {
@@ -215,17 +116,6 @@ import { RepairFormComponent } from '../components/repair-form.component';
       @keyframes shimmer {
         to {
           background-position: -200% 0;
-        }
-      }
-
-      @media (max-width: 720px) {
-        .page-heading {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .mode-badge {
-          margin-left: 56px;
         }
       }
     `,
