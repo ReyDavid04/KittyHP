@@ -33,14 +33,6 @@ import {
 
       <section class="workspace">
         <div class="workspace-header">
-          <div class="workspace-title">
-            <div>
-              <h2>Historial de reparaciones</h2>
-              <p>{{ filteredRepairs.length | number }} de {{ repairs.length | number }} registros visibles</p>
-            </div>
-            <span class="count-badge">{{ filteredRepairs.length | number }}</span>
-          </div>
-
           <div class="toolbar">
             <label class="search-field" for="globalSearch">
               <span class="search-icon" aria-hidden="true">
@@ -109,6 +101,10 @@ import {
             <button type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
             <button type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
           </div>
+
+          <span class="total-records">
+            Total: <strong>{{ repairs.length | number }}</strong> registros
+          </span>
         </footer>
       </section>
     </section>
@@ -142,7 +138,6 @@ import {
       }
 
       h1,
-      h2,
       p {
         margin-top: 0;
       }
@@ -213,43 +208,9 @@ import {
       .workspace-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        padding: 18px 20px;
+        justify-content: flex-end;
+        padding: 14px 20px;
         border-bottom: 1px solid var(--border);
-      }
-
-      .workspace-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-      }
-
-      .workspace-title h2 {
-        margin-bottom: 3px;
-        font-size: 1rem;
-        letter-spacing: -0.015em;
-      }
-
-      .workspace-title p {
-        margin-bottom: 0;
-        color: var(--muted);
-        font-size: 0.76rem;
-      }
-
-      .count-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 30px;
-        height: 25px;
-        padding: 0 8px;
-        border-radius: 999px;
-        color: var(--primary);
-        font-size: 0.72rem;
-        font-weight: 750;
-        background: var(--primary-soft);
       }
 
       .toolbar {
@@ -257,7 +218,7 @@ import {
         align-items: center;
         justify-content: flex-end;
         gap: 10px;
-        min-width: min(100%, 480px);
+        width: min(100%, 480px);
       }
 
       .search-field {
@@ -340,8 +301,7 @@ import {
       }
 
       .pagination {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        display: flex;
         align-items: center;
         gap: 16px;
         padding: 14px 18px;
@@ -357,7 +317,9 @@ import {
         gap: 7px;
       }
 
-      .page-size {
+      .page-size,
+      .page-info,
+      .total-records {
         font-size: 0.76rem;
       }
 
@@ -370,12 +332,9 @@ import {
         background: #fff;
       }
 
-      .page-info {
-        font-size: 0.76rem;
-      }
-
       .pager {
         justify-content: flex-end;
+        margin-left: auto;
       }
 
       .pager button {
@@ -407,15 +366,26 @@ import {
         cursor: not-allowed;
       }
 
+      .total-records {
+        flex: 0 0 auto;
+        padding-left: 14px;
+        border-left: 1px solid var(--border);
+        color: var(--text);
+        white-space: nowrap;
+      }
+
       @media (max-width: 1120px) {
         .workspace-header {
           align-items: stretch;
-          flex-direction: column;
         }
 
         .toolbar {
-          justify-content: stretch;
+          width: 100%;
           max-width: none;
+        }
+
+        .pagination {
+          flex-wrap: wrap;
         }
       }
 
@@ -432,7 +402,7 @@ import {
         }
 
         .workspace-header {
-          padding: 15px;
+          padding: 12px 15px;
         }
 
         .toolbar {
@@ -446,13 +416,18 @@ import {
         }
 
         .pagination {
-          grid-template-columns: 1fr;
-          justify-items: center;
+          justify-content: center;
         }
 
-        .page-size,
         .pager {
           justify-content: center;
+          width: 100%;
+          margin-left: 0;
+        }
+
+        .total-records {
+          padding-left: 0;
+          border-left: 0;
         }
       }
     `,
