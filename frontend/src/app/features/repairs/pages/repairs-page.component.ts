@@ -17,7 +17,7 @@ import {
   template: `
     <section class="page">
       <header class="page-heading">
-        <div>
+        <div class="heading-copy">
           <p class="overline">Manufacturing quality</p>
           <h1>Reportes de reparación</h1>
           <p class="page-description">
@@ -117,22 +117,27 @@ import {
     `
       .page {
         display: grid;
-        gap: 22px;
+        gap: 14px;
       }
 
       .page-heading {
         display: flex;
-        align-items: flex-end;
+        align-items: center;
         justify-content: space-between;
-        gap: 24px;
+        gap: 20px;
+        min-height: 76px;
+      }
+
+      .heading-copy {
+        min-width: 0;
       }
 
       .overline {
-        margin: 0 0 7px;
+        margin: 0 0 3px;
         color: var(--primary);
-        font-size: 0.72rem;
+        font-size: 0.62rem;
         font-weight: 750;
-        letter-spacing: 0.13em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
       }
 
@@ -143,17 +148,18 @@ import {
       }
 
       h1 {
-        margin-bottom: 7px;
-        font-size: clamp(1.65rem, 2.5vw, 2.25rem);
-        line-height: 1.15;
-        letter-spacing: -0.035em;
+        margin-bottom: 3px;
+        font-size: clamp(1.3rem, 2vw, 1.7rem);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
       }
 
       .page-description {
-        max-width: 680px;
+        max-width: 660px;
         margin-bottom: 0;
         color: var(--muted);
-        font-size: 0.94rem;
+        font-size: 0.82rem;
+        line-height: 1.35;
       }
 
       .create-button,
@@ -161,36 +167,37 @@ import {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 9px;
-        min-height: 42px;
-        padding: 10px 16px;
-        border-radius: 12px;
-        font-size: 0.86rem;
+        gap: 7px;
+        min-height: 36px;
+        padding: 7px 12px;
+        border-radius: 10px;
+        font-size: 0.8rem;
         font-weight: 700;
         cursor: pointer;
         transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
       }
 
       .create-button {
+        flex: 0 0 auto;
         border: 1px solid var(--primary);
         color: #fff;
         background: var(--primary);
-        box-shadow: 0 8px 18px rgba(22, 76, 140, 0.2);
+        box-shadow: 0 6px 14px rgba(22, 76, 140, 0.18);
       }
 
       .create-button:hover {
         background: var(--primary-strong);
-        box-shadow: 0 11px 24px rgba(22, 76, 140, 0.24);
+        box-shadow: 0 9px 20px rgba(22, 76, 140, 0.22);
         transform: translateY(-1px);
       }
 
       .button-icon {
         display: grid;
         place-items: center;
-        width: 20px;
-        height: 20px;
-        border-radius: 6px;
-        font-size: 1.1rem;
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        font-size: 1rem;
         font-weight: 400;
         background: rgba(255, 255, 255, 0.14);
       }
@@ -416,6 +423,8 @@ import {
         .page-heading {
           align-items: stretch;
           flex-direction: column;
+          gap: 10px;
+          min-height: 0;
         }
 
         .create-button {
