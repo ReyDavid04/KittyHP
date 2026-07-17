@@ -117,22 +117,12 @@ app-repair-form .grid-fr {
 }
 
 app-repair-form .grid-category {
-  grid-column: 1 / span 3 !important;
+  grid-column: 1 / span 6 !important;
   grid-row: 2 !important;
 }
 
 app-repair-form .grid-return {
-  grid-column: 4 / span 3 !important;
-  grid-row: 2 !important;
-}
-
-app-repair-form .grid-major-part {
-  grid-column: 7 / span 3 !important;
-  grid-row: 2 !important;
-}
-
-app-repair-form .grid-failure-factor {
-  grid-column: 10 / span 3 !important;
+  grid-column: 7 / span 6 !important;
   grid-row: 2 !important;
 }
 
@@ -162,12 +152,12 @@ app-repair-form .grid-fail-picture .upload-content {
   text-align: center;
 }
 
-app-repair-form .grid-repair-result {
+app-repair-form .grid-major-part {
   grid-column: 1 / span 5 !important;
   grid-row: 3 !important;
 }
 
-app-repair-form .grid-actions {
+app-repair-form .grid-failure-factor {
   grid-column: 6 / span 5 !important;
   grid-row: 3 !important;
 }
@@ -175,6 +165,16 @@ app-repair-form .grid-actions {
 app-repair-form .grid-evidence {
   grid-column: 11 / span 5 !important;
   grid-row: 3 !important;
+}
+
+app-repair-form .grid-repair-result {
+  grid-column: 1 / 8 !important;
+  grid-row: 4 !important;
+}
+
+app-repair-form .grid-actions {
+  grid-column: 8 / 16 !important;
+  grid-row: 4 !important;
 }
 
 @media (max-width: 1180px) {
