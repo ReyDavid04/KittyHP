@@ -295,3 +295,24 @@ app-repair-form .grid-evidence .upload-content {
     text-align: left;
   }
 }
+
+/* Preview state: show only the title above the selected image. */
+app-repair-form .upload-zone.has-file {
+  flex-direction: column !important;
+  align-items: stretch !important;
+}
+
+app-repair-form .upload-zone.has-file .upload-content {
+  order: 1;
+  text-align: left !important;
+}
+
+app-repair-form .upload-zone.has-file .upload-content > span {
+  display: none !important;
+}
+
+app-repair-form .upload-zone.has-file .image-preview {
+  order: 2;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+}
