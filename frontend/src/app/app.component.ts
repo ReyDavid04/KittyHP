@@ -1,87 +1,195 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   template: `
-    <div class="shell">
-      <header class="hero">
-        <p class="eyebrow">KittyHP</p>
-        <div class="title-row">
-          <h1>Sistema de reportes de reparación</h1>
-          <span class="badge">Reportes</span>
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" routerLink="/" aria-label="Ir al inicio de KittyHP">
+          <span class="brand-mark" aria-hidden="true">K</span>
+          <span class="brand-copy">
+            <strong>KittyHP</strong>
+            <small>Repair Intelligence</small>
+          </span>
+        </a>
+
+        <nav class="main-nav" aria-label="Navegación principal">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            Reportes
+          </a>
+        </nav>
+
+        <div class="environment">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span>Sistema activo</span>
         </div>
-        <p class="lede">Angular standalone conectado a un backend NestJS para capturar y consultar registros.</p>
       </header>
-      <main class="content">
+
+      <main class="app-content">
         <router-outlet></router-outlet>
       </main>
     </div>
   `,
   styles: [
     `
-      .shell {
+      :host {
+        display: block;
         min-height: 100dvh;
-        padding: 12px;
-        background:
-          radial-gradient(circle at top left, rgba(0, 87, 184, 0.08), transparent 34%),
-          radial-gradient(circle at right top, rgba(24, 144, 255, 0.08), transparent 28%),
-          linear-gradient(180deg, #f6f9fc 0%, #eef4fb 100%);
       }
 
-      .hero {
-        width: 100%;
-        margin: 0 0 12px;
-        padding: 14px 18px;
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 10px 22px rgba(16, 32, 51, 0.05);
-        backdrop-filter: blur(8px);
+      .app-shell {
+        min-height: 100dvh;
       }
 
-      .eyebrow {
-        margin: 0 0 6px;
-        color: var(--primary);
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.16em;
+      .app-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: grid;
+        grid-template-columns: minmax(210px, auto) 1fr auto;
+        align-items: center;
+        gap: 28px;
+        min-height: 72px;
+        padding: 0 28px;
+        border-bottom: 1px solid rgba(200, 211, 223, 0.9);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 1px 0 rgba(18, 35, 55, 0.02);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 11px;
+        width: max-content;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        color: #fff;
+        font-size: 1.05rem;
+        font-weight: 800;
+        background: linear-gradient(145deg, var(--primary), var(--accent));
+        box-shadow: 0 8px 18px rgba(22, 76, 140, 0.22);
+      }
+
+      .brand-copy {
+        display: grid;
+        gap: 1px;
+      }
+
+      .brand-copy strong {
+        font-size: 0.98rem;
+        letter-spacing: -0.01em;
+      }
+
+      .brand-copy small {
+        color: var(--muted);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
-      .title-row {
+      .main-nav {
         display: flex;
+        align-items: stretch;
+        height: 72px;
+      }
+
+      .main-nav a {
+        position: relative;
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
+        padding: 0 4px;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 650;
+        text-decoration: none;
       }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(1.05rem, 1.9vw, 1.45rem);
+      .main-nav a::after {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        border-radius: 3px 3px 0 0;
+        background: var(--primary);
+        content: '';
+        opacity: 0;
+        transform: scaleX(0.5);
+        transition: 160ms ease;
       }
 
-      .badge {
-        padding: 4px 10px;
+      .main-nav a.active {
+        color: var(--primary);
+      }
+
+      .main-nav a.active::after {
+        opacity: 1;
+        transform: scaleX(1);
+      }
+
+      .environment {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 11px;
         border: 1px solid var(--border);
         border-radius: 999px;
-        font-size: 0.75rem;
-        color: var(--primary);
-        background: #f4f8ff;
-      }
-
-      .lede {
-        margin: 8px 0 0;
         color: var(--muted);
-        max-width: 64ch;
-        font-size: 0.92rem;
+        font-size: 0.76rem;
+        font-weight: 600;
+        background: var(--surface-subtle);
       }
 
-      .content {
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--success);
+        box-shadow: 0 0 0 4px rgba(20, 125, 100, 0.12);
+      }
+
+      .app-content {
         width: 100%;
-        margin: 0;
+        max-width: 1920px;
+        margin: 0 auto;
+        padding: 26px 28px 40px;
+      }
+
+      @media (max-width: 760px) {
+        .app-header {
+          grid-template-columns: 1fr auto;
+          min-height: 64px;
+          padding: 0 16px;
+        }
+
+        .main-nav {
+          display: none;
+        }
+
+        .environment span:last-child {
+          display: none;
+        }
+
+        .environment {
+          padding: 8px;
+        }
+
+        .app-content {
+          padding: 18px 14px 28px;
+        }
       }
     `,
   ],
