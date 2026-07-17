@@ -73,38 +73,44 @@ import {
         ></app-repair-list>
 
         <footer class="pagination" *ngIf="filteredRepairs.length">
-          <div class="page-size">
-            <span>Filas por página</span>
-            <select [value]="pageSize" (change)="setPageSize($any($event.target).value)">
-              <option [value]="8">8</option>
-              <option [value]="12">12</option>
-              <option [value]="20">20</option>
-              <option [value]="50">50</option>
-            </select>
+          <div class="pagination-meta">
+            <div class="page-size">
+              <span>Filas por página</span>
+              <select [value]="pageSize" (change)="setPageSize($any($event.target).value)">
+                <option [value]="8">8</option>
+                <option [value]="12">12</option>
+                <option [value]="20">20</option>
+                <option [value]="50">50</option>
+              </select>
+            </div>
+
+            <span class="page-info">
+              Página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong>
+            </span>
           </div>
 
-          <span class="page-info">
-            Página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong>
-          </span>
-
-          <div class="pager" aria-label="Paginación">
-            <button type="button" aria-label="Primera página" [disabled]="currentPage === 1" (click)="goToPage(1)">«</button>
-            <button type="button" aria-label="Página anterior" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
-            <button
-              *ngFor="let pageNumber of pageButtons"
-              type="button"
-              class="page-button"
-              [class.active]="pageNumber === currentPage"
-              [attr.aria-current]="pageNumber === currentPage ? 'page' : null"
-              (click)="goToPage(pageNumber)"
-            >{{ pageNumber }}</button>
-            <button type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
-            <button type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
+          <div class="pager-wrap">
+            <div class="pager" aria-label="Paginación">
+              <button type="button" aria-label="Primera página" [disabled]="currentPage === 1" (click)="goToPage(1)">«</button>
+              <button type="button" aria-label="Página anterior" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+              <button
+                *ngFor="let pageNumber of pageButtons"
+                type="button"
+                class="page-button"
+                [class.active]="pageNumber === currentPage"
+                [attr.aria-current]="pageNumber === currentPage ? 'page' : null"
+                (click)="goToPage(pageNumber)"
+              >{{ pageNumber }}</button>
+              <button type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
+              <button type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
+            </div>
           </div>
 
-          <span class="total-records">
-            Total: <strong>{{ repairs.length | number }}</strong> registros
-          </span>
+          <div class="pagination-total">
+            <span class="total-records">
+              Total: <strong>{{ repairs.length | number }}</strong> registros
+            </span>
+          </div>
         </footer>
       </section>
     </section>
@@ -301,13 +307,22 @@ import {
       }
 
       .pagination {
-        display: flex;
+        display: grid;
+        grid-template-columns: minmax(250px, 1fr) auto minmax(250px, 1fr);
         align-items: center;
-        gap: 16px;
+        gap: 18px;
         padding: 14px 18px;
         border-top: 1px solid var(--border);
         color: var(--muted);
         background: var(--surface-subtle);
+      }
+
+      .pagination-meta {
+        display: flex;
+        align-items: center;
+        justify-self: start;
+        gap: 18px;
+        min-width: 0;
       }
 
       .page-size,
@@ -323,6 +338,12 @@ import {
         font-size: 0.76rem;
       }
 
+      .page-size,
+      .page-info,
+      .total-records {
+        white-space: nowrap;
+      }
+
       .page-size select {
         height: 34px;
         padding: 0 28px 0 10px;
@@ -332,9 +353,14 @@ import {
         background: #fff;
       }
 
+      .pager-wrap {
+        display: flex;
+        justify-content: center;
+        justify-self: center;
+      }
+
       .pager {
-        justify-content: flex-end;
-        margin-left: auto;
+        justify-content: center;
       }
 
       .pager button {
@@ -366,12 +392,14 @@ import {
         cursor: not-allowed;
       }
 
+      .pagination-total {
+        display: flex;
+        justify-content: flex-end;
+        justify-self: end;
+      }
+
       .total-records {
-        flex: 0 0 auto;
-        padding-left: 14px;
-        border-left: 1px solid var(--border);
         color: var(--text);
-        white-space: nowrap;
       }
 
       @media (max-width: 1120px) {
@@ -385,7 +413,12 @@ import {
         }
 
         .pagination {
-          flex-wrap: wrap;
+          grid-template-columns: 1fr auto;
+        }
+
+        .pager-wrap {
+          grid-column: 1 / -1;
+          grid-row: 2;
         }
       }
 
@@ -416,18 +449,27 @@ import {
         }
 
         .pagination {
-          justify-content: center;
+          grid-template-columns: 1fr;
+          gap: 12px;
+          justify-items: center;
         }
 
-        .pager {
-          justify-content: center;
-          width: 100%;
-          margin-left: 0;
+        .pagination-meta {
+          flex-direction: column;
+          justify-self: center;
+          gap: 10px;
         }
 
-        .total-records {
-          padding-left: 0;
-          border-left: 0;
+        .pager-wrap {
+          grid-column: auto;
+          grid-row: auto;
+          justify-self: center;
+          max-width: 100%;
+          overflow-x: auto;
+        }
+
+        .pagination-total {
+          justify-self: center;
         }
       }
     `,
