@@ -6,7 +6,7 @@
           <th
             *ngFor="let column of columns; trackBy: trackByColumn"
             [ngClass]="column.className"
-            [class.sticky-left]="column.key === 'recordDate'"
+            [class.sticky-left]="column.key === 'topIssue'"
           >
             <div class="th-cell">
               <span class="column-title">
@@ -39,7 +39,7 @@
         <tr *ngFor="let repair of repairs; trackBy: trackByRepairId">
           <td
             *ngFor="let column of columns; trackBy: trackByColumn"
-            [class.sticky-left]="column.key === 'recordDate'"
+            [class.sticky-left]="column.key === 'topIssue'"
           >
             <ng-container [ngSwitch]="column.key">
               <span *ngSwitchCase="'recordDate'" class="truncate" [title]="repair.recordDate">
