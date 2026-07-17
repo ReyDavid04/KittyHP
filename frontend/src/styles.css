@@ -162,23 +162,27 @@ app-repair-form .grid-evidence {
   flex-direction: column !important;
   align-items: stretch !important;
   justify-content: flex-start !important;
-  gap: 14px !important;
+  gap: 8px !important;
   width: 100% !important;
-  height: 276px !important;
-  min-height: 276px !important;
-  padding: 18px !important;
+  height: 248px !important;
+  min-height: 248px !important;
+  padding: 12px !important;
 }
 
 app-repair-form .grid-fail-picture .image-preview,
 app-repair-form .grid-evidence .image-preview {
   flex: 0 0 auto !important;
   width: 100% !important;
-  height: 180px !important;
+  height: 196px !important;
   margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
 }
 
 app-repair-form .grid-fail-picture .image-preview img,
 app-repair-form .grid-evidence .image-preview img {
+  display: block;
   width: 100% !important;
   height: 100% !important;
   object-fit: contain !important;
