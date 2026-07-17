@@ -7,3 +7,20 @@
 .image-link {
   line-height: 0;
 }
+
+.number-column {
+  width: 108px;
+  min-width: 108px;
+  max-width: 108px;
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
+.number-column .th-cell {
+  gap: 4px;
+}
+
+.number-column .filter-button {
+  width: 20px;
+  height: 20px;
+}
