@@ -77,7 +77,7 @@ export class RepairListComponent {
     { key: 'buildQty', label: 'Build qty', className: 'number-column', numeric: true },
     { key: 'frPercentage', label: 'F/R', className: 'rate-column', numeric: true },
     { key: 'category', label: 'Categoría' },
-    { key: 'returnStatus', label: 'Return' },
+    { key: 'returnStatus', label: 'Return', className: 'return-column' },
     { key: 'failPicture', label: 'Fail picture', className: 'image-column', filterable: false },
     { key: 'majorPart', label: 'Major part' },
     { key: 'repairResult', label: 'Repair result', className: 'text-column' },
