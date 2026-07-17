@@ -42,24 +42,32 @@
             [class.sticky-left]="column.key === 'recordDate'"
           >
             <ng-container [ngSwitch]="column.key">
-              <span *ngSwitchCase="'recordDate'" class="date-value">{{ repair.recordDate }}</span>
+              <span *ngSwitchCase="'recordDate'" class="truncate" [title]="repair.recordDate">
+                {{ repair.recordDate || '—' }}
+              </span>
 
-              <strong *ngSwitchCase="'topIssue'" class="issue-value" [title]="repair.topIssue">
-                {{ repair.topIssue }}
-              </strong>
+              <span *ngSwitchCase="'topIssue'" class="truncate" [title]="repair.topIssue">
+                {{ repair.topIssue || '—' }}
+              </span>
 
-              <span *ngSwitchCase="'failureQty'" class="numeric-value">{{ repair.failureQty | number }}</span>
-              <span *ngSwitchCase="'buildQty'" class="numeric-value">{{ repair.buildQty | number }}</span>
+              <span *ngSwitchCase="'failureQty'" class="truncate">
+                {{ repair.failureQty | number }}
+              </span>
 
-              <span *ngSwitchCase="'frPercentage'" class="rate-pill">
+              <span *ngSwitchCase="'buildQty'" class="truncate">
+                {{ repair.buildQty | number }}
+              </span>
+
+              <span *ngSwitchCase="'frPercentage'" class="truncate">
                 {{ repair.frPercentage | number: '1.2-2' }}%
               </span>
 
-              <span *ngSwitchCase="'category'" class="category-pill">{{ repair.category }}</span>
+              <span *ngSwitchCase="'category'" class="truncate" [title]="repair.category">
+                {{ repair.category || '—' }}
+              </span>
 
-              <span *ngSwitchCase="'returnStatus'" class="status-pill" [class.empty]="!repair.returnStatus">
-                <span class="status-dot" aria-hidden="true"></span>
-                {{ repair.returnStatus || 'Sin retorno' }}
+              <span *ngSwitchCase="'returnStatus'" class="truncate" [title]="repair.returnStatus || ''">
+                {{ repair.returnStatus || '—' }}
               </span>
 
               <ng-container *ngSwitchCase="'failPicture'">
