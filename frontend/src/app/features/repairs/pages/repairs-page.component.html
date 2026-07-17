@@ -1,0 +1,101 @@
+<section class="page">
+  <header class="page-heading">
+    <div class="heading-copy">
+      <p class="overline">Manufacturing quality</p>
+      <h1>Reportes de reparación</h1>
+      <p class="page-description">
+        Consulta fallas, resultados de reparación y evidencia en un solo espacio.
+      </p>
+    </div>
+
+    <button type="button" class="create-button" (click)="openNewRepair()">
+      <span class="button-icon" aria-hidden="true">+</span>
+      Crear reporte
+    </button>
+  </header>
+
+  <section class="workspace">
+    <div class="workspace-header">
+      <div class="toolbar">
+        <label class="search-field" for="globalSearch">
+          <span class="search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
+            </svg>
+          </span>
+          <input
+            id="globalSearch"
+            type="search"
+            [value]="searchTerm"
+            (input)="setSearch($any($event.target).value)"
+            placeholder="Buscar issue, categoría, parte..."
+          >
+          <button
+            *ngIf="searchTerm"
+            type="button"
+            class="clear-search"
+            aria-label="Limpiar búsqueda"
+            (click)="setSearch('')"
+          >×</button>
+        </label>
+
+        <button *ngIf="activeFilterCount" type="button" class="secondary-button" (click)="clearFilters()">
+          Limpiar filtros
+          <span>{{ activeFilterCount }}</span>
+        </button>
+      </div>
+    </div>
+
+    <app-repair-list
+      [repairs]="pagedRepairs"
+      [filters]="filters"
+      [availableValues]="availableValues"
+      [sort]="sort"
+      (filterChange)="updateFilter($event.key, $event.values)"
+      (sortChange)="updateSort($event)"
+      (edit)="openEditRepair($event)"
+      (remove)="removeRepair($event)"
+    ></app-repair-list>
+
+    <footer class="pagination" *ngIf="filteredRepairs.length">
+      <div class="pagination-meta">
+        <div class="page-size">
+          <span>Filas por página</span>
+          <select [value]="pageSize" (change)="setPageSize($any($event.target).value)">
+            <option [value]="8">8</option>
+            <option [value]="12">12</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+
+        <span class="page-info">
+          Página <strong>{{ currentPage }}</strong> de <strong>{{ totalPages }}</strong>
+        </span>
+      </div>
+
+      <div class="pager-wrap">
+        <div class="pager" aria-label="Paginación">
+          <button type="button" aria-label="Primera página" [disabled]="currentPage === 1" (click)="goToPage(1)">«</button>
+          <button type="button" aria-label="Página anterior" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+          <button
+            *ngFor="let pageNumber of pageButtons"
+            type="button"
+            class="page-button"
+            [class.active]="pageNumber === currentPage"
+            [attr.aria-current]="pageNumber === currentPage ? 'page' : null"
+            (click)="goToPage(pageNumber)"
+          >{{ pageNumber }}</button>
+          <button type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
+          <button type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
+        </div>
+      </div>
+
+      <div class="pagination-total">
+        <span class="total-records">
+          Total: <strong>{{ repairs.length | number }}</strong> registros
+        </span>
+      </div>
+    </footer>
+  </section>
+</section>
