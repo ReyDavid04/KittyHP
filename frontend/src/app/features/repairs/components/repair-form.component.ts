@@ -88,6 +88,21 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             <input type="text" formControlName="returnStatus" placeholder="YES, NO o estatus">
           </label>
 
+          <label class="field grid-major-part">
+            <span>Major part</span>
+            <input type="text" formControlName="majorPart" placeholder="Parte principal afectada">
+          </label>
+
+          <label class="field grid-failure-factor">
+            <span>Failure factor</span>
+            <textarea
+              class="compact-textarea"
+              rows="1"
+              formControlName="failureFactor"
+              placeholder="Factor o causa de la falla"
+            ></textarea>
+          </label>
+
           <label class="upload-zone grid-fail-picture" [class.has-file]="failPicturePreviewUrl">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
 
@@ -117,26 +132,12 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             </ng-template>
           </label>
 
-          <label class="field grid-major-part">
-            <span>Major part</span>
-            <input type="text" formControlName="majorPart" placeholder="Parte principal afectada">
-          </label>
-
           <label class="field grid-repair-result">
             <span>Repair result</span>
             <input type="text" formControlName="repairResult" placeholder="Resultado de la reparación">
           </label>
 
-          <label class="field grid-half">
-            <span>Failure factor</span>
-            <textarea
-              rows="4"
-              formControlName="failureFactor"
-              placeholder="Describe el factor o causa de la falla"
-            ></textarea>
-          </label>
-
-          <label class="field grid-half">
+          <label class="field grid-actions">
             <span>Actions</span>
             <textarea
               rows="4"
@@ -221,30 +222,19 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         grid-column: span 4;
       }
 
-      .grid-category {
+      .grid-category,
+      .grid-return,
+      .grid-major-part,
+      .grid-failure-factor {
         grid-column: span 3;
       }
 
-      .grid-return {
-        grid-column: span 2;
-      }
-
-      .grid-fail-picture {
-        grid-column: span 7;
-      }
-
-      .grid-major-part {
-        grid-column: span 3;
-      }
-
+      .grid-fail-picture,
       .grid-repair-result {
-        grid-column: span 9;
-      }
-
-      .grid-half {
         grid-column: span 6;
       }
 
+      .grid-actions,
       .grid-full {
         grid-column: 1 / -1;
       }
@@ -290,6 +280,13 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         padding: 13px 14px;
         line-height: 1.5;
         resize: vertical;
+      }
+
+      .field textarea.compact-textarea {
+        height: 46px;
+        min-height: 46px;
+        padding-top: 12px;
+        padding-bottom: 10px;
       }
 
       .field input::placeholder,
@@ -533,17 +530,18 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         .grid-fr,
         .grid-category,
         .grid-return,
-        .grid-major-part {
+        .grid-major-part,
+        .grid-failure-factor {
           grid-column: span 2;
         }
 
         .grid-top-issue,
-        .grid-repair-result,
-        .grid-half,
-        .grid-fail-picture {
+        .grid-fail-picture,
+        .grid-repair-result {
           grid-column: span 4;
         }
 
+        .grid-actions,
         .grid-full {
           grid-column: 1 / -1;
         }
@@ -566,10 +564,11 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         .grid-fr,
         .grid-category,
         .grid-return,
-        .grid-fail-picture,
         .grid-major-part,
+        .grid-failure-factor,
+        .grid-fail-picture,
         .grid-repair-result,
-        .grid-half,
+        .grid-actions,
         .grid-full {
           grid-column: auto;
         }
