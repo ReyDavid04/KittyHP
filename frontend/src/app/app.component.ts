@@ -23,18 +23,23 @@ import { RouterOutlet } from '@angular/router';
   styles: [
     `
       .shell {
-        min-height: 100vh;
-        padding: 20px;
+        min-height: 100dvh;
+        padding: 12px;
+        background:
+          radial-gradient(circle at top left, rgba(0, 87, 184, 0.08), transparent 34%),
+          radial-gradient(circle at right top, rgba(24, 144, 255, 0.08), transparent 28%),
+          linear-gradient(180deg, #f6f9fc 0%, #eef4fb 100%);
       }
 
       .hero {
-        max-width: 1040px;
-        margin: 0 auto 16px;
-        padding: 16px 20px;
+        width: 100%;
+        margin: 0 0 12px;
+        padding: 14px 18px;
         border: 1px solid var(--border);
         border-radius: 18px;
-        background: rgba(255, 255, 255, 0.9);
-        box-shadow: 0 10px 26px rgba(16, 32, 51, 0.06);
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 10px 22px rgba(16, 32, 51, 0.05);
+        backdrop-filter: blur(8px);
       }
 
       .eyebrow {
@@ -55,7 +60,7 @@ import { RouterOutlet } from '@angular/router';
 
       h1 {
         margin: 0;
-        font-size: clamp(1.2rem, 2.2vw, 1.75rem);
+        font-size: clamp(1.05rem, 1.9vw, 1.45rem);
       }
 
       .badge {
@@ -75,8 +80,8 @@ import { RouterOutlet } from '@angular/router';
       }
 
       .content {
-        max-width: 1040px;
-        margin: 0 auto;
+        width: 100%;
+        margin: 0;
       }
     `,
   ],

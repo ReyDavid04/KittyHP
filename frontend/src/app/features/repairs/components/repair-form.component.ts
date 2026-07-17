@@ -11,7 +11,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
     <form class="card" [formGroup]="form" (ngSubmit)="submit()">
       <div class="header">
         <h2>{{ repair ? 'Editar reporte' : 'Nuevo reporte' }}</h2>
-        <button *ngIf="repair" type="button" class="ghost" (click)="cancel.emit()">Cancelar edición</button>
+        <button type="button" class="ghost" (click)="cancel.emit()">Cerrar</button>
       </div>
       <label>
         Fecha

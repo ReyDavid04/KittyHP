@@ -1,13 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
-import { RepairFormComponent } from '../components/repair-form.component';
-import { RepairColumnFilters, RepairListComponent } from '../components/repair-list.component';
+import {
+  FILTER_BLANK_VALUE,
+  RepairColumnFilters,
+  RepairColumnKey,
+  RepairColumnValues,
+  RepairListComponent,
+} from '../components/repair-list.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RepairFormComponent, RepairListComponent],
+  imports: [CommonModule, RepairListComponent],
   template: `
     <section class="panel">
       <div class="toolbar">
@@ -23,44 +29,53 @@ import { RepairColumnFilters, RepairListComponent } from '../components/repair-l
       <app-repair-list
         [repairs]="pagedRepairs"
         [filters]="filters"
-        (filterChange)="updateFilter($event.key, $event.value)"
+        [availableValues]="availableValues"
+        (filterChange)="updateFilter($event.key, $event.values)"
         (edit)="openEditRepair($event)"
         (remove)="removeRepair($event)"
       ></app-repair-list>
 
       <div class="pagination" *ngIf="filteredRepairs.length">
-        <button type="button" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">Anterior</button>
-        <span>Página {{ currentPage }} de {{ totalPages }}</span>
-        <button type="button" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">Siguiente</button>
+        <div class="page-size">
+          <span>Rows</span>
+          <select [value]="pageSize" (change)="setPageSize($any($event.target).value)">
+            <option [value]="8">8</option>
+            <option [value]="12">12</option>
+            <option [value]="20">20</option>
+            <option [value]="50">50</option>
+          </select>
+        </div>
+        <div class="pager">
+          <button type="button" [disabled]="currentPage === 1" (click)="goToPage(1)">|&lt;</button>
+          <button type="button" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">&lt;</button>
+          <button *ngFor="let page of pageButtons" type="button" class="page-btn" [class.active]="page === currentPage" (click)="goToPage(page)">{{ page }}</button>
+          <button type="button" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">&gt;</button>
+          <button type="button" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">&gt;|</button>
+        </div>
+        <span class="page-info">Página {{ currentPage }} de {{ totalPages }} · {{ filteredRepairs.length }} registros</span>
       </div>
 
-      <div class="modal-backdrop" *ngIf="showForm">
-        <div class="modal">
-          <app-repair-form
-            [repair]="selectedRepair"
-            (save)="saveRepair($event)"
-            (cancel)="closeForm()"
-          ></app-repair-form>
-        </div>
-      </div>
     </section>
   `,
   styles: [
     `
       .panel {
         display: grid;
-        gap: 16px;
+        gap: 14px;
+        width: 100%;
       }
 
       .toolbar {
         display: flex;
-        align-items: end;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
-        padding: 16px 20px;
+        padding: 16px;
         border: 1px solid var(--border);
         border-radius: 18px;
-        background: var(--surface);
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 10px 24px rgba(16, 32, 51, 0.05);
+        backdrop-filter: blur(8px);
       }
 
       .search-box {
@@ -80,15 +95,18 @@ import { RepairColumnFilters, RepairListComponent } from '../components/repair-l
         padding: 12px 14px;
         border: 1px solid var(--border);
         border-radius: 12px;
+        min-width: min(100%, 500px);
       }
 
       .toolbar-actions {
         display: flex;
         gap: 12px;
+        align-items: center;
       }
 
       .primary,
-      .pagination button {
+      .pagination button,
+      .pagination select {
         border: 0;
         border-radius: 12px;
         background: var(--primary);
@@ -97,12 +115,47 @@ import { RepairColumnFilters, RepairListComponent } from '../components/repair-l
         cursor: pointer;
       }
 
+      .pagination select {
+        background: #fff;
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+      }
+
       .pagination {
         display: flex;
         align-items: center;
-        justify-content: flex-end;
+        justify-content: space-between;
         gap: 12px;
+        padding: 12px 16px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 10px 24px rgba(16, 32, 51, 0.05);
+        backdrop-filter: blur(8px);
         color: var(--muted);
+        flex-wrap: wrap;
+      }
+
+      .page-size,
+      .pager {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .page-btn {
+        min-width: 42px;
+        padding: 10px 12px !important;
+      }
+
+      .page-btn.active {
+        background: #0f5bd7;
+      }
+
+      .page-info {
+        font-size: 0.9rem;
       }
 
       .pagination button:disabled {
@@ -110,49 +163,47 @@ import { RepairColumnFilters, RepairListComponent } from '../components/repair-l
         cursor: not-allowed;
       }
 
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(8, 15, 28, 0.55);
-        display: grid;
-        place-items: center;
-        padding: 24px;
-        z-index: 40;
-      }
-
-      .modal {
-        width: min(980px, 100%);
-        max-height: calc(100vh - 48px);
-        overflow: auto;
-        border-radius: 20px;
-        box-shadow: 0 28px 60px rgba(0, 0, 0, 0.25);
-      }
     `,
   ],
 })
 export class RepairsPageComponent {
   readonly repairReportsApi = inject(RepairReportsApiService);
+  readonly router = inject(Router);
   repairs: RepairReport[] = [];
   searchTerm = '';
   currentPage = 1;
-  readonly pageSize = 8;
-  showForm = false;
-  selectedRepair: RepairReport | null = null;
+  pageSize = 8;
 
   filters: RepairColumnFilters = {
-    recordDate: '',
-    topIssue: '',
-    failureQty: '',
-    buildQty: '',
-    frPercentage: '',
-    category: '',
-    returnStatus: '',
-    failPicture: '',
-    majorPart: '',
-    repairResult: '',
-    failureFactor: '',
-    actions: '',
-    evidencePicture: '',
+    recordDate: [],
+    topIssue: [],
+    failureQty: [],
+    buildQty: [],
+    frPercentage: [],
+    category: [],
+    returnStatus: [],
+    failPicture: [],
+    majorPart: [],
+    repairResult: [],
+    failureFactor: [],
+    actions: [],
+    evidencePicture: [],
+  };
+
+  availableValues: RepairColumnValues = {
+    recordDate: [],
+    topIssue: [],
+    failureQty: [],
+    buildQty: [],
+    frPercentage: [],
+    category: [],
+    returnStatus: [],
+    failPicture: [],
+    majorPart: [],
+    repairResult: [],
+    failureFactor: [],
+    actions: [],
+    evidencePicture: [],
   };
 
   constructor() {
@@ -185,15 +236,13 @@ export class RepairsPageComponent {
         return false;
       }
 
-      return Object.entries(this.filters).every(([key, value]) => {
-        const filterValue = value.trim().toLowerCase();
-
-        if (!filterValue) {
+      return Object.entries(this.filters).every(([key, values]) => {
+        if (!values.length) {
           return true;
         }
 
-        const repairValue = String((repair as unknown as Record<string, unknown>)[key] ?? '').toLowerCase();
-        return repairValue.includes(filterValue);
+        const repairValue = this.valueForKey(repair, key as RepairColumnKey);
+        return values.includes(repairValue);
       });
     });
   }
@@ -207,43 +256,50 @@ export class RepairsPageComponent {
     return this.filteredRepairs.slice(start, start + this.pageSize);
   }
 
-  saveRepair(payload: RepairUpsertPayload) {
-    const request$ = this.selectedRepair ? this.repairReportsApi.update(this.selectedRepair.id, payload) : this.repairReportsApi.create(payload);
+  get pageButtons(): number[] {
+    const total = this.totalPages;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, index) => index + 1);
+    }
 
-    request$.subscribe(() => {
-      this.closeForm();
-      this.loadRepairs();
-    });
+    const start = Math.max(2, this.currentPage - 2);
+    const end = Math.min(total - 1, this.currentPage + 2);
+    const pages = [1];
+
+    if (start > 2) {
+      pages.push(start - 1);
+    }
+
+    for (let page = start; page <= end; page += 1) {
+      pages.push(page);
+    }
+
+    if (end < total - 1) {
+      pages.push(end + 1);
+    }
+
+    pages.push(total);
+    return Array.from(new Set(pages));
   }
 
   loadRepairs(): void {
     this.repairReportsApi.getAll().subscribe((repairs) => {
       this.repairs = repairs;
+      this.availableValues = this.buildAvailableValues(repairs);
       this.currentPage = 1;
     });
   }
 
   openNewRepair(): void {
-    this.selectedRepair = null;
-    this.showForm = true;
+    void this.router.navigate(['/repairs/new']);
   }
 
   openEditRepair(repair: RepairReport): void {
-    this.selectedRepair = repair;
-    this.showForm = true;
-  }
-
-  closeForm(): void {
-    this.selectedRepair = null;
-    this.showForm = false;
+    void this.router.navigate(['/repairs', repair.id, 'edit']);
   }
 
   removeRepair(id: string) {
     this.repairReportsApi.delete(id).subscribe(() => {
-      if (this.selectedRepair?.id === id) {
-        this.closeForm();
-      }
-
       this.loadRepairs();
     });
   }
@@ -253,13 +309,55 @@ export class RepairsPageComponent {
     this.currentPage = 1;
   }
 
-  updateFilter(key: keyof RepairColumnFilters, value: string): void {
-    this.filters = { ...this.filters, [key]: value };
+  updateFilter(key: RepairColumnKey, values: string[]): void {
+    this.filters = { ...this.filters, [key]: values };
     this.currentPage = 1;
   }
 
   goToPage(page: number): void {
     this.currentPage = Math.min(Math.max(page, 1), this.totalPages);
+  }
+
+  setPageSize(value: string): void {
+    this.pageSize = Number(value);
+    this.currentPage = 1;
+  }
+
+  private valueForKey(repair: RepairReport, key: RepairColumnKey): string {
+    const raw = String((repair as unknown as Record<string, unknown>)[key] ?? '').trim();
+    return raw ? raw.toLowerCase() : FILTER_BLANK_VALUE;
+  }
+
+  private buildAvailableValues(repairs: RepairReport[]): RepairColumnValues {
+    const unique = <T extends RepairColumnKey>(key: T): string[] => {
+      const values = new Set<string>();
+
+      repairs.forEach((repair) => {
+        values.add(this.valueForKey(repair, key));
+      });
+
+      return Array.from(values).sort((first, second) => {
+        if (first === FILTER_BLANK_VALUE) return -1;
+        if (second === FILTER_BLANK_VALUE) return 1;
+        return first.localeCompare(second, undefined, { numeric: true, sensitivity: 'base' });
+      });
+    };
+
+    return {
+      recordDate: unique('recordDate'),
+      topIssue: unique('topIssue'),
+      failureQty: unique('failureQty'),
+      buildQty: unique('buildQty'),
+      frPercentage: unique('frPercentage'),
+      category: unique('category'),
+      returnStatus: unique('returnStatus'),
+      failPicture: unique('failPicture'),
+      majorPart: unique('majorPart'),
+      repairResult: unique('repairResult'),
+      failureFactor: unique('failureFactor'),
+      actions: unique('actions'),
+      evidencePicture: unique('evidencePicture'),
+    };
   }
 }
 
