@@ -134,7 +134,11 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
           <label class="field grid-repair-result">
             <span>Repair result</span>
-            <input type="text" formControlName="repairResult" placeholder="Resultado de la reparación">
+            <textarea
+              rows="4"
+              formControlName="repairResult"
+              placeholder="Resultado de la reparación"
+            ></textarea>
           </label>
 
           <label class="field grid-actions">
@@ -146,11 +150,11 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
             ></textarea>
           </label>
 
-          <label class="upload-zone grid-full" [class.has-file]="evidencePicturePreviewUrl">
+          <label class="upload-zone grid-evidence" [class.has-file]="evidencePicturePreviewUrl">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'evidencePicture')">
 
             <ng-container *ngIf="evidencePicturePreviewUrl as preview; else evidencePictureEmpty">
-              <span class="image-preview">
+              <span class="image-preview evidence-preview">
                 <img [src]="preview" alt="Vista previa de la evidencia final">
                 <span class="image-change">Cambiar imagen</span>
               </span>
@@ -229,14 +233,14 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         grid-column: span 3;
       }
 
-      .grid-fail-picture,
-      .grid-repair-result {
-        grid-column: span 6;
+      .grid-fail-picture {
+        grid-column: 1 / -1;
       }
 
+      .grid-repair-result,
       .grid-actions,
-      .grid-full {
-        grid-column: 1 / -1;
+      .grid-evidence {
+        grid-column: span 4;
       }
 
       .field {
@@ -276,7 +280,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       .field textarea {
-        min-height: 118px;
+        min-height: 148px;
         padding: 13px 14px;
         line-height: 1.5;
         resize: vertical;
@@ -397,6 +401,12 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         border: 1px solid var(--border);
         border-radius: 9px;
         background: var(--surface-muted);
+      }
+
+      .grid-evidence .image-preview {
+        flex-basis: 150px;
+        width: 150px;
+        height: 110px;
       }
 
       .image-preview img {
@@ -535,14 +545,14 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
           grid-column: span 2;
         }
 
-        .grid-top-issue,
-        .grid-fail-picture,
-        .grid-repair-result {
+        .grid-top-issue {
           grid-column: span 4;
         }
 
+        .grid-fail-picture,
+        .grid-repair-result,
         .grid-actions,
-        .grid-full {
+        .grid-evidence {
           grid-column: 1 / -1;
         }
       }
@@ -569,7 +579,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         .grid-fail-picture,
         .grid-repair-result,
         .grid-actions,
-        .grid-full {
+        .grid-evidence {
           grid-column: auto;
         }
 
@@ -580,7 +590,8 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
           padding: 14px;
         }
 
-        .image-preview {
+        .image-preview,
+        .grid-evidence .image-preview {
           flex-basis: auto;
           width: 100%;
           height: 210px;
