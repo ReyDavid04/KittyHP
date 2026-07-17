@@ -1,15 +1,4 @@
 <section class="page">
-  <header class="page-heading">
-    <div class="heading-copy">
-      <h1>Reportes de reparación</h1>
-    </div>
-
-    <button type="button" class="create-button" (click)="openNewRepair()">
-      <span class="button-icon" aria-hidden="true">+</span>
-      Crear reporte
-    </button>
-  </header>
-
   <section class="workspace">
     <div class="workspace-header">
       <div class="toolbar">
@@ -34,6 +23,11 @@
             (click)="setSearch('')"
           >×</button>
         </label>
+
+        <button type="button" class="create-button" (click)="openNewRepair()">
+          <span class="button-icon" aria-hidden="true">+</span>
+          Crear reporte
+        </button>
 
         <button *ngIf="activeFilterCount" type="button" class="secondary-button" (click)="clearFilters()">
           Limpiar filtros
