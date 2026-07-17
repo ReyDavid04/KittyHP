@@ -9,142 +9,163 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
   imports: [CommonModule, ReactiveFormsModule],
   template: `
     <form class="form-shell" [formGroup]="form" (ngSubmit)="submit()">
-      <section class="form-section">
-        <div class="section-heading">
-          <span class="section-number">01</span>
-          <div>
-            <h3>Información general</h3>
-            <p>Datos principales para identificar y clasificar el reporte.</p>
-          </div>
-        </div>
-
-        <div class="form-grid general-grid">
+      <div class="form-body">
+        <div class="form-grid">
           <label class="field">
-            <span>Fecha <b>*</b></span>
-            <input type="date" formControlName="recordDate" [class.invalid]="form.controls.recordDate.invalid && form.controls.recordDate.touched">
-            <small *ngIf="form.controls.recordDate.invalid && form.controls.recordDate.touched">La fecha es obligatoria.</small>
+            <span>Date <b>*</b></span>
+            <input
+              type="date"
+              formControlName="recordDate"
+              [class.invalid]="form.controls.recordDate.invalid && form.controls.recordDate.touched"
+            >
+            <small *ngIf="form.controls.recordDate.invalid && form.controls.recordDate.touched">
+              La fecha es obligatoria.
+            </small>
           </label>
 
-          <label class="field field-wide">
+          <label class="field field-span-3">
             <span>Top issue <b>*</b></span>
-            <input type="text" formControlName="topIssue" placeholder="Describe la falla principal" [class.invalid]="form.controls.topIssue.invalid && form.controls.topIssue.touched">
-            <small *ngIf="form.controls.topIssue.invalid && form.controls.topIssue.touched">El top issue es obligatorio.</small>
+            <input
+              type="text"
+              formControlName="topIssue"
+              placeholder="Describe la falla principal"
+              [class.invalid]="form.controls.topIssue.invalid && form.controls.topIssue.touched"
+            >
+            <small *ngIf="form.controls.topIssue.invalid && form.controls.topIssue.touched">
+              El top issue es obligatorio.
+            </small>
           </label>
 
           <label class="field">
-            <span>Categoría <b>*</b></span>
-            <input type="text" formControlName="category" placeholder="Ej. MB, LCD, Cover" [class.invalid]="form.controls.category.invalid && form.controls.category.touched">
-            <small *ngIf="form.controls.category.invalid && form.controls.category.touched">La categoría es obligatoria.</small>
+            <span>Failure qty <b>*</b></span>
+            <input
+              type="number"
+              min="0"
+              formControlName="failureQty"
+              [class.invalid]="form.controls.failureQty.invalid && form.controls.failureQty.touched"
+            >
+          </label>
+
+          <label class="field">
+            <span>Build qty <b>*</b></span>
+            <input
+              type="number"
+              min="0"
+              formControlName="buildQty"
+              [class.invalid]="form.controls.buildQty.invalid && form.controls.buildQty.touched"
+            >
+          </label>
+
+          <label class="field">
+            <span>F/R <b>*</b></span>
+            <div class="suffix-input">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="frPercentage"
+                [class.invalid]="form.controls.frPercentage.invalid && form.controls.frPercentage.touched"
+              >
+              <span>%</span>
+            </div>
+          </label>
+
+          <label class="field">
+            <span>Category <b>*</b></span>
+            <input
+              type="text"
+              formControlName="category"
+              placeholder="Ej. MB, LCD, Cover"
+              [class.invalid]="form.controls.category.invalid && form.controls.category.touched"
+            >
+            <small *ngIf="form.controls.category.invalid && form.controls.category.touched">
+              La categoría es obligatoria.
+            </small>
           </label>
 
           <label class="field">
             <span>Return</span>
             <input type="text" formControlName="returnStatus" placeholder="YES, NO o estatus">
           </label>
-        </div>
-      </section>
 
-      <section class="form-section">
-        <div class="section-heading">
-          <span class="section-number">02</span>
-          <div>
-            <h3>Información de producción</h3>
-            <p>Cantidades utilizadas para dar contexto al failure rate.</p>
-          </div>
-        </div>
-
-        <div class="form-grid metrics-grid">
-          <label class="field metric-field">
-            <span>Failure quantity <b>*</b></span>
-            <input type="number" min="0" formControlName="failureQty" [class.invalid]="form.controls.failureQty.invalid && form.controls.failureQty.touched">
+          <label class="upload-zone field-span-3" [class.has-file]="failPictureFile || repair?.failPicture">
+            <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
+            <span class="upload-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path>
+              </svg>
+            </span>
+            <span class="upload-content">
+              <strong>Fail picture</strong>
+              <span *ngIf="!failPictureFile">Selecciona una imagen de la falla</span>
+              <span class="file-name" *ngIf="failPictureFile">{{ failPictureFile.name }}</span>
+              <a
+                *ngIf="repair?.failPicture && !failPictureFile"
+                [href]="repair!.failPicture!"
+                target="_blank"
+                rel="noopener"
+                (click)="$event.stopPropagation()"
+              >Ver imagen actual</a>
+            </span>
           </label>
 
-          <label class="field metric-field">
-            <span>Build quantity <b>*</b></span>
-            <input type="number" min="0" formControlName="buildQty" [class.invalid]="form.controls.buildQty.invalid && form.controls.buildQty.touched">
-          </label>
-
-          <label class="field metric-field accent-field">
-            <span>F/R % <b>*</b></span>
-            <div class="suffix-input">
-              <input type="number" min="0" step="0.01" formControlName="frPercentage" [class.invalid]="form.controls.frPercentage.invalid && form.controls.frPercentage.touched">
-              <span>%</span>
-            </div>
-          </label>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <div class="section-heading">
-          <span class="section-number">03</span>
-          <div>
-            <h3>Diagnóstico y reparación</h3>
-            <p>Documenta la parte involucrada, la causa y el resultado obtenido.</p>
-          </div>
-        </div>
-
-        <div class="form-grid diagnosis-grid">
           <label class="field">
             <span>Major part</span>
             <input type="text" formControlName="majorPart" placeholder="Parte principal afectada">
           </label>
 
-          <label class="field field-wide">
+          <label class="field field-span-3">
             <span>Repair result</span>
             <input type="text" formControlName="repairResult" placeholder="Resultado de la reparación">
           </label>
 
-          <label class="field field-full">
+          <label class="field field-span-2">
             <span>Failure factor</span>
-            <textarea rows="3" formControlName="failureFactor" placeholder="Describe el factor o causa de la falla"></textarea>
+            <textarea
+              rows="4"
+              formControlName="failureFactor"
+              placeholder="Describe el factor o causa de la falla"
+            ></textarea>
           </label>
 
-          <label class="field field-full">
-            <span>Acciones realizadas</span>
-            <textarea rows="4" formControlName="actions" placeholder="Detalla las acciones ejecutadas y el seguimiento requerido"></textarea>
-          </label>
-        </div>
-      </section>
-
-      <section class="form-section">
-        <div class="section-heading">
-          <span class="section-number">04</span>
-          <div>
-            <h3>Evidencia fotográfica</h3>
-            <p>Agrega imágenes claras de la falla y del resultado final.</p>
-          </div>
-        </div>
-
-        <div class="upload-grid">
-          <label class="upload-zone" [class.has-file]="failPictureFile || repair?.failPicture">
-            <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
-            <span class="upload-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path></svg>
-            </span>
-            <strong>Fail picture</strong>
-            <span class="upload-copy" *ngIf="!failPictureFile">Selecciona o arrastra una imagen de la falla</span>
-            <span class="file-name" *ngIf="failPictureFile">{{ failPictureFile.name }}</span>
-            <a *ngIf="repair?.failPicture && !failPictureFile" [href]="repair!.failPicture!" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Ver imagen actual</a>
+          <label class="field field-span-2">
+            <span>Actions</span>
+            <textarea
+              rows="4"
+              formControlName="actions"
+              placeholder="Detalla las acciones realizadas"
+            ></textarea>
           </label>
 
-          <label class="upload-zone" [class.has-file]="evidencePictureFile || repair?.evidencePicture">
+          <label class="upload-zone field-full" [class.has-file]="evidencePictureFile || repair?.evidencePicture">
             <input type="file" accept="image/*" (change)="onFileSelected($event, 'evidencePicture')">
             <span class="upload-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path></svg>
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path>
+              </svg>
             </span>
-            <strong>Evidencia final</strong>
-            <span class="upload-copy" *ngIf="!evidencePictureFile">Selecciona o arrastra la evidencia de reparación</span>
-            <span class="file-name" *ngIf="evidencePictureFile">{{ evidencePictureFile.name }}</span>
-            <a *ngIf="repair?.evidencePicture && !evidencePictureFile" [href]="repair!.evidencePicture!" target="_blank" rel="noopener" (click)="$event.stopPropagation()">Ver imagen actual</a>
+            <span class="upload-content">
+              <strong>Evidence</strong>
+              <span *ngIf="!evidencePictureFile">Selecciona la evidencia final de la reparación</span>
+              <span class="file-name" *ngIf="evidencePictureFile">{{ evidencePictureFile.name }}</span>
+              <a
+                *ngIf="repair?.evidencePicture && !evidencePictureFile"
+                [href]="repair!.evidencePicture!"
+                target="_blank"
+                rel="noopener"
+                (click)="$event.stopPropagation()"
+              >Ver imagen actual</a>
+            </span>
           </label>
         </div>
-      </section>
+      </div>
 
       <footer class="form-actions">
         <div>
           <strong>{{ repair ? 'Actualización de reporte' : 'Nuevo reporte de reparación' }}</strong>
           <span>Los campos marcados con * son obligatorios.</span>
         </div>
+
         <div class="action-buttons">
           <button type="button" class="cancel-button" (click)="cancel.emit()">Cancelar</button>
           <button type="submit" class="save-button" [disabled]="form.invalid">
@@ -161,70 +182,26 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         overflow: hidden;
         border: 1px solid var(--border);
         border-radius: var(--radius-lg);
-        background: rgba(255, 255, 255, 0.96);
+        background: rgba(255, 255, 255, 0.98);
         box-shadow: var(--shadow-md);
       }
 
-      .form-section {
-        display: grid;
-        grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
-        gap: 34px;
-        padding: 28px 30px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .section-heading {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .section-number {
-        display: grid;
-        flex: 0 0 auto;
-        place-items: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 11px;
-        color: var(--primary);
-        font-size: 0.69rem;
-        font-weight: 800;
-        background: var(--primary-soft);
-      }
-
-      .section-heading h3 {
-        margin: 1px 0 5px;
-        font-size: 0.95rem;
-        letter-spacing: -0.01em;
-      }
-
-      .section-heading p {
-        max-width: 250px;
-        margin: 0;
-        color: var(--muted);
-        font-size: 0.76rem;
-        line-height: 1.55;
+      .form-body {
+        padding: 24px 28px;
       }
 
       .form-grid {
         display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 18px;
       }
 
-      .general-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .metrics-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .diagnosis-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
-      .field-wide {
+      .field-span-2 {
         grid-column: span 2;
+      }
+
+      .field-span-3 {
+        grid-column: span 3;
       }
 
       .field-full {
@@ -254,7 +231,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       .field textarea {
         width: 100%;
         border: 1px solid var(--border);
-        border-radius: 11px;
+        border-radius: 10px;
         color: var(--text);
         font-size: 0.82rem;
         font-weight: 450;
@@ -263,12 +240,12 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       .field input {
-        height: 43px;
+        height: 42px;
         padding: 0 12px;
       }
 
       .field textarea {
-        min-height: 86px;
+        min-height: 105px;
         padding: 11px 12px;
         line-height: 1.5;
         resize: vertical;
@@ -283,6 +260,8 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       .field textarea:focus {
         border-color: rgba(47, 126, 199, 0.7);
         background: #fff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(47, 126, 199, 0.1);
       }
 
       .field input.invalid,
@@ -295,22 +274,6 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         color: var(--danger);
         font-size: 0.68rem;
         font-weight: 600;
-      }
-
-      .metric-field {
-        padding: 15px;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        background: var(--surface-subtle);
-      }
-
-      .metric-field input {
-        background: #fff;
-      }
-
-      .accent-field {
-        border-color: rgba(47, 126, 199, 0.24);
-        background: var(--primary-soft);
       }
 
       .suffix-input {
@@ -330,22 +293,16 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         font-weight: 800;
       }
 
-      .upload-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
-      }
-
       .upload-zone {
         position: relative;
-        display: grid;
-        place-items: center;
-        min-height: 190px;
-        padding: 22px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 92px;
+        padding: 16px 18px;
         border: 1px dashed var(--border-strong);
-        border-radius: 16px;
+        border-radius: 12px;
         color: var(--text);
-        text-align: center;
         background: var(--surface-subtle);
         cursor: pointer;
         transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
@@ -354,7 +311,6 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       .upload-zone:hover {
         border-color: var(--accent);
         background: #f5f9fe;
-        transform: translateY(-1px);
       }
 
       .upload-zone.has-file {
@@ -363,7 +319,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         background: var(--success-soft);
       }
 
-      .upload-zone input {
+      .upload-zone > input {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -373,17 +329,17 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
       .upload-icon {
         display: grid;
+        flex: 0 0 auto;
         place-items: center;
-        width: 44px;
-        height: 44px;
-        margin-bottom: 10px;
-        border-radius: 14px;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
         color: var(--primary);
         background: var(--primary-soft);
       }
 
       .upload-icon svg {
-        width: 21px;
+        width: 20px;
         fill: none;
         stroke: currentColor;
         stroke-linecap: round;
@@ -391,30 +347,30 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         stroke-width: 1.7;
       }
 
-      .upload-zone strong {
-        margin-bottom: 4px;
-        font-size: 0.84rem;
-      }
-
-      .upload-copy,
-      .file-name {
-        max-width: 100%;
-        overflow: hidden;
+      .upload-content {
+        display: grid;
+        min-width: 0;
+        gap: 3px;
         color: var(--muted);
         font-size: 0.72rem;
+      }
+
+      .upload-content strong {
+        color: var(--text);
+        font-size: 0.8rem;
+      }
+
+      .file-name {
+        overflow: hidden;
+        color: var(--success);
+        font-weight: 700;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
-      .file-name {
-        color: var(--success);
-        font-weight: 700;
-      }
-
       .upload-zone a {
-        margin-top: 9px;
+        width: max-content;
         color: var(--primary);
-        font-size: 0.72rem;
         font-weight: 700;
         text-decoration: none;
       }
@@ -431,7 +387,8 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         align-items: center;
         justify-content: space-between;
         gap: 20px;
-        padding: 17px 30px;
+        padding: 15px 28px;
+        border-top: 1px solid var(--border);
         background: rgba(248, 250, 252, 0.96);
         backdrop-filter: blur(14px);
       }
@@ -461,9 +418,9 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         align-items: center;
         justify-content: center;
         gap: 8px;
-        min-height: 42px;
-        padding: 9px 16px;
-        border-radius: 11px;
+        min-height: 40px;
+        padding: 8px 15px;
+        border-radius: 10px;
         font-size: 0.78rem;
         font-weight: 750;
         cursor: pointer;
@@ -495,37 +452,43 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       @media (max-width: 1080px) {
-        .form-section {
-          grid-template-columns: 1fr;
-          gap: 22px;
+        .form-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .section-heading p {
-          max-width: none;
+        .field-span-3 {
+          grid-column: span 1;
+        }
+
+        .field-full {
+          grid-column: 1 / -1;
         }
       }
 
-      @media (max-width: 760px) {
-        .form-section {
-          padding: 22px 18px;
+      @media (max-width: 720px) {
+        .form-body {
+          padding: 18px 14px;
         }
 
-        .general-grid,
-        .metrics-grid,
-        .diagnosis-grid,
-        .upload-grid {
+        .form-grid {
           grid-template-columns: 1fr;
+          gap: 14px;
         }
 
-        .field-wide,
+        .field-span-2,
+        .field-span-3,
         .field-full {
           grid-column: auto;
+        }
+
+        .upload-zone {
+          min-height: 88px;
         }
 
         .form-actions {
           align-items: stretch;
           flex-direction: column;
-          padding: 15px 18px;
+          padding: 14px;
         }
 
         .action-buttons {
@@ -548,9 +511,9 @@ export class RepairFormComponent implements OnChanges {
     recordDate: ['', Validators.required],
     topIssue: ['', Validators.required],
     category: ['', Validators.required],
-    failureQty: [0, Validators.required],
-    buildQty: [0, Validators.required],
-    frPercentage: [0, Validators.required],
+    failureQty: [0, [Validators.required, Validators.min(0)]],
+    buildQty: [0, [Validators.required, Validators.min(0)]],
+    frPercentage: [0, [Validators.required, Validators.min(0)]],
     returnStatus: [''],
     majorPart: [''],
     repairResult: [''],
