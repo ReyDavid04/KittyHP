@@ -141,7 +141,7 @@ app-repair-form .grid-fail-picture {
 app-repair-form .grid-fail-picture .image-preview {
   flex: 0 0 auto !important;
   width: 100% !important;
-  height: 82px !important;
+  height: 138px !important;
 }
 
 app-repair-form .grid-fail-picture .upload-icon {
@@ -150,6 +150,10 @@ app-repair-form .grid-fail-picture .upload-icon {
 
 app-repair-form .grid-fail-picture .upload-content {
   text-align: center;
+}
+
+app-repair-form .upload-zone .file-name {
+  display: none !important;
 }
 
 app-repair-form .grid-major-part {
