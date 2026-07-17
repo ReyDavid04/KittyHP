@@ -58,8 +58,9 @@ import { RepairFormComponent } from '../components/repair-form.component';
       .page-heading {
         display: flex;
         align-items: center;
-        gap: 18px;
-        padding: 24px 36px;
+        gap: 14px;
+        min-height: 58px;
+        padding: 9px 22px;
         border-bottom: 1px solid var(--border);
         background: linear-gradient(180deg, #fff 0%, #fbfcfe 100%);
       }
@@ -69,13 +70,13 @@ import { RepairFormComponent } from '../components/repair-form.component';
         flex: 0 0 auto;
         align-items: center;
         justify-content: center;
-        gap: 7px;
-        min-height: 38px;
-        padding: 7px 12px;
+        gap: 6px;
+        min-height: 34px;
+        padding: 5px 10px;
         border: 1px solid var(--border);
-        border-radius: 10px;
+        border-radius: 9px;
         color: var(--primary);
-        font-size: 0.76rem;
+        font-size: 0.72rem;
         font-weight: 750;
         background: #fff;
         cursor: pointer;
@@ -89,7 +90,7 @@ import { RepairFormComponent } from '../components/repair-form.component';
       }
 
       .back-button svg {
-        width: 17px;
+        width: 15px;
         fill: none;
         stroke: currentColor;
         stroke-linecap: round;
@@ -100,10 +101,10 @@ import { RepairFormComponent } from '../components/repair-form.component';
       h1 {
         margin: 0;
         color: var(--text);
-        font-size: clamp(1.35rem, 2vw, 1.85rem);
+        font-size: clamp(1.15rem, 1.6vw, 1.4rem);
         font-weight: 800;
-        line-height: 1.15;
-        letter-spacing: -0.035em;
+        line-height: 1.1;
+        letter-spacing: -0.025em;
       }
 
       app-repair-form {
@@ -158,14 +159,18 @@ import { RepairFormComponent } from '../components/repair-form.component';
         }
 
         .page-heading {
-          align-items: flex-start;
-          flex-direction: column;
-          gap: 12px;
-          padding: 18px;
+          gap: 10px;
+          min-height: 54px;
+          padding: 8px 12px;
         }
 
         .back-button {
-          min-height: 34px;
+          min-height: 32px;
+          padding: 5px 8px;
+        }
+
+        h1 {
+          font-size: 1.05rem;
         }
       }
     `,
