@@ -109,7 +109,6 @@ import { RepairFormComponent } from '../components/repair-form.component';
       }
 
       h1 {
-        flex: 1 1 auto;
         margin: 0;
         color: var(--text);
         font-size: clamp(1.15rem, 1.6vw, 1.4rem);
@@ -255,7 +254,7 @@ export class RepairEditorPageComponent {
   }
 
   get isSaveDisabled(): boolean {
-    return this.isLoading || !this.repairForm || this.repairForm.form.invalid;
+    return this.isLoading || !this.repairForm || this.repairForm.catalogsLoading || this.repairForm.form.invalid;
   }
 
   submitRepair(): void {
