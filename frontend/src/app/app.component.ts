@@ -20,7 +20,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             Reportes
           </a>
 
-          <details class="settings-menu" #configMenu>
+          <details class="settings-menu" routerLinkActive="active" #configMenu>
             <summary>
               <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
                 <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8 3.5-2.1-.8a6.8 6.8 0 0 0-.7-1.7l.9-2-1.6-1.6-2 .9a6.8 6.8 0 0 0-1.7-.7L12 4H9.8L9 6.1a6.8 6.8 0 0 0-1.7.7l-2-.9-1.6 1.6.9 2a6.8 6.8 0 0 0-.7 1.7L2 12v2.2l2.1.8c.2.6.4 1.2.7 1.7l-.9 2 1.6 1.6 2-.9c.5.3 1.1.5 1.7.7l.8 2.1h2.2l.8-2.1c.6-.2 1.2-.4 1.7-.7l2 .9 1.6-1.6-.9-2c.3-.5.5-1.1.7-1.7l2.1-.8V12Z"></path>
@@ -181,6 +181,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       }
 
       .settings-menu summary {
+        position: relative;
         display: inline-flex;
         align-items: center;
         gap: 7px;
@@ -192,6 +193,20 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         list-style: none;
         cursor: pointer;
         user-select: none;
+      }
+
+      .settings-menu summary::after {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        border-radius: 2px 2px 0 0;
+        background: var(--primary);
+        content: '';
+        opacity: 0;
+        transform: scaleX(0.5);
+        transition: 160ms ease;
       }
 
       .settings-menu summary::-webkit-details-marker {
@@ -218,8 +233,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
       }
 
       .settings-menu[open] summary,
-      .settings-menu summary:hover {
+      .settings-menu summary:hover,
+      .settings-menu.active summary {
         color: var(--primary);
+      }
+
+      .settings-menu.active summary::after {
+        opacity: 1;
+        transform: scaleX(1);
       }
 
       .settings-menu[open] .chevron {
