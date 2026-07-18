@@ -92,6 +92,17 @@
 
           <td class="sticky-right actions-cell">
             <div class="row-actions">
+              <a
+                class="icon-button view"
+                [href]="'/repairs/' + repair.id + '/view'"
+                aria-label="Visualizar reporte"
+                title="Visualizar"
+              >
+                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                  <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                  <circle cx="12" cy="12" r="2.8"></circle>
+                </svg>
+              </a>
               <button type="button" class="icon-button edit" aria-label="Editar reporte" title="Editar" (click)="edit.emit(repair)">
                 <svg viewBox="0 0 24 24" focusable="false"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16 4 20Zm10.8-13.6 2.8 2.8"></path></svg>
               </button>
