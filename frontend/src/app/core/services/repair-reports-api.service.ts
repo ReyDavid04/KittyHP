@@ -5,6 +5,13 @@ import { RepairReport, RepairUpsertPayload } from '../models/repair-report.model
 
 type RepairReportResponse = Omit<RepairReport, 'frPercentage'> & { frPercentage: string | number };
 
+export interface RepairCatalogs {
+  topIssues: string[];
+  categories: string[];
+  majorParts: string[];
+  failureFactors: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class RepairReportsApiService {
   private readonly baseUrl = '/api/repairs';
@@ -13,6 +20,10 @@ export class RepairReportsApiService {
 
   getAll(): Observable<RepairReport[]> {
     return this.httpClient.get<RepairReportResponse[]>(this.baseUrl).pipe(map((repairs) => repairs.map((repair) => this.normalize(repair))));
+  }
+
+  getCatalogs(): Observable<RepairCatalogs> {
+    return this.httpClient.get<RepairCatalogs>(`${this.baseUrl}/catalogs`);
   }
 
   getOne(id: string): Observable<RepairReport> {
@@ -74,4 +85,3 @@ export class RepairReportsApiService {
     formData.append(key, String(value));
   }
 }
-
