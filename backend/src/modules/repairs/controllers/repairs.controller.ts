@@ -48,6 +48,11 @@ export class RepairsController {
     return this.repairsService.findAll();
   }
 
+  @Get('catalogs')
+  getCatalogs() {
+    return this.repairsService.getCatalogs();
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const repair = await this.repairsService.findById(id);
@@ -103,4 +108,3 @@ export class RepairsController {
     return { deleted: true };
   }
 }
-
