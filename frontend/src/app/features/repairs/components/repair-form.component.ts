@@ -2,6 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
+import { RepairCatalogs, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
+
+const EMPTY_CATALOGS: RepairCatalogs = {
+  topIssues: [],
+  categories: [],
+  majorParts: [],
+  failureFactors: [],
+};
 
 @Component({
   selector: 'app-repair-form',
@@ -22,12 +30,13 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
           <label class="field grid-top-issue">
             <span>Top issue <b>*</b></span>
-            <input
-              type="text"
+            <select
               formControlName="topIssue"
-              placeholder="Describe la falla principal"
               [class.invalid]="form.controls.topIssue.invalid && form.controls.topIssue.touched"
             >
+              <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona el top issue' }}</option>
+              <option *ngFor="let option of topIssueOptions" [value]="option">{{ option }}</option>
+            </select>
           </label>
 
           <label class="field grid-failure-qty">
@@ -66,12 +75,13 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
           <label class="field grid-category">
             <span>Category <b>*</b></span>
-            <input
-              type="text"
+            <select
               formControlName="category"
-              placeholder="Ej. MB, LCD, Cover"
               [class.invalid]="form.controls.category.invalid && form.controls.category.touched"
             >
+              <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la categoría' }}</option>
+              <option *ngFor="let option of categoryOptions" [value]="option">{{ option }}</option>
+            </select>
           </label>
 
           <label class="field grid-return">
@@ -86,23 +96,24 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
           <label class="field grid-major-part">
             <span>Major part <b>*</b></span>
-            <input
-              type="text"
+            <select
               formControlName="majorPart"
-              placeholder="Parte principal afectada"
               [class.invalid]="form.controls.majorPart.invalid && form.controls.majorPart.touched"
             >
+              <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la parte principal' }}</option>
+              <option *ngFor="let option of majorPartOptions" [value]="option">{{ option }}</option>
+            </select>
           </label>
 
           <label class="field grid-failure-factor">
             <span>Failure factor <b>*</b></span>
-            <textarea
-              class="compact-textarea"
-              rows="1"
+            <select
               formControlName="failureFactor"
-              placeholder="Factor o causa de la falla"
               [class.invalid]="form.controls.failureFactor.invalid && form.controls.failureFactor.touched"
-            ></textarea>
+            >
+              <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona el factor de falla' }}</option>
+              <option *ngFor="let option of failureFactorOptions" [value]="option">{{ option }}</option>
+            </select>
           </label>
 
           <label
@@ -189,7 +200,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
 
       <footer class="form-actions">
         <div class="action-buttons">
-          <button type="submit" class="save-button" [disabled]="form.invalid">
+          <button type="submit" class="save-button" [disabled]="form.invalid || catalogsLoading">
             <span aria-hidden="true">✓</span>
             {{ repair ? 'Guardar cambios' : 'Guardar reporte' }}
           </button>
@@ -264,6 +275,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       .field input,
+      .field select,
       .field textarea {
         width: 100%;
         border: 1px solid var(--border);
@@ -275,9 +287,14 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
       }
 
-      .field input {
+      .field input,
+      .field select {
         height: 46px;
         padding: 0 14px;
+      }
+
+      .field select {
+        cursor: pointer;
       }
 
       .field textarea {
@@ -287,19 +304,13 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
         resize: vertical;
       }
 
-      .field textarea.compact-textarea {
-        height: 46px;
-        min-height: 46px;
-        padding-top: 12px;
-        padding-bottom: 10px;
-      }
-
       .field input::placeholder,
       .field textarea::placeholder {
         color: #98a3b2;
       }
 
       .field input:focus,
+      .field select:focus,
       .field textarea:focus {
         border-color: rgba(47, 126, 199, 0.7);
         background: #fff;
@@ -308,6 +319,7 @@ import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-r
       }
 
       .field input.invalid,
+      .field select.invalid,
       .field textarea.invalid,
       .upload-zone.invalid {
         border-color: rgba(180, 35, 58, 0.65);
@@ -573,6 +585,8 @@ export class RepairFormComponent implements OnChanges {
   evidencePictureFile: File | null = null;
   failPicturePreview = '';
   evidencePicturePreview = '';
+  catalogs: RepairCatalogs = { ...EMPTY_CATALOGS };
+  catalogsLoading = true;
 
   readonly form = new FormBuilder().nonNullable.group({
     recordDate: ['', Validators.required],
@@ -589,6 +603,26 @@ export class RepairFormComponent implements OnChanges {
     evidencePicture: ['', Validators.required],
     actions: ['', Validators.required],
   });
+
+  constructor(private readonly repairReportsApi: RepairReportsApiService) {
+    this.loadCatalogs();
+  }
+
+  get topIssueOptions(): string[] {
+    return this.withCurrentValue(this.catalogs.topIssues, this.form.controls.topIssue.value);
+  }
+
+  get categoryOptions(): string[] {
+    return this.withCurrentValue(this.catalogs.categories, this.form.controls.category.value);
+  }
+
+  get majorPartOptions(): string[] {
+    return this.withCurrentValue(this.catalogs.majorParts, this.form.controls.majorPart.value);
+  }
+
+  get failureFactorOptions(): string[] {
+    return this.withCurrentValue(this.catalogs.failureFactors, this.form.controls.failureFactor.value);
+  }
 
   get failPicturePreviewUrl(): string {
     return this.failPicturePreview || this.repair?.failPicture || '';
@@ -651,7 +685,7 @@ export class RepairFormComponent implements OnChanges {
   }
 
   submit(): void {
-    if (this.form.invalid) {
+    if (this.form.invalid || this.catalogsLoading) {
       this.form.markAllAsTouched();
       return;
     }
@@ -675,6 +709,29 @@ export class RepairFormComponent implements OnChanges {
       failPictureFile: this.failPictureFile,
       evidencePictureFile: this.evidencePictureFile,
     });
+  }
+
+  private loadCatalogs(): void {
+    this.repairReportsApi.getCatalogs().subscribe({
+      next: (catalogs) => {
+        this.catalogs = catalogs;
+        this.catalogsLoading = false;
+      },
+      error: () => {
+        this.catalogs = { ...EMPTY_CATALOGS };
+        this.catalogsLoading = false;
+      },
+    });
+  }
+
+  private withCurrentValue(options: string[], currentValue: string): string[] {
+    const normalizedCurrent = currentValue.trim();
+
+    if (!normalizedCurrent || options.includes(normalizedCurrent)) {
+      return options;
+    }
+
+    return [normalizedCurrent, ...options];
   }
 
   private setPreview(field: 'failPicture' | 'evidencePicture', value: string): void {
