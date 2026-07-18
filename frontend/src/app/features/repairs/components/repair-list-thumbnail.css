@@ -46,6 +46,27 @@ tbody td:nth-child(7) .truncate {
   max-width: 80px;
 }
 
+.actions-column,
+.actions-cell {
+  width: 132px !important;
+  min-width: 132px !important;
+}
+
+.row-actions {
+  flex-wrap: nowrap;
+}
+
+.icon-button.view {
+  color: #52657d;
+  text-decoration: none;
+}
+
+.icon-button.view:hover {
+  border-color: rgba(82, 101, 125, 0.34);
+  color: var(--primary);
+  background: #f1f5f9;
+}
+
 :host {
   display: block;
   height: 100%;
