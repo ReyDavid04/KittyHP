@@ -1,9 +1,11 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
-import { CreateRepairDto } from '../dto/create-repair.dto';
-import { UpdateRepairDto } from '../dto/update-repair.dto';
-import { RepairsService } from '../services/repairs.service';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { extname } from 'node:path';
+import { CreateRepairCatalogItemDto } from '../dto/create-repair-catalog-item.dto';
+import { CreateRepairDto } from '../dto/create-repair.dto';
+import { UpdateRepairCatalogItemDto } from '../dto/update-repair-catalog-item.dto';
+import { UpdateRepairDto } from '../dto/update-repair.dto';
+import { RepairsService } from '../services/repairs.service';
 
 function buildUploadName(originalName: string): string {
   const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -51,6 +53,36 @@ export class RepairsController {
   @Get('catalogs')
   getCatalogs() {
     return this.repairsService.getCatalogs();
+  }
+
+  @Get('catalog-items/:type')
+  getCatalogItems(@Param('type') type: string) {
+    return this.repairsService.getCatalogItems(type);
+  }
+
+  @Post('catalog-items/:type')
+  createCatalogItem(
+    @Param('type') type: string,
+    @Body() createCatalogItemDto: CreateRepairCatalogItemDto,
+  ) {
+    return this.repairsService.createCatalogItem(type, createCatalogItemDto);
+  }
+
+  @Patch('catalog-items/:type/:catalogItemId')
+  updateCatalogItem(
+    @Param('type') type: string,
+    @Param('catalogItemId') catalogItemId: string,
+    @Body() updateCatalogItemDto: UpdateRepairCatalogItemDto,
+  ) {
+    return this.repairsService.updateCatalogItem(type, catalogItemId, updateCatalogItemDto);
+  }
+
+  @Delete('catalog-items/:type/:catalogItemId')
+  deleteCatalogItem(
+    @Param('type') type: string,
+    @Param('catalogItemId') catalogItemId: string,
+  ) {
+    return this.repairsService.deleteCatalogItem(type, catalogItemId);
   }
 
   @Get(':id')
