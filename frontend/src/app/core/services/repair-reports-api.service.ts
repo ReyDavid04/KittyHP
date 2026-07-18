@@ -5,11 +5,29 @@ import { RepairReport, RepairUpsertPayload } from '../models/repair-report.model
 
 type RepairReportResponse = Omit<RepairReport, 'frPercentage'> & { frPercentage: string | number };
 
+export type RepairCatalogType = 'top_issue' | 'category' | 'major_part' | 'failure_factor';
+
 export interface RepairCatalogs {
   topIssues: string[];
   categories: string[];
   majorParts: string[];
   failureFactors: string[];
+}
+
+export interface RepairCatalogItem {
+  id: string;
+  catalogType: RepairCatalogType;
+  value: string;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RepairCatalogItemPayload {
+  value?: string;
+  isActive?: boolean;
+  sortOrder?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -24,6 +42,22 @@ export class RepairReportsApiService {
 
   getCatalogs(): Observable<RepairCatalogs> {
     return this.httpClient.get<RepairCatalogs>(`${this.baseUrl}/catalogs`);
+  }
+
+  getCatalogItems(type: RepairCatalogType): Observable<RepairCatalogItem[]> {
+    return this.httpClient.get<RepairCatalogItem[]>(`${this.baseUrl}/catalog-items/${type}`);
+  }
+
+  createCatalogItem(type: RepairCatalogType, payload: Required<Pick<RepairCatalogItemPayload, 'value'>> & RepairCatalogItemPayload): Observable<RepairCatalogItem> {
+    return this.httpClient.post<RepairCatalogItem>(`${this.baseUrl}/catalog-items/${type}`, payload);
+  }
+
+  updateCatalogItem(type: RepairCatalogType, id: string, payload: RepairCatalogItemPayload): Observable<RepairCatalogItem> {
+    return this.httpClient.patch<RepairCatalogItem>(`${this.baseUrl}/catalog-items/${type}/${id}`, payload);
+  }
+
+  deleteCatalogItem(type: RepairCatalogType, id: string): Observable<{ deleted: true }> {
+    return this.httpClient.delete<{ deleted: true }>(`${this.baseUrl}/catalog-items/${type}/${id}`);
   }
 
   getOne(id: string): Observable<RepairReport> {
