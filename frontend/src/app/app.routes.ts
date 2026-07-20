@@ -15,9 +15,9 @@ export const appRoutes: Routes = [
   { path: '', component: RepairsPageComponent, canActivate: [authGuard] },
   { path: 'repairs/new', component: RepairEditorPageComponent, canActivate: [authGuard] },
   { path: 'repairs/:id/view', component: RepairViewPageComponent, canActivate: [authGuard] },
-  { path: 'repairs/:id/edit', component: RepairEditorPageComponent, canActivate: [authGuard] },
+  { path: 'repairs/:id/edit', component: RepairEditorPageComponent, canActivate: [authGuard, adminGuard] },
   { path: 'settings/users', component: UserManagementPageComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'settings/catalogs/:type', component: CatalogManagementPageComponent, canActivate: [authGuard] },
+  { path: 'settings/catalogs/:type', component: CatalogManagementPageComponent, canActivate: [authGuard, adminGuard] },
   { path: 'settings', redirectTo: 'settings/catalogs/top_issue', pathMatch: 'full' },
   { path: '**', redirectTo: '' },
 ];
