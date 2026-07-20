@@ -1,12 +1,15 @@
 CREATE TABLE repairs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   record_date DATE NOT NULL,
+  family VARCHAR(255) NULL,
   top_issue VARCHAR(255) NOT NULL,
   failure_qty INT UNSIGNED NOT NULL DEFAULT 0,
   build_qty INT UNSIGNED NOT NULL DEFAULT 0,
   fr_percentage DECIMAL(8,2) NOT NULL DEFAULT 0.00,
   category VARCHAR(120) NOT NULL,
   return_status VARCHAR(50) NULL,
+  return_yes_qty INT UNSIGNED NOT NULL DEFAULT 0,
+  return_no_qty INT UNSIGNED NOT NULL DEFAULT 0,
   fail_picture VARCHAR(255) NULL,
   major_part VARCHAR(255) NULL,
   repair_result VARCHAR(255) NULL,
@@ -34,6 +37,12 @@ CREATE TABLE repair_catalog_items (
   UNIQUE KEY uq_repair_catalog_type_value (catalog_type, value),
   KEY idx_repair_catalog_type_active (catalog_type, is_active, sort_order)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO repair_catalog_items (catalog_type, value)
+SELECT 'family', TRIM(family)
+FROM repairs
+WHERE family IS NOT NULL AND TRIM(family) <> ''
+GROUP BY TRIM(family);
 
 INSERT IGNORE INTO repair_catalog_items (catalog_type, value)
 SELECT 'top_issue', TRIM(top_issue)
