@@ -4,17 +4,11 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @MinLength(3)
-  @MaxLength(80)
-  @Matches(/^[a-zA-Z0-9._-]+$/, {
-    message: 'El usuario solo puede contener letras, números, punto, guion y guion bajo.',
+  @MaxLength(160)
+  @Matches(/^[a-zA-Z0-9._-]+(?:@inventec\.com)?$/i, {
+    message: 'El correo debe pertenecer al dominio @inventec.com.',
   })
-  username?: string;
-
-  @IsOptional()
-  @IsString()
-  @MinLength(2)
-  @MaxLength(120)
-  displayName?: string;
+  email?: string;
 
   @IsOptional()
   @IsString()
