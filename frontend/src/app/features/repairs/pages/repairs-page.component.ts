@@ -105,7 +105,19 @@ export class RepairsPageComponent {
 
   openNewRepair(): void { void this.router.navigate(['/repairs/new']); }
   openEditRepair(repair: RepairReport): void { void this.router.navigate(['/repairs', repair.id, 'edit']); }
-  removeRepair(id: string): void { this.repairReportsApi.delete(id).subscribe(() => this.loadRepairs()); }
+
+  removeRepair(id: string): void {
+    const repair = this.repairs.find((item) => item.id === id);
+    const detail = repair?.topIssue ? `\n\nTop Issue: ${repair.topIssue}` : '';
+    const confirmed = window.confirm(
+      `¿Estás seguro de eliminar el reporte #${id}?${detail}\n\nEsta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) return;
+
+    this.repairReportsApi.delete(id).subscribe(() => this.loadRepairs());
+  }
+
   setSearch(value: string): void { this.searchTerm = value; this.currentPage = 1; }
 
   setDateFrom(value: string): void {
