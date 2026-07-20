@@ -7,6 +7,8 @@ export interface RepairReport {
   buildQty: number;
   frPercentage: number;
   category: string;
+  returnYesQty: number;
+  returnNoQty: number;
   returnStatus?: string | null;
   failPicture?: string | null;
   majorPart?: string | null;
@@ -25,7 +27,7 @@ export interface RepairUpsertPayload {
   buildQty: number;
   frPercentage: number;
   category: string;
-  returnStatus?: string | null;
+  returnYesQty: number;
   majorPart?: string | null;
   repairResult?: string | null;
   failureFactor?: string | null;
