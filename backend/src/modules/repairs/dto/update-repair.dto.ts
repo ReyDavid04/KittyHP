@@ -9,6 +9,11 @@ export class UpdateRepairDto {
   @IsString()
   @IsOptional()
   @MaxLength(255)
+  family?: string;
+
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
   topIssue?: string;
 
   @IsOptional()
