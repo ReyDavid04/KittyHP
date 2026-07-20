@@ -18,7 +18,12 @@ import { AuthService } from './core/services/auth.service';
         <nav class="main-nav" aria-label="Navegación principal">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Reportes</a>
 
-          <details class="settings-menu" routerLinkActive="active" #configMenu>
+          <details
+            *ngIf="authService.isAdmin()"
+            class="settings-menu"
+            routerLinkActive="active"
+            #configMenu
+          >
             <summary>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm8 3.5-2.1-.8a6.8 6.8 0 0 0-.7-1.7l.9-2-1.6-1.6-2 .9a6.8 6.8 0 0 0-1.7-.7L12 4H9.8L9 6.1a6.8 6.8 0 0 0-1.7.7l-2-.9-1.6 1.6.9 2a6.8 6.8 0 0 0-.7 1.7L2 12v2.2l2.1.8c.2.6.4 1.2.7 1.7l-.9 2 1.6 1.6 2-.9c.5.3 1.1.5 1.7.7l.8 2.1h2.2l.8-2.1c.6-.2 1.2-.4 1.7-.7l2 .9 1.6-1.6-.9-2c.3-.5.5-1.1.7-1.7l2.1-.8V12Z"></path></svg>
               <span>Configuración</span>
@@ -26,14 +31,12 @@ import { AuthService } from './core/services/auth.service';
             </summary>
 
             <div class="settings-dropdown">
-              <ng-container *ngIf="authService.isAdmin()">
-                <span class="dropdown-title">Administración</span>
-                <a routerLink="/settings/users" routerLinkActive="active" (click)="$any(configMenu).open = false">
-                  <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
-                  <strong>Usuarios</strong>
-                </a>
-                <span class="menu-divider"></span>
-              </ng-container>
+              <span class="dropdown-title">Administración</span>
+              <a routerLink="/settings/users" routerLinkActive="active" (click)="$any(configMenu).open = false">
+                <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
+                <strong>Usuarios</strong>
+              </a>
+              <span class="menu-divider"></span>
 
               <span class="dropdown-title">Catálogos</span>
               <a routerLink="/settings/catalogs/family" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Family</strong></a>
