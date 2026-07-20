@@ -10,6 +10,7 @@ function updateCatalogResultsCounter(): void {
   }
 
   const searchRow = catalogPage.querySelector<HTMLElement>('.search-row');
+  const searchInput = catalogPage.querySelector<HTMLInputElement>('.search-field input');
   const totalLabel = catalogPage.querySelector<HTMLElement>('.item-count');
 
   if (!searchRow || !totalLabel) {
@@ -29,7 +30,11 @@ function updateCatalogResultsCounter(): void {
     searchRow.appendChild(counter);
   }
 
-  const nextText = `${visible} de ${total} resultados`;
+  const recordLabel = total === 1 ? 'registro' : 'registros';
+  const hasActiveSearch = Boolean(searchInput?.value.trim());
+  const nextText = hasActiveSearch
+    ? `${visible} de ${total} ${recordLabel}`
+    : `${total} ${recordLabel}`;
 
   if (counter.textContent !== nextText) {
     counter.textContent = nextText;
