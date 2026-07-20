@@ -301,8 +301,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         padding: 0;
       }
 
-      :host ::ng-deep .catalog-tabs {
+      :host ::ng-deep .catalog-tabs,
+      :host ::ng-deep .catalog-page .page-header > div > span,
+      :host ::ng-deep .catalog-page .back-link {
         display: none !important;
+      }
+
+      :host ::ng-deep .catalog-page .page-header {
+        justify-content: flex-start !important;
       }
 
       @media (max-width: 760px) {
