@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   RepairCatalogItem,
   RepairCatalogType,
@@ -44,26 +44,12 @@ const CATALOGS: CatalogDefinition[] = [
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, FormsModule],
   template: `
     <section class="catalog-page">
       <header class="page-header">
-        <div>
-          <span>Configuración</span>
-          <h1>Administración de catálogos</h1>
-        </div>
-        <a routerLink="/" class="back-link">Regresar a reportes</a>
+        <h1>Administración de catálogos</h1>
       </header>
-
-      <nav class="catalog-tabs" aria-label="Catálogos disponibles">
-        <a
-          *ngFor="let catalog of catalogs"
-          [routerLink]="['/settings/catalogs', catalog.type]"
-          routerLinkActive="active"
-        >
-          {{ catalog.title }}
-        </a>
-      </nav>
 
       <section class="catalog-panel">
         <div class="panel-heading">
@@ -87,11 +73,6 @@ const CATALOGS: CatalogDefinition[] = [
             >
           </label>
 
-          <label class="order-field">
-            <span>Orden</span>
-            <input type="number" name="newSortOrder" [(ngModel)]="newSortOrder" step="1">
-          </label>
-
           <button type="submit" [disabled]="saving || !newValue.trim()">
             <span aria-hidden="true">+</span>
             Agregar
@@ -109,7 +90,6 @@ const CATALOGS: CatalogDefinition[] = [
             <thead>
               <tr>
                 <th>Valor</th>
-                <th class="order-column">Orden</th>
                 <th class="status-column">Estatus</th>
                 <th class="actions-column">Opciones</th>
               </tr>
@@ -128,16 +108,6 @@ const CATALOGS: CatalogDefinition[] = [
                   <ng-template #valueText><strong>{{ item.value }}</strong></ng-template>
                 </td>
                 <td>
-                  <input
-                    *ngIf="editingId === item.id; else orderText"
-                    type="number"
-                    [(ngModel)]="editSortOrder"
-                    [ngModelOptions]="{ standalone: true }"
-                    class="inline-order"
-                  >
-                  <ng-template #orderText>{{ item.sortOrder }}</ng-template>
-                </td>
-                <td>
                   <span class="status" [class.inactive]="!item.isActive">
                     {{ item.isActive ? 'Activo' : 'Inactivo' }}
                   </span>
@@ -152,7 +122,12 @@ const CATALOGS: CatalogDefinition[] = [
                   </div>
                   <ng-template #editActions>
                     <div class="row-actions">
-                      <button type="button" class="text-button primary" (click)="saveEdit(item)" [disabled]="saving || !editValue.trim()">
+                      <button
+                        type="button"
+                        class="text-button primary"
+                        (click)="saveEdit(item)"
+                        [disabled]="saving || !editValue.trim()"
+                      >
                         Guardar
                       </button>
                       <button type="button" class="text-button" (click)="cancelEdit()">Cancelar</button>
@@ -188,25 +163,10 @@ const CATALOGS: CatalogDefinition[] = [
       .page-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-        min-height: 72px;
-        padding: 12px 24px;
+        min-height: 58px;
+        padding: 9px 22px;
         border-bottom: 1px solid var(--border);
         background: #fff;
-      }
-
-      .page-header > div {
-        display: grid;
-        gap: 3px;
-      }
-
-      .page-header span {
-        color: var(--muted);
-        font-size: 0.68rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
       }
 
       h1,
@@ -216,49 +176,10 @@ const CATALOGS: CatalogDefinition[] = [
       }
 
       h1 {
-        font-size: 1.35rem;
+        font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+        font-weight: 800;
+        line-height: 1.1;
         letter-spacing: -0.025em;
-      }
-
-      .back-link {
-        padding: 8px 12px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        color: var(--primary);
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-decoration: none;
-        background: #fff;
-      }
-
-      .catalog-tabs {
-        display: flex;
-        gap: 6px;
-        overflow-x: auto;
-        padding: 12px 24px;
-        border-bottom: 1px solid var(--border);
-        background: #fff;
-      }
-
-      .catalog-tabs a {
-        flex: 0 0 auto;
-        padding: 8px 12px;
-        border: 1px solid transparent;
-        border-radius: 8px;
-        color: var(--muted);
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-decoration: none;
-      }
-
-      .catalog-tabs a:hover {
-        background: var(--surface-subtle);
-      }
-
-      .catalog-tabs a.active {
-        border-color: rgba(47, 126, 199, 0.22);
-        color: var(--primary);
-        background: var(--primary-soft);
       }
 
       .catalog-panel {
@@ -305,7 +226,7 @@ const CATALOGS: CatalogDefinition[] = [
 
       .create-row {
         display: grid;
-        grid-template-columns: minmax(260px, 1fr) 110px auto;
+        grid-template-columns: minmax(260px, 1fr) auto;
         align-items: end;
         gap: 12px;
         padding: 16px 20px;
@@ -390,7 +311,7 @@ const CATALOGS: CatalogDefinition[] = [
 
       table {
         width: 100%;
-        min-width: 760px;
+        min-width: 660px;
         border-spacing: 0;
         border-collapse: separate;
       }
@@ -424,9 +345,8 @@ const CATALOGS: CatalogDefinition[] = [
         background: #fbfdff;
       }
 
-      .order-column,
       .status-column {
-        width: 120px;
+        width: 130px;
       }
 
       .actions-column {
@@ -484,22 +404,12 @@ const CATALOGS: CatalogDefinition[] = [
       }
 
       .inline-input {
-        max-width: 420px;
-      }
-
-      .inline-order {
-        width: 82px;
+        max-width: 520px;
       }
 
       @media (max-width: 720px) {
         .page-header {
-          align-items: flex-start;
-          flex-direction: column;
-          padding: 12px;
-        }
-
-        .catalog-tabs {
-          padding: 10px 12px;
+          padding: 9px 12px;
         }
 
         .catalog-panel {
@@ -515,8 +425,8 @@ const CATALOGS: CatalogDefinition[] = [
           grid-template-columns: 1fr;
         }
 
-        .order-field {
-          max-width: 140px;
+        .create-row button {
+          width: 100%;
         }
       }
     `,
@@ -526,17 +436,14 @@ export class CatalogManagementPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly repairReportsApi = inject(RepairReportsApiService);
 
-  readonly catalogs = CATALOGS;
   currentCatalog: CatalogDefinition = CATALOGS[0];
   items: RepairCatalogItem[] = [];
   loading = true;
   saving = false;
   errorMessage = '';
   newValue = '';
-  newSortOrder = 0;
   editingId: string | null = null;
   editValue = '';
-  editSortOrder = 0;
 
   constructor() {
     this.route.paramMap.subscribe((params) => {
@@ -558,12 +465,10 @@ export class CatalogManagementPageComponent {
     this.errorMessage = '';
     this.repairReportsApi.createCatalogItem(this.currentCatalog.type, {
       value,
-      sortOrder: Number(this.newSortOrder) || 0,
       isActive: true,
     }).subscribe({
       next: () => {
         this.newValue = '';
-        this.newSortOrder = 0;
         this.saving = false;
         this.loadItems();
       },
@@ -577,14 +482,12 @@ export class CatalogManagementPageComponent {
   startEdit(item: RepairCatalogItem): void {
     this.editingId = item.id;
     this.editValue = item.value;
-    this.editSortOrder = item.sortOrder;
     this.errorMessage = '';
   }
 
   cancelEdit(): void {
     this.editingId = null;
     this.editValue = '';
-    this.editSortOrder = 0;
   }
 
   saveEdit(item: RepairCatalogItem): void {
@@ -596,10 +499,7 @@ export class CatalogManagementPageComponent {
 
     this.saving = true;
     this.errorMessage = '';
-    this.repairReportsApi.updateCatalogItem(this.currentCatalog.type, item.id, {
-      value,
-      sortOrder: Number(this.editSortOrder) || 0,
-    }).subscribe({
+    this.repairReportsApi.updateCatalogItem(this.currentCatalog.type, item.id, { value }).subscribe({
       next: () => {
         this.saving = false;
         this.cancelEdit();
