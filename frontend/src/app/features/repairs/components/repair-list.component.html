@@ -103,10 +103,24 @@
                   <circle cx="12" cy="12" r="2.8"></circle>
                 </svg>
               </a>
-              <button type="button" class="icon-button edit" aria-label="Editar reporte" title="Editar" (click)="edit.emit(repair)">
+              <button
+                *ngIf="authService.isAdmin()"
+                type="button"
+                class="icon-button edit"
+                aria-label="Editar reporte"
+                title="Editar"
+                (click)="edit.emit(repair)"
+              >
                 <svg viewBox="0 0 24 24" focusable="false"><path d="m4 20 4.2-1 10.9-10.9a2.1 2.1 0 0 0-3-3L5.2 16 4 20Zm10.8-13.6 2.8 2.8"></path></svg>
               </button>
-              <button type="button" class="icon-button delete" aria-label="Eliminar reporte" title="Eliminar" (click)="remove.emit(repair.id)">
+              <button
+                *ngIf="authService.isAdmin()"
+                type="button"
+                class="icon-button delete"
+                aria-label="Eliminar reporte"
+                title="Eliminar"
+                (click)="remove.emit(repair.id)"
+              >
                 <svg viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"></path></svg>
               </button>
             </div>
