@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRepairDto } from '../dto/create-repair.dto';
@@ -6,11 +6,16 @@ import { UpdateRepairDto } from '../dto/update-repair.dto';
 import { RepairEntity } from '../entities/repair.entity';
 
 function calculateFrPercentage(failureQty: number, buildQty: number): string {
-  if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || buildQty <= 0) {
-    return '0.00';
+  if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || failureQty <= 0 || buildQty <= 0) {
+    throw new BadRequestException('Failure qty y Build qty deben ser mayores que cero.');
   }
 
-  return ((failureQty / buildQty) * 100).toFixed(2);
+  const frPercentage = Number(((failureQty / buildQty) * 100).toFixed(2));
+  if (frPercentage <= 0) {
+    throw new BadRequestException('El F/R calculado debe ser mayor a 0.00%.');
+  }
+
+  return frPercentage.toFixed(2);
 }
 
 @Injectable()
