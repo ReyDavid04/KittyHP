@@ -54,6 +54,16 @@
   background: #fff !important;
 }
 
+/* Keep a single results counter visible at all times. */
+.catalog-page .item-count,
+.catalog-page .search-count:not(.catalog-results-count) {
+  display: none !important;
+}
+
+.catalog-page .catalog-results-count {
+  display: inline-block !important;
+}
+
 /* The catalog menu only shows the catalog names. */
 .settings-dropdown a {
   gap: 0 !important;
