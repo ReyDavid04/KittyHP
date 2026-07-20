@@ -106,6 +106,82 @@ export class RepairsPageComponent {
   openNewRepair(): void { void this.router.navigate(['/repairs/new']); }
   openEditRepair(repair: RepairReport): void { void this.router.navigate(['/repairs', repair.id, 'edit']); }
 
+  exportToExcel(): void {
+    const repairs = this.filteredRepairs;
+    if (!repairs.length) return;
+
+    const headers = [
+      'ID',
+      'Date',
+      'Family',
+      'Top Issue',
+      "Failure q'ty",
+      "Build q'ty",
+      'F/R (%)',
+      'Category',
+      'Return',
+      'Fail Picture',
+      'Major Part',
+      'Repair Result',
+      'Failure Factor',
+      'Actions',
+      'Evidence',
+    ];
+
+    const headerRow = `<Row ss:StyleID="Header">${headers.map((header) => this.excelTextCell(header)).join('')}</Row>`;
+    const dataRows = repairs.map((repair) => [
+      this.excelTextCell(repair.id),
+      this.excelTextCell(this.normalizeRecordDate(repair.recordDate) || repair.recordDate),
+      this.excelTextCell(repair.family),
+      this.excelTextCell(repair.topIssue),
+      this.excelNumberCell(repair.failureQty),
+      this.excelNumberCell(repair.buildQty),
+      this.excelNumberCell(Number(repair.frPercentage), 'Decimal'),
+      this.excelTextCell(repair.category),
+      this.excelTextCell(repair.returnStatus),
+      this.excelTextCell(repair.failPicture),
+      this.excelTextCell(repair.majorPart),
+      this.excelTextCell(repair.repairResult),
+      this.excelTextCell(repair.failureFactor),
+      this.excelTextCell(repair.actions),
+      this.excelTextCell(repair.evidencePicture),
+    ].join('')).map((cells) => `<Row>${cells}</Row>`).join('');
+
+    const workbook = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Arial" ss:Size="10"/></Style>
+  <Style ss:ID="Header"><Font ss:FontName="Arial" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#164C8C" ss:Pattern="Solid"/><Alignment ss:Vertical="Center"/></Style>
+  <Style ss:ID="Decimal"><NumberFormat ss:Format="0.00"/></Style>
+ </Styles>
+ <Worksheet ss:Name="Reportes">
+  <Table>
+   <Column ss:Width="60"/><Column ss:Width="80"/><Column ss:Width="110"/><Column ss:Width="180"/>
+   <Column ss:Width="80"/><Column ss:Width="80"/><Column ss:Width="70"/><Column ss:Width="110"/>
+   <Column ss:Width="80"/><Column ss:Width="180"/><Column ss:Width="120"/><Column ss:Width="180"/>
+   <Column ss:Width="140"/><Column ss:Width="220"/><Column ss:Width="180"/>
+   ${headerRow}${dataRows}
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions>
+ </Worksheet>
+</Workbook>`;
+
+    const blob = new Blob([workbook], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    link.href = downloadUrl;
+    link.download = `KittyHP_Reportes_${date}.xls`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(downloadUrl);
+  }
+
   removeRepair(id: string): void {
     const repair = this.repairs.find((item) => item.id === id);
     const detail = repair?.topIssue ? `\n\nTop Issue: ${repair.topIssue}` : '';
@@ -138,6 +214,27 @@ export class RepairsPageComponent {
   clearFilters(): void { this.filters = this.createEmptyFilters(); this.clearDateRange(); }
   goToPage(page: number): void { this.currentPage = Math.min(Math.max(page, 1), this.totalPages); }
   setPageSize(value: string): void { this.pageSize = Number(value); this.currentPage = 1; }
+
+  private excelTextCell(value: unknown): string {
+    return `<Cell><Data ss:Type="String">${this.escapeXml(value)}</Data></Cell>`;
+  }
+
+  private excelNumberCell(value: unknown, styleId?: string): string {
+    const number = Number(value);
+    const safeNumber = Number.isFinite(number) ? number : 0;
+    const style = styleId ? ` ss:StyleID="${styleId}"` : '';
+    return `<Cell${style}><Data ss:Type="Number">${safeNumber}</Data></Cell>`;
+  }
+
+  private escapeXml(value: unknown): string {
+    return String(value ?? '')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
 
   private sortRepairs(repairs: RepairReport[]): RepairReport[] {
     const { key, direction } = this.sort;
