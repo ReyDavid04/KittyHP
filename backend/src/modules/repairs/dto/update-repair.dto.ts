@@ -18,17 +18,17 @@ export class UpdateRepairDto {
 
   @IsOptional()
   @Type(() => Number)
-  @Min(0)
+  @Min(1)
   failureQty?: number;
 
   @IsOptional()
   @Type(() => Number)
-  @Min(0)
+  @Min(1)
   buildQty?: number;
 
   @IsOptional()
   @Type(() => Number)
-  @Min(0)
+  @Min(0.01)
   frPercentage?: number;
 
   @IsString()
