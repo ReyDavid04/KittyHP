@@ -1,10 +1,22 @@
-import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
+
+export type UserRole = 'admin' | 'user';
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  displayName: string;
+  role: UserRole;
+}
 
 interface LoginResponse {
   token: string;
+  userId: number;
   username: string;
+  displayName: string;
+  role: UserRole;
   expiresAt: string;
 }
 
@@ -15,7 +27,7 @@ export class AuthService {
   private readonly storageKey = 'kittyhp-auth-session';
   private readonly currentSession = signal<StoredSession | null>(this.readSession());
 
-  readonly currentUser = signal<string | null>(this.currentSession()?.username ?? null);
+  readonly currentUser = signal<AuthUser | null>(this.toAuthUser(this.currentSession()));
 
   constructor(private readonly httpClient: HttpClient) {}
 
@@ -40,6 +52,10 @@ export class AuthService {
     return true;
   }
 
+  isAdmin(): boolean {
+    return this.isAuthenticated() && this.currentUser()?.role === 'admin';
+  }
+
   getToken(): string | null {
     return this.isAuthenticated() ? this.currentSession()?.token ?? null : null;
   }
@@ -47,7 +63,7 @@ export class AuthService {
   private saveSession(session: StoredSession): void {
     localStorage.setItem(this.storageKey, JSON.stringify(session));
     this.currentSession.set(session);
-    this.currentUser.set(session.username);
+    this.currentUser.set(this.toAuthUser(session));
   }
 
   private readSession(): StoredSession | null {
@@ -55,14 +71,35 @@ export class AuthService {
       const raw = localStorage.getItem(this.storageKey);
       if (!raw) return null;
       const session = JSON.parse(raw) as StoredSession;
-      if (!session.token || !session.username || !session.expiresAt || new Date(session.expiresAt).getTime() <= Date.now()) {
+      const validRole = session.role === 'admin' || session.role === 'user';
+
+      if (
+        !session.token ||
+        !session.userId ||
+        !session.username ||
+        !session.displayName ||
+        !validRole ||
+        !session.expiresAt ||
+        new Date(session.expiresAt).getTime() <= Date.now()
+      ) {
         localStorage.removeItem(this.storageKey);
         return null;
       }
+
       return session;
     } catch {
       localStorage.removeItem(this.storageKey);
       return null;
     }
+  }
+
+  private toAuthUser(session: StoredSession | null): AuthUser | null {
+    if (!session) return null;
+    return {
+      id: session.userId,
+      username: session.username,
+      displayName: session.displayName,
+      role: session.role,
+    };
   }
 }
