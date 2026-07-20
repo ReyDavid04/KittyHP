@@ -7,9 +7,9 @@ import { UpdateRepairDto } from '../dto/update-repair.dto';
 import { RepairRepository } from '../repositories/repair.repository';
 import { CreateRepairUseCase } from '../use-cases/create-repair.use-case';
 
-export type RepairCatalogType = 'top_issue' | 'category' | 'major_part' | 'failure_factor';
+export type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_part' | 'failure_factor';
 
-const CATALOG_TYPES: RepairCatalogType[] = ['top_issue', 'category', 'major_part', 'failure_factor'];
+const CATALOG_TYPES: RepairCatalogType[] = ['family', 'top_issue', 'category', 'major_part', 'failure_factor'];
 
 type RepairCatalogRow = {
   catalogType: RepairCatalogType;
@@ -37,6 +37,7 @@ export type RepairCatalogItem = {
 };
 
 export type RepairCatalogs = {
+  families: string[];
   topIssues: string[];
   categories: string[];
   majorParts: string[];
@@ -44,6 +45,7 @@ export type RepairCatalogs = {
 };
 
 const EMPTY_CATALOGS: RepairCatalogs = {
+  families: [],
   topIssues: [],
   categories: [],
   majorParts: [],
@@ -59,6 +61,7 @@ export class RepairsService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    await this.ensureRepairFamilyColumn();
     await this.ensureCatalogTable();
     await this.seedCatalogsFromRepairsIfEmpty();
   }
@@ -83,6 +86,9 @@ export class RepairsService implements OnModuleInit {
 
     return rows.reduce<RepairCatalogs>((catalogs, row) => {
       switch (row.catalogType) {
+        case 'family':
+          catalogs.families.push(row.value);
+          break;
         case 'top_issue':
           catalogs.topIssues.push(row.value);
           break;
@@ -99,6 +105,7 @@ export class RepairsService implements OnModuleInit {
 
       return catalogs;
     }, {
+      families: [...EMPTY_CATALOGS.families],
       topIssues: [...EMPTY_CATALOGS.topIssues],
       categories: [...EMPTY_CATALOGS.categories],
       majorParts: [...EMPTY_CATALOGS.majorParts],
@@ -230,6 +237,23 @@ export class RepairsService implements OnModuleInit {
     return this.repairRepository.delete(id);
   }
 
+  private async ensureRepairFamilyColumn(): Promise<void> {
+    const rows = await this.dataSource.query<Array<{ total: number | string }>>(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'repairs'
+         AND COLUMN_NAME = 'family'`,
+    );
+
+    if (Number(rows[0]?.total ?? 0) === 0) {
+      await this.dataSource.query(
+        `ALTER TABLE repairs
+         ADD COLUMN family VARCHAR(255) NULL AFTER record_date`,
+      );
+    }
+  }
+
   private async ensureCatalogTable(): Promise<void> {
     await this.dataSource.query(`
       CREATE TABLE IF NOT EXISTS repair_catalog_items (
@@ -257,6 +281,7 @@ export class RepairsService implements OnModuleInit {
     }
 
     const catalogColumns: Array<{ type: RepairCatalogType; column: string }> = [
+      { type: 'family', column: 'family' },
       { type: 'top_issue', column: 'top_issue' },
       { type: 'category', column: 'category' },
       { type: 'major_part', column: 'major_part' },
