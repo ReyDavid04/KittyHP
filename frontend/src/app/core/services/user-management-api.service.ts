@@ -5,8 +5,7 @@ import { UserRole } from './auth.service';
 
 export interface ManagedUser {
   id: number;
-  username: string;
-  displayName: string;
+  email: string;
   role: UserRole;
   isActive: boolean;
   createdAt: string;
@@ -14,16 +13,14 @@ export interface ManagedUser {
 }
 
 export interface CreateUserPayload {
-  username: string;
-  displayName: string;
+  email: string;
   password: string;
   role: UserRole;
   isActive: boolean;
 }
 
 export interface UpdateUserPayload {
-  username?: string;
-  displayName?: string;
+  email?: string;
   password?: string;
   role?: UserRole;
   isActive?: boolean;
