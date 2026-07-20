@@ -1,14 +1,18 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { LoginPageComponent } from './features/auth/pages/login-page.component';
 import { CatalogManagementPageComponent } from './features/repairs/pages/catalog-management-page.component';
 import { RepairEditorPageComponent } from './features/repairs/pages/repair-editor-page.component';
 import { RepairViewPageComponent } from './features/repairs/pages/repair-view-page.component';
 import { RepairsPageComponent } from './features/repairs/pages/repairs-page.component';
 
 export const appRoutes: Routes = [
-  { path: '', component: RepairsPageComponent },
-  { path: 'repairs/new', component: RepairEditorPageComponent },
-  { path: 'repairs/:id/view', component: RepairViewPageComponent },
-  { path: 'repairs/:id/edit', component: RepairEditorPageComponent },
-  { path: 'settings/catalogs/:type', component: CatalogManagementPageComponent },
+  { path: 'login', component: LoginPageComponent },
+  { path: '', component: RepairsPageComponent, canActivate: [authGuard] },
+  { path: 'repairs/new', component: RepairEditorPageComponent, canActivate: [authGuard] },
+  { path: 'repairs/:id/view', component: RepairViewPageComponent, canActivate: [authGuard] },
+  { path: 'repairs/:id/edit', component: RepairEditorPageComponent, canActivate: [authGuard] },
+  { path: 'settings/catalogs/:type', component: CatalogManagementPageComponent, canActivate: [authGuard] },
   { path: 'settings', redirectTo: 'settings/catalogs/top_issue', pathMatch: 'full' },
+  { path: '**', redirectTo: '' },
 ];
