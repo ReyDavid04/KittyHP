@@ -47,10 +47,6 @@ const CATALOGS: CatalogDefinition[] = [
   imports: [CommonModule, FormsModule],
   template: `
     <section class="catalog-page">
-      <header class="page-header">
-        <h1>Administración de catálogos</h1>
-      </header>
-
       <section class="catalog-panel">
         <div class="panel-heading">
           <div>
@@ -79,6 +75,35 @@ const CATALOGS: CatalogDefinition[] = [
           </button>
         </form>
 
+        <div class="search-row">
+          <label class="search-field">
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"></path>
+            </svg>
+            <input
+              type="search"
+              name="catalogSearch"
+              [(ngModel)]="searchTerm"
+              placeholder="Buscar valor en el catálogo..."
+              autocomplete="off"
+            >
+            <button
+              *ngIf="searchTerm"
+              type="button"
+              class="clear-search"
+              aria-label="Limpiar búsqueda"
+              title="Limpiar búsqueda"
+              (click)="searchTerm = ''"
+            >
+              ×
+            </button>
+          </label>
+
+          <span class="search-count" *ngIf="searchTerm.trim()">
+            {{ filteredItems.length }} de {{ items.length }} resultados
+          </span>
+        </div>
+
         <div *ngIf="errorMessage" class="error-message" role="alert">
           {{ errorMessage }}
         </div>
@@ -95,7 +120,7 @@ const CATALOGS: CatalogDefinition[] = [
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let item of items; trackBy: trackById">
+              <tr *ngFor="let item of filteredItems; trackBy: trackById">
                 <td>
                   <input
                     *ngIf="editingId === item.id; else valueText"
@@ -135,6 +160,13 @@ const CATALOGS: CatalogDefinition[] = [
                   </ng-template>
                 </td>
               </tr>
+
+              <tr *ngIf="!filteredItems.length">
+                <td colspan="3" class="no-results">
+                  <strong>No se encontraron resultados.</strong>
+                  <span>Prueba con otro término de búsqueda.</span>
+                </td>
+              </tr>
             </tbody>
           </table>
 
@@ -153,42 +185,27 @@ const CATALOGS: CatalogDefinition[] = [
       :host {
         display: block;
         min-height: calc(100dvh - 50px);
-        background: #f5f7fa;
-      }
-
-      .catalog-page {
-        width: 100%;
-      }
-
-      .page-header {
-        display: flex;
-        align-items: center;
-        min-height: 58px;
-        padding: 9px 22px;
-        border-bottom: 1px solid var(--border);
         background: #fff;
       }
 
-      h1,
-      h2,
-      p {
-        margin: 0;
-      }
-
-      h1 {
-        font-size: clamp(1.15rem, 1.6vw, 1.4rem);
-        font-weight: 800;
-        line-height: 1.1;
-        letter-spacing: -0.025em;
+      .catalog-page,
+      .catalog-panel {
+        width: 100%;
+        min-height: calc(100dvh - 50px);
+        background: #fff;
       }
 
       .catalog-panel {
-        margin: 20px 24px;
-        overflow: hidden;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        background: #fff;
-        box-shadow: var(--shadow-sm);
+        margin: 0;
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      h2,
+      p {
+        margin: 0;
       }
 
       .panel-heading {
@@ -196,22 +213,26 @@ const CATALOGS: CatalogDefinition[] = [
         align-items: center;
         justify-content: space-between;
         gap: 18px;
-        padding: 18px 20px;
+        min-height: 58px;
+        padding: 9px 22px;
         border-bottom: 1px solid var(--border);
+        background: #fff;
       }
 
       .panel-heading > div {
         display: grid;
-        gap: 5px;
+        gap: 4px;
       }
 
       h2 {
-        font-size: 1.05rem;
+        font-size: clamp(1.15rem, 1.6vw, 1.4rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.025em;
       }
 
       .panel-heading p {
-        color: var(--muted);
-        font-size: 0.76rem;
+        display: none;
       }
 
       .item-count {
@@ -231,7 +252,7 @@ const CATALOGS: CatalogDefinition[] = [
         gap: 12px;
         padding: 16px 20px;
         border-bottom: 1px solid var(--border);
-        background: #fbfcfe;
+        background: #fff;
       }
 
       .create-row label {
@@ -278,6 +299,93 @@ const CATALOGS: CatalogDefinition[] = [
         cursor: not-allowed;
       }
 
+      .search-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+      }
+
+      .search-field {
+        position: relative;
+        display: block;
+        width: min(520px, 100%);
+      }
+
+      .search-field > svg {
+        position: absolute;
+        top: 50%;
+        left: 11px;
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: #8996a8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.7;
+        pointer-events: none;
+        transform: translateY(-50%);
+      }
+
+      .search-field input {
+        height: 34px;
+        padding: 0 34px;
+        border-color: #e2e8f0;
+        color: #334155;
+        font-size: 0.76rem;
+        background: #fbfcfe;
+        box-shadow: none;
+      }
+
+      .search-field input::placeholder {
+        color: #9aa6b5;
+      }
+
+      .search-field input:hover {
+        border-color: #d4dce6;
+        background: #fff;
+      }
+
+      .search-field input:focus {
+        border-color: rgba(47, 126, 199, 0.42);
+        background: #fff;
+        box-shadow: 0 0 0 2px rgba(47, 126, 199, 0.08);
+      }
+
+      .clear-search {
+        position: absolute;
+        top: 50%;
+        right: 7px;
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 6px;
+        color: #738196;
+        font-size: 1rem;
+        line-height: 1;
+        background: transparent;
+        cursor: pointer;
+        transform: translateY(-50%);
+      }
+
+      .clear-search:hover {
+        color: var(--primary);
+        background: var(--primary-soft);
+      }
+
+      .search-count {
+        color: var(--muted);
+        font-size: 0.7rem;
+        font-weight: 650;
+        white-space: nowrap;
+      }
+
       .error-message {
         padding: 11px 20px;
         border-bottom: 1px solid #f5c8d0;
@@ -287,22 +395,35 @@ const CATALOGS: CatalogDefinition[] = [
       }
 
       .loading-state,
+      .empty-state,
+      .no-results {
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-align: center;
+      }
+
+      .loading-state,
       .empty-state {
         display: grid;
         place-items: center;
         min-height: 220px;
         padding: 30px;
-        color: var(--muted);
-        font-size: 0.78rem;
       }
 
-      .empty-state {
+      .empty-state,
+      .no-results {
         gap: 6px;
-        text-align: center;
       }
 
-      .empty-state strong {
+      .empty-state strong,
+      .no-results strong {
         color: var(--text);
+      }
+
+      .no-results {
+        display: grid;
+        place-items: center;
+        min-height: 170px;
       }
 
       .table-wrap {
@@ -341,7 +462,7 @@ const CATALOGS: CatalogDefinition[] = [
         border-bottom: 0;
       }
 
-      tbody tr:hover td {
+      tbody tr:hover td:not(.no-results) {
         background: #fbfdff;
       }
 
@@ -408,25 +529,31 @@ const CATALOGS: CatalogDefinition[] = [
       }
 
       @media (max-width: 720px) {
-        .page-header {
-          padding: 9px 12px;
-        }
-
-        .catalog-panel {
-          margin: 12px;
-        }
-
         .panel-heading {
-          align-items: flex-start;
-          flex-direction: column;
+          padding: 9px 12px;
         }
 
         .create-row {
           grid-template-columns: 1fr;
+          padding: 14px 12px;
         }
 
         .create-row button {
           width: 100%;
+        }
+
+        .search-row {
+          align-items: stretch;
+          flex-direction: column;
+          padding: 10px 12px;
+        }
+
+        .search-field {
+          width: 100%;
+        }
+
+        .search-count {
+          align-self: flex-end;
         }
       }
     `,
@@ -442,6 +569,7 @@ export class CatalogManagementPageComponent {
   saving = false;
   errorMessage = '';
   newValue = '';
+  searchTerm = '';
   editingId: string | null = null;
   editValue = '';
 
@@ -449,9 +577,20 @@ export class CatalogManagementPageComponent {
     this.route.paramMap.subscribe((params) => {
       const requestedType = params.get('type') as RepairCatalogType | null;
       this.currentCatalog = CATALOGS.find((catalog) => catalog.type === requestedType) ?? CATALOGS[0];
+      this.searchTerm = '';
       this.cancelEdit();
       this.loadItems();
     });
+  }
+
+  get filteredItems(): RepairCatalogItem[] {
+    const search = this.searchTerm.trim().toLocaleLowerCase();
+
+    if (!search) {
+      return this.items;
+    }
+
+    return this.items.filter((item) => item.value.toLocaleLowerCase().includes(search));
   }
 
   createItem(): void {
