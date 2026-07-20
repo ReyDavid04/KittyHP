@@ -26,9 +26,9 @@ const EMPTY_CATALOGS: RepairCatalogs = {
           </label>
 
           <label class="field grid-family">
-            <span>Familia <b>*</b></span>
+            <span>Family <b>*</b></span>
             <select formControlName="family" [class.invalid]="isInvalid('family')">
-              <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la familia' }}</option>
+              <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona Family' }}</option>
               <option *ngFor="let option of familyOptions" [value]="option">{{ option }}</option>
             </select>
           </label>
