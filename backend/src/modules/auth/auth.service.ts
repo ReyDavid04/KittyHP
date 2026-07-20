@@ -66,8 +66,10 @@ export class AuthService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
   ) {
-    this.tokenSecret = this.configService.get<string>('AUTH_TOKEN_SECRET', 'kittyhp-change-this-secret');
-    this.tokenLifetimeMs = Number(this.configService.get<string>('AUTH_TOKEN_LIFETIME_MS', '28800000'));
+    this.tokenSecret = this.configService.getOrThrow<string>('AUTH_TOKEN_SECRET');
+    this.tokenLifetimeMs = Number(
+      this.configService.getOrThrow<string>('AUTH_TOKEN_LIFETIME_MS'),
+    );
   }
 
   async onModuleInit(): Promise<void> {
@@ -85,7 +87,11 @@ export class AuthService implements OnModuleInit {
     const normalizedEmail = this.normalizeEmail(email);
     const user = await this.findByEmail(normalizedEmail);
 
-    if (!user || !this.toBoolean(user.is_active) || !this.verifyPassword(password, user.password_salt, user.password_hash)) {
+    if (
+      !user ||
+      !this.toBoolean(user.is_active) ||
+      !this.verifyPassword(password, user.password_salt, user.password_hash)
+    ) {
       throw new UnauthorizedException('Correo o contraseña incorrectos.');
     }
 
@@ -119,7 +125,10 @@ export class AuthService implements OnModuleInit {
     }
 
     try {
-      const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8')) as AuthTokenPayload;
+      const payload = JSON.parse(
+        Buffer.from(encodedPayload, 'base64url').toString('utf8'),
+      ) as AuthTokenPayload;
+
       if (
         !payload.sub ||
         !payload.email ||
@@ -129,6 +138,7 @@ export class AuthService implements OnModuleInit {
       ) {
         throw new UnauthorizedException('La sesión expiró.');
       }
+
       return payload;
     } catch (error) {
       if (error instanceof UnauthorizedException) throw error;
@@ -164,7 +174,9 @@ export class AuthService implements OnModuleInit {
       ) as { insertId?: number };
 
       const created = await this.findById(Number(result.insertId));
-      if (!created) throw new NotFoundException('No fue posible recuperar el usuario creado.');
+      if (!created) {
+        throw new NotFoundException('No fue posible recuperar el usuario creado.');
+      }
       return this.toManagedUser(created);
     } catch (error) {
       this.handleDuplicateEmail(error);
@@ -172,7 +184,11 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  async updateUser(id: number, dto: UpdateUserDto, currentUserId: number): Promise<ManagedUser> {
+  async updateUser(
+    id: number,
+    dto: UpdateUserDto,
+    currentUserId: number,
+  ): Promise<ManagedUser> {
     const user = await this.findById(id);
     if (!user) throw new NotFoundException('El usuario no existe.');
 
@@ -190,6 +206,7 @@ export class AuthService implements OnModuleInit {
 
     let passwordHash = user.password_hash;
     let passwordSalt = user.password_salt;
+
     if (dto.password !== undefined && dto.password.length > 0) {
       const password = this.hashPassword(dto.password);
       passwordHash = password.hash;
@@ -251,7 +268,9 @@ export class AuthService implements OnModuleInit {
 
     const columns = await this.getUserColumns();
     if (!columns.has('email')) {
-      await this.dataSource.query('ALTER TABLE users ADD COLUMN email VARCHAR(160) NULL AFTER id');
+      await this.dataSource.query(
+        'ALTER TABLE users ADD COLUMN email VARCHAR(160) NULL AFTER id',
+      );
     }
 
     const migratedColumns = await this.getUserColumns();
@@ -271,15 +290,20 @@ export class AuthService implements OnModuleInit {
       SET email = CONCAT('usuario', id, '@inventec.com')
       WHERE email IS NULL OR TRIM(email) = ''
     `);
-    await this.dataSource.query('ALTER TABLE users MODIFY COLUMN email VARCHAR(160) NOT NULL');
+    await this.dataSource.query(
+      'ALTER TABLE users MODIFY COLUMN email VARCHAR(160) NOT NULL',
+    );
 
     const indexes = await this.getUserIndexes();
     if (!indexes.has('uq_users_email')) {
-      await this.dataSource.query('ALTER TABLE users ADD UNIQUE KEY uq_users_email (email)');
+      await this.dataSource.query(
+        'ALTER TABLE users ADD UNIQUE KEY uq_users_email (email)',
+      );
     }
 
     const finalColumns = await this.getUserColumns();
     const finalIndexes = await this.getUserIndexes();
+
     if (finalIndexes.has('uq_users_username')) {
       await this.dataSource.query('ALTER TABLE users DROP INDEX uq_users_username');
     }
@@ -292,11 +316,16 @@ export class AuthService implements OnModuleInit {
   }
 
   private async seedInitialAdministrator(): Promise<void> {
-    const rows = await this.dataSource.query('SELECT COUNT(*) AS total FROM users') as CountRow[];
+    const rows = await this.dataSource.query(
+      'SELECT COUNT(*) AS total FROM users',
+    ) as CountRow[];
+
     if (Number(rows[0]?.total ?? 0) > 0) return;
 
-    const email = this.normalizeEmail(this.configService.get<string>('AUTH_EMAIL', 'Ramos.Rey@inventec.com'));
-    const password = this.configService.get<string>('AUTH_PASSWORD', 'KittyHP2026!');
+    const email = this.normalizeEmail(
+      this.configService.getOrThrow<string>('AUTH_EMAIL'),
+    );
+    const password = this.configService.getOrThrow<string>('AUTH_PASSWORD');
     const { salt, hash } = this.hashPassword(password);
 
     await this.dataSource.query(
@@ -306,12 +335,22 @@ export class AuthService implements OnModuleInit {
     );
   }
 
-  private async ensureAdministratorRemains(user: UserRow, nextRole: UserRole, nextIsActive: boolean): Promise<void> {
-    const removesActiveAdmin = user.role === 'admin' && this.toBoolean(user.is_active) && (nextRole !== 'admin' || !nextIsActive);
+  private async ensureAdministratorRemains(
+    user: UserRow,
+    nextRole: UserRole,
+    nextIsActive: boolean,
+  ): Promise<void> {
+    const removesActiveAdmin =
+      user.role === 'admin' &&
+      this.toBoolean(user.is_active) &&
+      (nextRole !== 'admin' || !nextIsActive);
+
     if (!removesActiveAdmin) return;
 
     const rows = await this.dataSource.query(
-      `SELECT COUNT(*) AS total FROM users WHERE role = 'admin' AND is_active = 1 AND id <> ?`,
+      `SELECT COUNT(*) AS total
+       FROM users
+       WHERE role = 'admin' AND is_active = 1 AND id <> ?`,
       [user.id],
     ) as CountRow[];
 
@@ -323,18 +362,24 @@ export class AuthService implements OnModuleInit {
   private async findByEmail(email: string): Promise<UserRow | null> {
     const rows = await this.dataSource.query(
       `SELECT id, email, password_hash, password_salt, role, is_active, created_at, updated_at
-       FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1`,
+       FROM users
+       WHERE LOWER(email) = LOWER(?)
+       LIMIT 1`,
       [email],
     ) as UserRow[];
+
     return rows[0] ?? null;
   }
 
   private async findById(id: number): Promise<UserRow | null> {
     const rows = await this.dataSource.query(
       `SELECT id, email, password_hash, password_salt, role, is_active, created_at, updated_at
-       FROM users WHERE id = ? LIMIT 1`,
+       FROM users
+       WHERE id = ?
+       LIMIT 1`,
       [id],
     ) as UserRow[];
+
     return rows[0] ?? null;
   }
 
@@ -344,6 +389,7 @@ export class AuthService implements OnModuleInit {
        FROM INFORMATION_SCHEMA.COLUMNS
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`,
     ) as ColumnRow[];
+
     return new Set(rows.map((row) => row.columnName));
   }
 
@@ -353,6 +399,7 @@ export class AuthService implements OnModuleInit {
        FROM INFORMATION_SCHEMA.STATISTICS
        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`,
     ) as IndexRow[];
+
     return new Set(rows.map((row) => row.indexName));
   }
 
@@ -360,13 +407,20 @@ export class AuthService implements OnModuleInit {
     const trimmed = value.trim();
     const parts = trimmed.split('@');
 
-    if (parts.length > 2 || (parts.length === 2 && parts[1].toLowerCase() !== 'inventec.com')) {
-      throw new BadRequestException('El correo debe pertenecer al dominio @inventec.com.');
+    if (
+      parts.length > 2 ||
+      (parts.length === 2 && parts[1].toLowerCase() !== 'inventec.com')
+    ) {
+      throw new BadRequestException(
+        'El correo debe pertenecer al dominio @inventec.com.',
+      );
     }
 
     const localPart = parts[0]?.trim();
     if (!localPart || localPart.length < 3 || !/^[a-zA-Z0-9._-]+$/.test(localPart)) {
-      throw new BadRequestException('Captura un correo válido, por ejemplo Ramos.Rey@inventec.com.');
+      throw new BadRequestException(
+        'Captura un correo válido, por ejemplo Ramos.Rey@inventec.com.',
+      );
     }
 
     return `${localPart}@inventec.com`;
@@ -384,12 +438,16 @@ export class AuthService implements OnModuleInit {
   }
 
   private sign(payload: AuthTokenPayload): string {
-    const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+    const encodedPayload = Buffer.from(JSON.stringify(payload), 'utf8').toString(
+      'base64url',
+    );
     return `${encodedPayload}.${this.createSignature(encodedPayload)}`;
   }
 
   private createSignature(encodedPayload: string): string {
-    return createHmac('sha256', this.tokenSecret).update(encodedPayload).digest('base64url');
+    return createHmac('sha256', this.tokenSecret)
+      .update(encodedPayload)
+      .digest('base64url');
   }
 
   private matchesBuffer(value: Buffer, expected: Buffer): boolean {
