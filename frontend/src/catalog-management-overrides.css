@@ -1,0 +1,49 @@
+/* Catalog management uses the active catalog as the page title. */
+.catalog-page {
+  min-height: calc(100dvh - 50px);
+  background: #fff !important;
+}
+
+.catalog-page .page-header {
+  display: none !important;
+}
+
+.catalog-page .catalog-panel {
+  margin: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.catalog-page .panel-heading {
+  min-height: 58px !important;
+  padding: 9px 22px !important;
+  border-bottom: 1px solid var(--border) !important;
+  background: #fff !important;
+}
+
+.catalog-page .panel-heading h2 {
+  margin: 0 !important;
+  font-size: clamp(1.15rem, 1.6vw, 1.4rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+}
+
+.catalog-page .panel-heading p {
+  display: none !important;
+}
+
+.catalog-page .create-row {
+  background: #fff !important;
+}
+
+@media (max-width: 720px) {
+  .catalog-page .panel-heading {
+    align-items: center !important;
+    flex-direction: row !important;
+    padding: 9px 12px !important;
+  }
+}
