@@ -56,9 +56,13 @@ import { RepairReportsApiService } from '../../../core/services/repair-reports-a
             <span class="detail-label">Category</span>
             <span class="detail-value">{{ item.category || '—' }}</span>
           </article>
-          <article class="detail-card">
-            <span class="detail-label">Return</span>
-            <span class="detail-value">{{ item.returnStatus || '—' }}</span>
+          <article class="detail-card number-card">
+            <span class="detail-label">Return Yes</span>
+            <span class="detail-value">{{ item.returnYesQty | number }}</span>
+          </article>
+          <article class="detail-card number-card">
+            <span class="detail-label">Return No</span>
+            <span class="detail-value">{{ item.returnNoQty | number }}</span>
           </article>
           <article class="detail-card">
             <span class="detail-label">Major part</span>
