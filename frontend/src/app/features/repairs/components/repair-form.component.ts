@@ -43,18 +43,37 @@ const EMPTY_CATALOGS: RepairCatalogs = {
 
           <label class="field grid-failure-qty">
             <span>Failure qty <b>*</b></span>
-            <input type="number" min="0" formControlName="failureQty" [class.invalid]="isInvalid('failureQty')">
+            <input
+              type="number"
+              min="0"
+              formControlName="failureQty"
+              placeholder="Captura la cantidad"
+              [class.invalid]="isInvalid('failureQty')"
+            >
           </label>
 
           <label class="field grid-build-qty">
             <span>Build qty <b>*</b></span>
-            <input type="number" min="0" formControlName="buildQty" [class.invalid]="isInvalid('buildQty')">
+            <input
+              type="number"
+              min="0"
+              formControlName="buildQty"
+              placeholder="Captura la cantidad"
+              [class.invalid]="isInvalid('buildQty')"
+            >
           </label>
 
           <label class="field grid-fr">
             <span>F/R <b>*</b></span>
             <div class="suffix-input">
-              <input type="number" min="0" step="0.01" formControlName="frPercentage" [class.invalid]="isInvalid('frPercentage')">
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                formControlName="frPercentage"
+                placeholder="Captura el porcentaje"
+                [class.invalid]="isInvalid('frPercentage')"
+              >
               <span>%</span>
             </div>
           </label>
@@ -210,9 +229,9 @@ export class RepairFormComponent implements OnChanges {
     family: ['', Validators.required],
     topIssue: ['', Validators.required],
     category: ['', Validators.required],
-    failureQty: [0, [Validators.required, Validators.min(0)]],
-    buildQty: [0, [Validators.required, Validators.min(0)]],
-    frPercentage: [0, [Validators.required, Validators.min(0)]],
+    failureQty: ['', [Validators.required, Validators.min(0)]],
+    buildQty: ['', [Validators.required, Validators.min(0)]],
+    frPercentage: ['', [Validators.required, Validators.min(0)]],
     returnStatus: ['', Validators.required],
     majorPart: ['', Validators.required],
     repairResult: ['', Validators.required],
@@ -250,9 +269,9 @@ export class RepairFormComponent implements OnChanges {
       recordDate: this.repair?.recordDate ?? '',
       family: this.repair?.family ?? '',
       topIssue: this.repair?.topIssue ?? '',
-      failureQty: this.repair?.failureQty ?? 0,
-      buildQty: this.repair?.buildQty ?? 0,
-      frPercentage: this.repair?.frPercentage ?? 0,
+      failureQty: this.repair ? String(this.repair.failureQty) : '',
+      buildQty: this.repair ? String(this.repair.buildQty) : '',
+      frPercentage: this.repair ? String(this.repair.frPercentage) : '',
       category: this.repair?.category ?? '',
       returnStatus: this.repair?.returnStatus ?? '',
       failPicture: this.repair?.failPicture ?? '',
