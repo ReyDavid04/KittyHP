@@ -26,6 +26,15 @@ import { AuthService } from './core/services/auth.service';
             </summary>
 
             <div class="settings-dropdown">
+              <ng-container *ngIf="authService.isAdmin()">
+                <span class="dropdown-title">Administración</span>
+                <a routerLink="/settings/users" routerLinkActive="active" (click)="$any(configMenu).open = false">
+                  <svg class="menu-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
+                  <strong>Usuarios</strong>
+                </a>
+                <span class="menu-divider"></span>
+              </ng-container>
+
               <span class="dropdown-title">Catálogos</span>
               <a routerLink="/settings/catalogs/family" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Family</strong></a>
               <a routerLink="/settings/catalogs/top_issue" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Top Issue</strong></a>
@@ -39,7 +48,7 @@ import { AuthService } from './core/services/auth.service';
         <div class="session-area">
           <span class="user-chip">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
-            <span>{{ authService.currentUser() }}</span>
+            <span>{{ authService.currentUser()?.displayName || authService.currentUser()?.username }}</span>
           </span>
           <button type="button" class="logout-button" (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5m4-3 4-4-4-4m4 4H9"></path></svg>
@@ -80,7 +89,7 @@ import { AuthService } from './core/services/auth.service';
     }
     .dropdown-title { padding: 5px 10px 8px; color: #718096; font-size: .61rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
     .settings-dropdown a {
-      position: relative; display: flex; align-items: center; min-height: 38px; margin: 1px 0;
+      position: relative; display: flex; align-items: center; gap: 9px; min-height: 38px; margin: 1px 0;
       padding: 7px 11px 7px 14px; border: 1px solid transparent; border-radius: 8px;
       color: #263449; background: transparent; text-decoration: none; transition: 150ms ease;
     }
@@ -88,6 +97,8 @@ import { AuthService } from './core/services/auth.service';
     .settings-dropdown a.active { padding-left: 18px; color: var(--primary); border-color: rgba(47,126,199,.1); background: #eaf2fb; }
     .settings-dropdown a.active::before { position: absolute; top: 9px; bottom: 9px; left: 7px; width: 3px; border-radius: 999px; background: var(--primary); content: ''; }
     .settings-dropdown strong { font-size: .74rem; font-weight: 750; line-height: 1.2; }
+    .menu-icon { width: 15px; flex: 0 0 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.65; }
+    .menu-divider { height: 1px; margin: 7px 5px; background: #edf1f5; }
     .session-area { display: flex; align-items: center; gap: 8px; }
     .user-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid #e0e7ef; border-radius: 9px; color: #526176; font-size: .69rem; font-weight: 650; background: #f8fafc; }
     .user-chip svg, .logout-button svg { width: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
