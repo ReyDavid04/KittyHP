@@ -7,19 +7,24 @@ const { spawn } = require('node:child_process');
 const mysql = require('mysql2/promise');
 
 const backendRoot = path.resolve(__dirname, '..');
-loadEnv(path.join(backendRoot, '.env'));
-
-const pollIntervalMs = positiveInteger(process.env.EMAIL_WORKER_INTERVAL_MS, 5000);
-const staleLockMinutes = positiveInteger(process.env.EMAIL_WORKER_STALE_MINUTES, 15);
+const env = loadEnv(path.join(backendRoot, '.env'));
+const pollIntervalMs = positiveInteger(
+  requiredEnv(env, 'EMAIL_WORKER_INTERVAL_MS'),
+  'EMAIL_WORKER_INTERVAL_MS',
+);
+const staleLockMinutes = positiveInteger(
+  requiredEnv(env, 'EMAIL_WORKER_STALE_MINUTES'),
+  'EMAIL_WORKER_STALE_MINUTES',
+);
 const workerId = `${os.hostname()}:${process.pid}`;
 const powershellScript = path.join(__dirname, 'outlook-send.ps1');
 
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
-  port: positiveInteger(process.env.DB_PORT, 3306),
-  user: requiredEnv('DB_USER'),
-  password: process.env.DB_PASSWORD || '',
-  database: requiredEnv('DB_NAME'),
+  host: requiredEnv(env, 'DB_HOST'),
+  port: positiveInteger(requiredEnv(env, 'DB_PORT'), 'DB_PORT'),
+  user: requiredEnv(env, 'DB_USER'),
+  password: requiredEnv(env, 'DB_PASSWORD'),
+  database: requiredEnv(env, 'DB_NAME'),
   waitForConnections: true,
   connectionLimit: 3,
   queueLimit: 0,
@@ -34,7 +39,7 @@ async function main() {
   await releaseStaleLocks();
 
   console.log(`[KittyHP Email Worker] Iniciado como ${workerId}`);
-  console.log(`[KittyHP Email Worker] Base: ${process.env.DB_NAME}; intervalo: ${pollIntervalMs} ms`);
+  console.log(`[KittyHP Email Worker] Base: ${env.DB_NAME}; intervalo: ${pollIntervalMs} ms`);
 
   await processQueue();
   timer = setInterval(() => {
@@ -62,8 +67,13 @@ async function processQueue() {
         );
         console.log(`[KittyHP Email Worker] Enviado #${email.id} a ${email.to_email}`);
       } catch (error) {
-        const message = error instanceof Error ? error.message.slice(0, 4000) : String(error).slice(0, 4000);
-        const nextStatus = Number(email.attempts) >= Number(email.max_attempts) ? 'error' : 'pending';
+        const message = error instanceof Error
+          ? error.message.slice(0, 4000)
+          : String(error).slice(0, 4000);
+        const nextStatus = Number(email.attempts) >= Number(email.max_attempts)
+          ? 'error'
+          : 'pending';
+
         await pool.execute(
           `UPDATE email_queue
            SET status = ?, error_message = ?, locked_by = NULL, locked_at = NULL
@@ -205,33 +215,51 @@ function ensureWindowsAndScript() {
   }
 }
 
-function requiredEnv(name) {
-  const value = process.env[name];
-  if (!value) throw new Error(`Falta la variable ${name} en backend/.env`);
+function requiredEnv(environment, name) {
+  const value = environment[name];
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new Error(`Falta la variable ${name} en backend/.env`);
+  }
   return value;
 }
 
-function positiveInteger(value, fallback) {
+function positiveInteger(value, name) {
   const parsed = Number(value);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(`La variable ${name} debe ser un número entero mayor que cero.`);
+  }
+  return parsed;
 }
 
 function loadEnv(filePath) {
-  if (!fs.existsSync(filePath)) return;
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`No se encontró el archivo obligatorio ${filePath}`);
+  }
+
+  const environment = {};
   const content = fs.readFileSync(filePath, 'utf8');
 
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith('#')) continue;
+
     const separator = line.indexOf('=');
     if (separator <= 0) continue;
+
     const key = line.slice(0, separator).trim();
     let value = line.slice(separator + 1).trim();
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
       value = value.slice(1, -1);
     }
-    if (process.env[key] === undefined) process.env[key] = value;
+
+    environment[key] = value;
   }
+
+  return environment;
 }
 
 async function shutdown(signal) {
