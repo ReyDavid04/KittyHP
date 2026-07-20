@@ -69,9 +69,67 @@
   white-space: nowrap;
 }
 
-/* The catalog menu only shows the catalog names. */
+/* Compact and polished catalog dropdown. */
+.settings-dropdown {
+  width: 232px !important;
+  padding: 8px !important;
+  border: 1px solid #dce4ee !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: 0 14px 34px rgba(15, 32, 51, 0.13) !important;
+}
+
+.settings-dropdown .dropdown-title {
+  padding: 5px 10px 8px !important;
+  color: #718096 !important;
+  font-size: 0.61rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.09em !important;
+}
+
 .settings-dropdown a {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 38px !important;
+  margin: 1px 0 !important;
+  padding: 7px 11px 7px 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  color: #263449 !important;
+  background: transparent !important;
   gap: 0 !important;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease !important;
+}
+
+.settings-dropdown a:hover {
+  color: var(--primary) !important;
+  border-color: rgba(47, 126, 199, 0.1) !important;
+  background: #f5f8fc !important;
+}
+
+.settings-dropdown a.active {
+  padding-left: 18px !important;
+  color: var(--primary) !important;
+  border-color: rgba(47, 126, 199, 0.1) !important;
+  background: #eaf2fb !important;
+}
+
+.settings-dropdown a.active::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 7px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--primary);
+  content: '';
+}
+
+.settings-dropdown strong {
+  font-size: 0.74rem !important;
+  font-weight: 750 !important;
+  line-height: 1.2;
 }
 
 .settings-dropdown small {
@@ -91,5 +149,9 @@
 
   .catalog-page .panel-heading p {
     font-size: 0.67rem !important;
+  }
+
+  .settings-dropdown {
+    width: min(232px, calc(100vw - 24px)) !important;
   }
 }
