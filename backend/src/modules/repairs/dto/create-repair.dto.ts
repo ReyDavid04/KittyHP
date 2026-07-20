@@ -8,6 +8,11 @@ export class CreateRepairDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
+  family!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
   topIssue!: string;
 
   @IsNumber()
@@ -62,4 +67,3 @@ export class CreateRepairDto {
   @IsOptional()
   evidencePicture?: string | null;
 }
-
