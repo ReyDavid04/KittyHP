@@ -15,6 +15,7 @@ export class RepairRepository {
   create(data: CreateRepairDto): Promise<RepairEntity> {
     const entity = this.repository.create({
       recordDate: data.recordDate,
+      family: data.family,
       topIssue: data.topIssue,
       failureQty: data.failureQty,
       buildQty: data.buildQty,
@@ -45,6 +46,7 @@ export class RepairRepository {
     }
 
     if (data.recordDate !== undefined) entity.recordDate = data.recordDate;
+    if (data.family !== undefined) entity.family = data.family;
     if (data.topIssue !== undefined) entity.topIssue = data.topIssue;
     if (data.failureQty !== undefined) entity.failureQty = data.failureQty;
     if (data.buildQty !== undefined) entity.buildQty = data.buildQty;
@@ -75,4 +77,3 @@ export class RepairRepository {
     return this.repository.find({ order: { recordDate: 'DESC', id: 'DESC' } });
   }
 }
-
