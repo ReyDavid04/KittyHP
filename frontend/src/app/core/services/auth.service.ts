@@ -10,6 +10,15 @@ export interface AuthUser {
   role: UserRole;
 }
 
+export interface CodeDeliveryResponse {
+  message: string;
+  developmentCode?: string;
+}
+
+interface MessageResponse {
+  message: string;
+}
+
 interface LoginResponse {
   token: string;
   userId: number;
@@ -33,6 +42,34 @@ export class AuthService {
     return this.httpClient.post<LoginResponse>('/api/auth/login', { email: this.toCorporateEmail(email), password }).pipe(
       tap((session) => this.saveSession(session)),
     );
+  }
+
+  register(email: string, password: string): Observable<CodeDeliveryResponse> {
+    return this.httpClient.post<CodeDeliveryResponse>('/api/auth/register', {
+      email: this.toCorporateEmail(email),
+      password,
+    });
+  }
+
+  verifyRegistration(email: string, code: string): Observable<MessageResponse> {
+    return this.httpClient.post<MessageResponse>('/api/auth/verify-registration', {
+      email: this.toCorporateEmail(email),
+      code,
+    });
+  }
+
+  requestPasswordReset(email: string): Observable<CodeDeliveryResponse> {
+    return this.httpClient.post<CodeDeliveryResponse>('/api/auth/forgot-password', {
+      email: this.toCorporateEmail(email),
+    });
+  }
+
+  resetPassword(email: string, code: string, password: string): Observable<MessageResponse> {
+    return this.httpClient.post<MessageResponse>('/api/auth/reset-password', {
+      email: this.toCorporateEmail(email),
+      code,
+      password,
+    });
   }
 
   logout(): void {
