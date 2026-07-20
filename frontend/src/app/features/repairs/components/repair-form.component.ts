@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairCatalogs, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
 
@@ -10,6 +10,24 @@ const EMPTY_CATALOGS: RepairCatalogs = {
   categories: [],
   majorParts: [],
   failureFactors: [],
+};
+
+const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const failureRaw = control.get('failureQty')?.value;
+  const returnYesRaw = control.get('returnYesQty')?.value;
+
+  if (failureRaw === '' || returnYesRaw === '' || failureRaw === null || returnYesRaw === null) {
+    return null;
+  }
+
+  const failureQty = Number(failureRaw);
+  const returnYesQty = Number(returnYesRaw);
+
+  if (!Number.isFinite(failureQty) || !Number.isFinite(returnYesQty)) {
+    return null;
+  }
+
+  return returnYesQty > failureQty ? { returnYesExceedsFailureQty: true } : null;
 };
 
 @Component({
@@ -46,9 +64,10 @@ const EMPTY_CATALOGS: RepairCatalogs = {
             <input
               type="number"
               min="1"
+              step="1"
               formControlName="failureQty"
               placeholder="Captura la cantidad"
-              [class.invalid]="isInvalid('failureQty')"
+              [class.invalid]="isInvalid('failureQty') || isReturnQuantityInvalid"
             >
           </label>
 
@@ -57,6 +76,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
             <input
               type="number"
               min="1"
+              step="1"
               formControlName="buildQty"
               placeholder="Captura la cantidad"
               [class.invalid]="isInvalid('buildQty')"
@@ -88,10 +108,32 @@ const EMPTY_CATALOGS: RepairCatalogs = {
             </select>
           </label>
 
-          <label class="field grid-return">
-            <span>Return <b>*</b></span>
-            <input type="text" formControlName="returnStatus" placeholder="YES, NO o estatus" [class.invalid]="isInvalid('returnStatus')">
-          </label>
+          <div class="return-group grid-return">
+            <label class="field">
+              <span>Return Yes <b>*</b></span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                formControlName="returnYesQty"
+                placeholder="Cantidad Yes"
+                [class.invalid]="isReturnQuantityInvalid"
+              >
+            </label>
+
+            <label class="field">
+              <span>Return No</span>
+              <input
+                type="text"
+                formControlName="returnNoQty"
+                readonly
+                placeholder="Automático"
+                aria-label="Return No calculado automáticamente"
+                title="Calculado automáticamente: Failure qty - Return Yes"
+              >
+            </label>
+            <small *ngIf="isReturnQuantityInvalid">Return Yes no puede ser mayor que Failure qty.</small>
+          </div>
 
           <label class="field grid-major-part">
             <span>Major part <b>*</b></span>
@@ -163,12 +205,15 @@ const EMPTY_CATALOGS: RepairCatalogs = {
     .grid-category, .grid-return, .grid-major-part, .grid-failure-factor { grid-column: span 3; }
     .grid-fail-picture { grid-column: 1 / -1; }
     .grid-repair-result, .grid-actions, .grid-evidence { grid-column: span 4; }
+    .return-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; }
+    .return-group > small { grid-column: 1 / -1; margin-top: -2px; color: var(--danger); font-size: .66rem; font-weight: 600; }
     .field { display: grid; align-content: start; gap: 8px; min-width: 0; color: #455267; font-size: .76rem; font-weight: 700; }
     .field > span:first-child { min-height: 18px; }
     .field b, .upload-content b { color: var(--danger); font-weight: 700; }
     .field small { margin-top: -2px; color: var(--danger); font-size: .66rem; font-weight: 600; }
     .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: .82rem; font-weight: 450; background: var(--surface-subtle); transition: 150ms ease; }
     .field input, .field select { height: 46px; padding: 0 14px; }
+    .field input[readonly] { color: var(--primary); font-weight: 750; background: #f4f8fc; cursor: default; }
     .field select { cursor: pointer; }
     .field textarea { min-height: 148px; padding: 13px 14px; line-height: 1.5; resize: vertical; }
     .field input::placeholder, .field textarea::placeholder { color: #98a3b2; }
@@ -210,6 +255,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
       .form-body { padding: 22px 18px 28px; }
       .form-grid { grid-template-columns: 1fr; gap: 16px; }
       .grid-date, .grid-family, .grid-top-issue, .grid-failure-qty, .grid-build-qty, .grid-fr, .grid-category, .grid-return, .grid-major-part, .grid-failure-factor, .grid-fail-picture, .grid-repair-result, .grid-actions, .grid-evidence { grid-column: auto; }
+      .return-group { grid-template-columns: 1fr; }
       .upload-zone { align-items: stretch; flex-direction: column; min-height: 0; padding: 14px; }
       .image-preview, .grid-evidence .image-preview { flex-basis: auto; width: 100%; height: 210px; }
       .form-actions { padding: 14px 18px; }
@@ -233,21 +279,26 @@ export class RepairFormComponent implements OnChanges {
     family: ['', Validators.required],
     topIssue: ['', Validators.required],
     category: ['', Validators.required],
-    failureQty: ['', [Validators.required, Validators.min(1)]],
-    buildQty: ['', [Validators.required, Validators.min(1)]],
+    failureQty: ['', [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
+    buildQty: ['', [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
     frPercentage: ['', [Validators.required, Validators.min(0.01)]],
-    returnStatus: ['', Validators.required],
+    returnYesQty: ['', [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]],
+    returnNoQty: ['', [Validators.required, Validators.min(0)]],
     majorPart: ['', Validators.required],
     repairResult: ['', Validators.required],
     failureFactor: ['', Validators.required],
     failPicture: ['', Validators.required],
     evidencePicture: ['', Validators.required],
     actions: ['', Validators.required],
-  });
+  }, { validators: returnQuantitiesValidator });
 
   constructor(private readonly repairReportsApi: RepairReportsApiService) {
-    this.form.controls.failureQty.valueChanges.subscribe(() => this.updateFrPercentage());
+    this.form.controls.failureQty.valueChanges.subscribe(() => {
+      this.updateFrPercentage();
+      this.updateReturnNoQty();
+    });
     this.form.controls.buildQty.valueChanges.subscribe(() => this.updateFrPercentage());
+    this.form.controls.returnYesQty.valueChanges.subscribe(() => this.updateReturnNoQty());
     this.loadCatalogs();
   }
 
@@ -258,6 +309,11 @@ export class RepairFormComponent implements OnChanges {
   get failureFactorOptions(): string[] { return this.withCurrentValue(this.catalogs.failureFactors, this.form.controls.failureFactor.value); }
   get failPicturePreviewUrl(): string { return this.failPicturePreview || this.repair?.failPicture || ''; }
   get evidencePicturePreviewUrl(): string { return this.evidencePicturePreview || this.repair?.evidencePicture || ''; }
+
+  get isReturnQuantityInvalid(): boolean {
+    const touched = this.form.controls.returnYesQty.touched || this.form.controls.failureQty.touched;
+    return this.isInvalid('returnYesQty') || (touched && this.form.hasError('returnYesExceedsFailureQty'));
+  }
 
   isInvalid(controlName: keyof typeof this.form.controls): boolean {
     const control = this.form.controls[controlName];
@@ -282,7 +338,8 @@ export class RepairFormComponent implements OnChanges {
         this.repair?.buildQty ?? '',
       ),
       category: this.repair?.category ?? '',
-      returnStatus: this.repair?.returnStatus ?? '',
+      returnYesQty: this.repair ? String(this.repair.returnYesQty ?? 0) : '',
+      returnNoQty: this.repair ? String(this.repair.returnNoQty ?? 0) : '',
       failPicture: this.repair?.failPicture ?? '',
       majorPart: this.repair?.majorPart ?? '',
       repairResult: this.repair?.repairResult ?? '',
@@ -291,6 +348,7 @@ export class RepairFormComponent implements OnChanges {
       evidencePicture: this.repair?.evidencePicture ?? '',
     });
     this.updateFrPercentage();
+    this.updateReturnNoQty();
   }
 
   onFileSelected(event: Event, field: 'failPicture' | 'evidencePicture'): void {
@@ -338,7 +396,7 @@ export class RepairFormComponent implements OnChanges {
       failureQty,
       buildQty,
       frPercentage,
-      returnStatus: value.returnStatus,
+      returnYesQty: Number(value.returnYesQty),
       failPicture: this.repair?.failPicture ?? null,
       majorPart: value.majorPart,
       repairResult: value.repairResult,
@@ -356,6 +414,22 @@ export class RepairFormComponent implements OnChanges {
       this.form.controls.buildQty.value,
     );
     this.form.controls.frPercentage.setValue(frPercentage, { emitEvent: false });
+  }
+
+  private updateReturnNoQty(): void {
+    const failureQty = Number(this.form.controls.failureQty.value);
+    const returnYesQty = Number(this.form.controls.returnYesQty.value);
+    const isValid = Number.isInteger(failureQty)
+      && Number.isInteger(returnYesQty)
+      && failureQty > 0
+      && returnYesQty >= 0
+      && returnYesQty <= failureQty;
+
+    this.form.controls.returnNoQty.setValue(
+      isValid ? String(failureQty - returnYesQty) : '',
+      { emitEvent: false },
+    );
+    this.form.updateValueAndValidity({ emitEvent: false });
   }
 
   private calculateFrPercentage(failureQtyValue: string | number, buildQtyValue: string | number): string {
