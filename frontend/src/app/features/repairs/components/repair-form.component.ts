@@ -64,15 +64,14 @@ const EMPTY_CATALOGS: RepairCatalogs = {
           </label>
 
           <label class="field grid-fr">
-            <span>F/R <b>*</b></span>
+            <span>F/R</span>
             <div class="suffix-input">
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
                 formControlName="frPercentage"
-                placeholder="Captura el porcentaje"
-                [class.invalid]="isInvalid('frPercentage')"
+                readonly
+                aria-label="F/R calculado automáticamente"
+                title="Calculado automáticamente: Failure qty / Build qty"
               >
               <span>%</span>
             </div>
@@ -178,6 +177,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
     }
     .suffix-input { position: relative; display: flex; align-items: center; }
     .suffix-input input { padding-right: 38px; }
+    .suffix-input input[readonly] { color: var(--primary); font-weight: 750; background: #f4f8fc; cursor: default; }
     .suffix-input > span { position: absolute; right: 14px; color: var(--primary); font-weight: 800; }
     .upload-zone { position: relative; display: flex; align-items: center; gap: 20px; min-height: 148px; padding: 18px; overflow: hidden; border: 1px dashed var(--border-strong); border-radius: 12px; color: var(--text); background: var(--surface-subtle); cursor: pointer; transition: 150ms ease; }
     .upload-zone:hover { border-color: var(--accent); background: #f5f9fe; box-shadow: 0 0 0 3px rgba(47,126,199,.07); }
@@ -231,7 +231,7 @@ export class RepairFormComponent implements OnChanges {
     category: ['', Validators.required],
     failureQty: ['', [Validators.required, Validators.min(0)]],
     buildQty: ['', [Validators.required, Validators.min(0)]],
-    frPercentage: ['', [Validators.required, Validators.min(0)]],
+    frPercentage: ['0.00', [Validators.required, Validators.min(0)]],
     returnStatus: ['', Validators.required],
     majorPart: ['', Validators.required],
     repairResult: ['', Validators.required],
@@ -242,6 +242,8 @@ export class RepairFormComponent implements OnChanges {
   });
 
   constructor(private readonly repairReportsApi: RepairReportsApiService) {
+    this.form.controls.failureQty.valueChanges.subscribe(() => this.updateFrPercentage());
+    this.form.controls.buildQty.valueChanges.subscribe(() => this.updateFrPercentage());
     this.loadCatalogs();
   }
 
@@ -271,7 +273,10 @@ export class RepairFormComponent implements OnChanges {
       topIssue: this.repair?.topIssue ?? '',
       failureQty: this.repair ? String(this.repair.failureQty) : '',
       buildQty: this.repair ? String(this.repair.buildQty) : '',
-      frPercentage: this.repair ? String(this.repair.frPercentage) : '',
+      frPercentage: this.calculateFrPercentage(
+        this.repair?.failureQty ?? '',
+        this.repair?.buildQty ?? '',
+      ),
       category: this.repair?.category ?? '',
       returnStatus: this.repair?.returnStatus ?? '',
       failPicture: this.repair?.failPicture ?? '',
@@ -281,6 +286,7 @@ export class RepairFormComponent implements OnChanges {
       actions: this.repair?.actions ?? '',
       evidencePicture: this.repair?.evidencePicture ?? '',
     });
+    this.updateFrPercentage();
   }
 
   onFileSelected(event: Event, field: 'failPicture' | 'evidencePicture'): void {
@@ -316,14 +322,18 @@ export class RepairFormComponent implements OnChanges {
     }
 
     const value = this.form.getRawValue();
+    const failureQty = Number(value.failureQty);
+    const buildQty = Number(value.buildQty);
+    const frPercentage = Number(this.calculateFrPercentage(failureQty, buildQty));
+
     this.save.emit({
       recordDate: value.recordDate,
       family: value.family,
       topIssue: value.topIssue,
       category: value.category,
-      failureQty: Number(value.failureQty),
-      buildQty: Number(value.buildQty),
-      frPercentage: Number(value.frPercentage),
+      failureQty,
+      buildQty,
+      frPercentage,
       returnStatus: value.returnStatus,
       failPicture: this.repair?.failPicture ?? null,
       majorPart: value.majorPart,
@@ -334,6 +344,25 @@ export class RepairFormComponent implements OnChanges {
       failPictureFile: this.failPictureFile,
       evidencePictureFile: this.evidencePictureFile,
     });
+  }
+
+  private updateFrPercentage(): void {
+    const frPercentage = this.calculateFrPercentage(
+      this.form.controls.failureQty.value,
+      this.form.controls.buildQty.value,
+    );
+    this.form.controls.frPercentage.setValue(frPercentage, { emitEvent: false });
+  }
+
+  private calculateFrPercentage(failureQtyValue: string | number, buildQtyValue: string | number): string {
+    const failureQty = Number(failureQtyValue);
+    const buildQty = Number(buildQtyValue);
+
+    if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || buildQty <= 0) {
+      return '0.00';
+    }
+
+    return ((failureQty / buildQty) * 100).toFixed(2);
   }
 
   private loadCatalogs(): void {
