@@ -10,25 +10,19 @@ const SEARCHABLE_CATALOG_FIELDS: Record<string, string> = {
 };
 
 function updateCatalogResultsCounter(): void {
-  const catalogPage = document.querySelector<HTMLElement>('.catalog-page');
+  const page = document.querySelector<HTMLElement>('.catalog-page');
+  const searchRow = page?.querySelector<HTMLElement>('.search-row');
+  const searchInput = page?.querySelector<HTMLInputElement>('.search-field input');
+  const totalLabel = page?.querySelector<HTMLElement>('.item-count');
 
-  if (!catalogPage) {
-    return;
-  }
-
-  const searchRow = catalogPage.querySelector<HTMLElement>('.search-row');
-  const searchInput = catalogPage.querySelector<HTMLInputElement>('.search-field input');
-  const totalLabel = catalogPage.querySelector<HTMLElement>('.item-count');
-
-  if (!searchRow || !totalLabel) {
+  if (!page || !searchRow || !totalLabel) {
     return;
   }
 
   const total = Number(totalLabel.textContent?.match(/\d+/)?.[0] ?? 0);
-  const visible = Array.from(catalogPage.querySelectorAll<HTMLTableRowElement>('tbody > tr'))
+  const visible = Array.from(page.querySelectorAll<HTMLTableRowElement>('tbody > tr'))
     .filter((row) => !row.querySelector('.no-results'))
     .length;
-
   let counter = searchRow.querySelector<HTMLElement>('.catalog-results-count');
 
   if (!counter) {
@@ -37,15 +31,10 @@ function updateCatalogResultsCounter(): void {
     searchRow.appendChild(counter);
   }
 
-  const recordLabel = total === 1 ? 'registro' : 'registros';
-  const hasActiveSearch = Boolean(searchInput?.value.trim());
-  const nextText = hasActiveSearch
-    ? `${visible} de ${total} ${recordLabel}`
-    : `${total} ${recordLabel}`;
-
-  if (counter.textContent !== nextText) {
-    counter.textContent = nextText;
-  }
+  const label = total === 1 ? 'registro' : 'registros';
+  counter.textContent = searchInput?.value.trim()
+    ? `${visible} de ${total} ${label}`
+    : `${total} ${label}`;
 }
 
 function setDefaultRepairDate(): void {
@@ -53,35 +42,32 @@ function setDefaultRepairDate(): void {
     return;
   }
 
-  const dateInput = document.querySelector<HTMLInputElement>(
+  const input = document.querySelector<HTMLInputElement>(
     'app-repair-form input[formcontrolname="recordDate"]',
   );
 
-  if (!dateInput || dateInput.value) {
+  if (!input || input.value) {
     return;
   }
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-
-  dateInput.value = `${year}-${month}-${day}`;
-  dateInput.dispatchEvent(new Event('input', { bubbles: true }));
-  dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  input.value = `${year}-${month}-${day}`;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
-function ensureSearchableCatalogStyles(): void {
-  if (document.getElementById('repair-searchable-catalog-styles')) {
+function ensureAutocompleteStyles(): void {
+  if (document.getElementById('repair-catalog-autocomplete-styles')) {
     return;
   }
 
   const style = document.createElement('style');
-  style.id = 'repair-searchable-catalog-styles';
+  style.id = 'repair-catalog-autocomplete-styles';
   style.textContent = `
-    app-repair-form .catalog-native-select {
-      display: none !important;
-    }
+    app-repair-form .catalog-native-select { display: none !important; }
 
     app-repair-form .catalog-autocomplete {
       position: relative;
@@ -89,9 +75,7 @@ function ensureSearchableCatalogStyles(): void {
       min-width: 0;
     }
 
-    app-repair-form .catalog-autocomplete.open {
-      z-index: 90;
-    }
+    app-repair-form .catalog-autocomplete.open { z-index: 90; }
 
     app-repair-form .catalog-search-input {
       width: 100% !important;
@@ -106,9 +90,7 @@ function ensureSearchableCatalogStyles(): void {
       transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease !important;
     }
 
-    app-repair-form .catalog-search-input::placeholder {
-      color: #98a3b2 !important;
-    }
+    app-repair-form .catalog-search-input::placeholder { color: #98a3b2 !important; }
 
     app-repair-form .catalog-search-input:hover {
       border-color: var(--border-strong) !important;
@@ -127,10 +109,7 @@ function ensureSearchableCatalogStyles(): void {
       background: #fffafb !important;
     }
 
-    app-repair-form .catalog-search-input:disabled {
-      opacity: 0.65;
-      cursor: wait;
-    }
+    app-repair-form .catalog-search-input:disabled { opacity: 0.65; cursor: wait; }
 
     app-repair-form .catalog-search-icon {
       position: absolute;
@@ -143,7 +122,9 @@ function ensureSearchableCatalogStyles(): void {
       transform: translateY(-50%);
     }
 
-    app-repair-form .catalog-search-icon svg {
+    app-repair-form .catalog-search-icon svg,
+    app-repair-form .catalog-toggle svg,
+    app-repair-form .catalog-option-check svg {
       display: block;
       width: 100%;
       height: 100%;
@@ -151,8 +132,9 @@ function ensureSearchableCatalogStyles(): void {
       stroke: currentColor;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 1.8;
     }
+
+    app-repair-form .catalog-search-icon svg { stroke-width: 1.8; }
 
     app-repair-form .catalog-toggle {
       position: absolute;
@@ -180,17 +162,11 @@ function ensureSearchableCatalogStyles(): void {
     app-repair-form .catalog-toggle svg {
       width: 14px;
       height: 14px;
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
       stroke-width: 2;
       transition: transform 150ms ease;
     }
 
-    app-repair-form .catalog-autocomplete.open .catalog-toggle svg {
-      transform: rotate(180deg);
-    }
+    app-repair-form .catalog-autocomplete.open .catalog-toggle svg { transform: rotate(180deg); }
 
     app-repair-form .catalog-options-panel {
       position: absolute;
@@ -208,13 +184,8 @@ function ensureSearchableCatalogStyles(): void {
       overscroll-behavior: contain;
     }
 
-    app-repair-form .catalog-options-panel[hidden] {
-      display: none !important;
-    }
-
-    app-repair-form .catalog-options-panel::-webkit-scrollbar {
-      width: 7px;
-    }
+    app-repair-form .catalog-options-panel[hidden] { display: none !important; }
+    app-repair-form .catalog-options-panel::-webkit-scrollbar { width: 7px; }
 
     app-repair-form .catalog-options-panel::-webkit-scrollbar-thumb {
       border: 2px solid #fff;
@@ -223,7 +194,6 @@ function ensureSearchableCatalogStyles(): void {
     }
 
     app-repair-form .catalog-option {
-      position: relative;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -256,10 +226,7 @@ function ensureSearchableCatalogStyles(): void {
       background: var(--primary-soft);
     }
 
-    app-repair-form .catalog-option-text {
-      min-width: 0;
-      overflow-wrap: anywhere;
-    }
+    app-repair-form .catalog-option-text { min-width: 0; overflow-wrap: anywhere; }
 
     app-repair-form .catalog-option mark {
       padding: 0;
@@ -275,16 +242,7 @@ function ensureSearchableCatalogStyles(): void {
       color: var(--primary);
     }
 
-    app-repair-form .catalog-option-check svg {
-      display: block;
-      width: 100%;
-      height: 100%;
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 2;
-    }
+    app-repair-form .catalog-option-check svg { stroke-width: 2; }
 
     app-repair-form .catalog-empty-option {
       display: grid;
@@ -300,52 +258,43 @@ function ensureSearchableCatalogStyles(): void {
   document.head.appendChild(style);
 }
 
-function catalogOptions(select: HTMLSelectElement): HTMLOptionElement[] {
+function availableOptions(select: HTMLSelectElement): HTMLOptionElement[] {
   return Array.from(select.options).filter((option) => Boolean(option.value));
 }
 
-function exactCatalogOption(select: HTMLSelectElement, value: string): HTMLOptionElement | undefined {
-  const normalizedValue = value.trim().toLocaleLowerCase();
-
-  if (!normalizedValue) {
-    return undefined;
-  }
-
-  return catalogOptions(select).find(
-    (option) => option.value.trim().toLocaleLowerCase() === normalizedValue,
-  );
+function exactOption(select: HTMLSelectElement, value: string): HTMLOptionElement | undefined {
+  const normalized = value.trim().toLocaleLowerCase();
+  return normalized
+    ? availableOptions(select).find((option) => option.value.trim().toLocaleLowerCase() === normalized)
+    : undefined;
 }
 
-function filteredCatalogOptions(select: HTMLSelectElement, query: string): HTMLOptionElement[] {
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  const options = catalogOptions(select);
-
-  if (!normalizedQuery) {
-    return options;
-  }
-
-  return options.filter((option) => option.value.toLocaleLowerCase().includes(normalizedQuery));
+function matchingOptions(select: HTMLSelectElement, value: string): HTMLOptionElement[] {
+  const normalized = value.trim().toLocaleLowerCase();
+  return normalized
+    ? availableOptions(select).filter((option) => option.value.toLocaleLowerCase().includes(normalized))
+    : availableOptions(select);
 }
 
-function createHighlightedOptionText(value: string, query: string): HTMLElement {
-  const container = document.createElement('span');
-  container.className = 'catalog-option-text';
-  const normalizedQuery = query.trim().toLocaleLowerCase();
-  const matchIndex = normalizedQuery ? value.toLocaleLowerCase().indexOf(normalizedQuery) : -1;
+function highlightedText(value: string, query: string): HTMLElement {
+  const element = document.createElement('span');
+  element.className = 'catalog-option-text';
+  const normalized = query.trim().toLocaleLowerCase();
+  const index = normalized ? value.toLocaleLowerCase().indexOf(normalized) : -1;
 
-  if (matchIndex < 0) {
-    container.textContent = value;
-    return container;
+  if (index < 0) {
+    element.textContent = value;
+    return element;
   }
 
-  container.append(document.createTextNode(value.slice(0, matchIndex)));
+  element.append(document.createTextNode(value.slice(0, index)));
   const mark = document.createElement('mark');
-  mark.textContent = value.slice(matchIndex, matchIndex + normalizedQuery.length);
-  container.append(mark, document.createTextNode(value.slice(matchIndex + normalizedQuery.length)));
-  return container;
+  mark.textContent = value.slice(index, index + normalized.length);
+  element.append(mark, document.createTextNode(value.slice(index + normalized.length)));
+  return element;
 }
 
-function setCatalogPanelOpen(wrapper: HTMLElement, open: boolean): void {
+function setPanelOpen(wrapper: HTMLElement, open: boolean): void {
   const input = wrapper.querySelector<HTMLInputElement>('.catalog-search-input');
   const panel = wrapper.querySelector<HTMLElement>('.catalog-options-panel');
 
@@ -362,7 +311,7 @@ function setCatalogPanelOpen(wrapper: HTMLElement, open: boolean): void {
   }
 }
 
-function setActiveCatalogOption(wrapper: HTMLElement, requestedIndex: number): void {
+function setActiveOption(wrapper: HTMLElement, requestedIndex: number): void {
   const options = Array.from(wrapper.querySelectorAll<HTMLButtonElement>('.catalog-option'));
 
   if (!options.length) {
@@ -376,7 +325,63 @@ function setActiveCatalogOption(wrapper: HTMLElement, requestedIndex: number): v
   options[index].scrollIntoView({ block: 'nearest' });
 }
 
-function chooseCatalogValue(
+function renderOptions(select: HTMLSelectElement, input: HTMLInputElement, wrapper: HTMLElement): void {
+  const panel = wrapper.querySelector<HTMLElement>('.catalog-options-panel');
+
+  if (!panel) {
+    return;
+  }
+
+  const options = matchingOptions(select, input.value);
+  const renderKey = JSON.stringify({
+    query: input.value.trim().toLocaleLowerCase(),
+    selected: select.value,
+    options: options.map((option) => option.value),
+  });
+
+  if (panel.dataset['renderKey'] === renderKey) {
+    return;
+  }
+
+  panel.dataset['renderKey'] = renderKey;
+  panel.replaceChildren();
+
+  if (!options.length) {
+    const empty = document.createElement('div');
+    empty.className = 'catalog-empty-option';
+    empty.textContent = 'No se encontraron opciones.';
+    panel.appendChild(empty);
+    wrapper.dataset['activeIndex'] = '-1';
+    return;
+  }
+
+  options.forEach((option) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'catalog-option';
+    button.setAttribute('role', 'option');
+    button.setAttribute('aria-selected', String(select.value === option.value));
+    button.classList.toggle('selected', select.value === option.value);
+    button.appendChild(highlightedText(option.value, input.value));
+
+    if (select.value === option.value) {
+      const check = document.createElement('span');
+      check.className = 'catalog-option-check';
+      check.setAttribute('aria-hidden', 'true');
+      check.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"></path></svg>';
+      button.appendChild(check);
+    }
+
+    button.addEventListener('mousedown', (event) => event.preventDefault());
+    button.addEventListener('click', () => selectOption(select, input, wrapper, option.value));
+    panel.appendChild(button);
+  });
+
+  const selectedIndex = options.findIndex((option) => option.value === select.value);
+  setActiveOption(wrapper, selectedIndex >= 0 ? selectedIndex : 0);
+}
+
+function selectOption(
   select: HTMLSelectElement,
   input: HTMLInputElement,
   wrapper: HTMLElement,
@@ -391,62 +396,12 @@ function chooseCatalogValue(
     select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  renderCatalogOptions(select, input, wrapper);
-  setCatalogPanelOpen(wrapper, false);
+  renderOptions(select, input, wrapper);
+  setPanelOpen(wrapper, false);
   input.focus();
 }
 
-function renderCatalogOptions(
-  select: HTMLSelectElement,
-  input: HTMLInputElement,
-  wrapper: HTMLElement,
-): void {
-  const panel = wrapper.querySelector<HTMLElement>('.catalog-options-panel');
-
-  if (!panel) {
-    return;
-  }
-
-  const options = filteredCatalogOptions(select, input.value);
-  panel.replaceChildren();
-
-  if (!options.length) {
-    const emptyState = document.createElement('div');
-    emptyState.className = 'catalog-empty-option';
-    emptyState.textContent = 'No se encontraron opciones.';
-    panel.appendChild(emptyState);
-    wrapper.dataset['activeIndex'] = '-1';
-    return;
-  }
-
-  options.forEach((option) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'catalog-option';
-    button.setAttribute('role', 'option');
-    button.setAttribute('aria-selected', String(select.value === option.value));
-    button.classList.toggle('selected', select.value === option.value);
-    button.appendChild(createHighlightedOptionText(option.value, input.value));
-
-    if (select.value === option.value) {
-      const check = document.createElement('span');
-      check.className = 'catalog-option-check';
-      check.setAttribute('aria-hidden', 'true');
-      check.innerHTML = '<svg viewBox="0 0 24 24"><path d="m5 12.5 4.2 4.2L19 7"></path></svg>';
-      button.appendChild(check);
-    }
-
-    button.addEventListener('mousedown', (event) => event.preventDefault());
-    button.addEventListener('click', () => chooseCatalogValue(select, input, wrapper, option.value));
-    panel.appendChild(button);
-  });
-
-  const selectedIndex = options.findIndex((option) => option.value === select.value);
-  wrapper.dataset['activeIndex'] = String(selectedIndex >= 0 ? selectedIndex : 0);
-  setActiveCatalogOption(wrapper, selectedIndex >= 0 ? selectedIndex : 0);
-}
-
-function synchronizeCatalogSelect(
+function synchronizeAutocomplete(
   select: HTMLSelectElement,
   input: HTMLInputElement,
   wrapper: HTMLElement,
@@ -459,18 +414,14 @@ function synchronizeCatalogSelect(
   }
 
   if (wrapper.classList.contains('open')) {
-    renderCatalogOptions(select, input, wrapper);
+    renderOptions(select, input, wrapper);
   }
 }
 
-function initializeSearchableCatalogSelects(): void {
-  ensureSearchableCatalogStyles();
+function initializeCatalogAutocompletes(): void {
+  ensureAutocompleteStyles();
 
-  const selects = document.querySelectorAll<HTMLSelectElement>(
-    'app-repair-form select[formcontrolname]',
-  );
-
-  selects.forEach((select) => {
+  document.querySelectorAll<HTMLSelectElement>('app-repair-form select[formcontrolname]').forEach((select) => {
     const controlName = select.getAttribute('formcontrolname') ?? '';
     const placeholder = SEARCHABLE_CATALOG_FIELDS[controlName];
 
@@ -479,18 +430,17 @@ function initializeSearchableCatalogSelects(): void {
     }
 
     const existingInputId = select.dataset['searchableInputId'];
+    const existingInput = existingInputId
+      ? document.getElementById(existingInputId) as HTMLInputElement | null
+      : null;
+    const existingWrapper = existingInput?.closest<HTMLElement>('.catalog-autocomplete') ?? null;
 
-    if (existingInputId) {
-      const existingInput = document.getElementById(existingInputId) as HTMLInputElement | null;
-      const existingWrapper = existingInput?.closest<HTMLElement>('.catalog-autocomplete') ?? null;
-
-      if (existingInput && existingWrapper) {
-        synchronizeCatalogSelect(select, existingInput, existingWrapper);
-        return;
-      }
+    if (existingInput && existingWrapper) {
+      synchronizeAutocomplete(select, existingInput, existingWrapper);
+      return;
     }
 
-    const uniqueId = `repair-${controlName}-catalog-search`;
+    const id = `repair-${controlName}-catalog-search`;
     const wrapper = document.createElement('div');
     const input = document.createElement('input');
     const toggle = document.createElement('button');
@@ -501,14 +451,14 @@ function initializeSearchableCatalogSelects(): void {
     wrapper.className = 'catalog-autocomplete';
     wrapper.dataset['activeIndex'] = '-1';
 
-    input.id = uniqueId;
+    input.id = id;
     input.type = 'text';
     input.className = 'catalog-search-input';
     input.placeholder = placeholder;
     input.autocomplete = 'off';
     input.setAttribute('aria-label', placeholder);
     input.setAttribute('aria-autocomplete', 'list');
-    input.setAttribute('aria-controls', `${uniqueId}-options`);
+    input.setAttribute('aria-controls', `${id}-options`);
     input.setAttribute('aria-expanded', 'false');
 
     toggle.type = 'button';
@@ -520,33 +470,32 @@ function initializeSearchableCatalogSelects(): void {
     searchIcon.setAttribute('aria-hidden', 'true');
     searchIcon.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 4.5 4.5"></path></svg>';
 
-    panel.id = `${uniqueId}-options`;
+    panel.id = `${id}-options`;
     panel.className = 'catalog-options-panel';
     panel.setAttribute('role', 'listbox');
     panel.hidden = true;
 
     select.classList.add('catalog-native-select');
-    select.dataset['searchableInputId'] = uniqueId;
+    select.dataset['searchableInputId'] = id;
     select.setAttribute('aria-hidden', 'true');
     select.tabIndex = -1;
-
-    label?.setAttribute('for', uniqueId);
+    label?.setAttribute('for', id);
     wrapper.append(input, toggle, searchIcon, panel);
     select.before(wrapper);
 
-    const openPanel = (): void => {
-      renderCatalogOptions(select, input, wrapper);
-      setCatalogPanelOpen(wrapper, true);
+    const open = (): void => {
+      renderOptions(select, input, wrapper);
+      setPanelOpen(wrapper, true);
     };
 
     input.addEventListener('focus', () => {
       input.classList.remove('catalog-value-invalid');
-      openPanel();
+      open();
     });
 
     input.addEventListener('input', () => {
-      const matchingOption = exactCatalogOption(select, input.value);
-      const nextValue = matchingOption?.value ?? '';
+      const match = exactOption(select, input.value);
+      const nextValue = match?.value ?? '';
 
       if (select.value !== nextValue) {
         select.value = nextValue;
@@ -555,80 +504,69 @@ function initializeSearchableCatalogSelects(): void {
       }
 
       input.classList.remove('catalog-value-invalid');
-      renderCatalogOptions(select, input, wrapper);
-      setCatalogPanelOpen(wrapper, true);
+      renderOptions(select, input, wrapper);
+      setPanelOpen(wrapper, true);
     });
 
     input.addEventListener('keydown', (event) => {
       const isOpen = wrapper.classList.contains('open');
       const currentIndex = Number(wrapper.dataset['activeIndex'] ?? -1);
 
-      if (event.key === 'ArrowDown') {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         if (!isOpen) {
-          openPanel();
+          open();
         }
-        setActiveCatalogOption(wrapper, currentIndex + 1);
-        return;
-      }
-
-      if (event.key === 'ArrowUp') {
-        event.preventDefault();
-        if (!isOpen) {
-          openPanel();
-        }
-        setActiveCatalogOption(wrapper, currentIndex <= 0 ? 0 : currentIndex - 1);
+        setActiveOption(wrapper, event.key === 'ArrowDown' ? currentIndex + 1 : Math.max(0, currentIndex - 1));
         return;
       }
 
       if (event.key === 'Enter' && isOpen) {
-        const activeOption = wrapper.querySelector<HTMLButtonElement>('.catalog-option.keyboard-active');
-        if (activeOption) {
+        const active = wrapper.querySelector<HTMLButtonElement>('.catalog-option.keyboard-active');
+        if (active) {
           event.preventDefault();
-          activeOption.click();
+          active.click();
         }
         return;
       }
 
       if (event.key === 'Escape' && isOpen) {
         event.preventDefault();
-        setCatalogPanelOpen(wrapper, false);
+        setPanelOpen(wrapper, false);
       }
     });
 
     input.addEventListener('blur', () => {
       window.setTimeout(() => {
-        const matchingOption = exactCatalogOption(select, input.value);
-
-        if (matchingOption) {
-          input.value = matchingOption.value;
+        const match = exactOption(select, input.value);
+        if (match) {
+          input.value = match.value;
           input.classList.remove('catalog-value-invalid');
         } else if (input.value.trim()) {
           input.classList.add('catalog-value-invalid');
         }
-
-        setCatalogPanelOpen(wrapper, false);
+        setPanelOpen(wrapper, false);
       }, 80);
     });
 
     toggle.addEventListener('mousedown', (event) => event.preventDefault());
     toggle.addEventListener('click', () => {
       if (wrapper.classList.contains('open')) {
-        setCatalogPanelOpen(wrapper, false);
+        setPanelOpen(wrapper, false);
       } else {
         input.focus();
-        openPanel();
+        open();
       }
     });
 
-    synchronizeCatalogSelect(select, input, wrapper);
+    synchronizeAutocomplete(select, input, wrapper);
   });
 }
 
-function closeOpenCatalogAutocompletes(target: Node | null): void {
+function closeOpenAutocompletes(target: Node | null): void {
   document.querySelectorAll<HTMLElement>('app-repair-form .catalog-autocomplete.open').forEach((wrapper) => {
     if (!target || !wrapper.contains(target)) {
-      setCatalogPanelOpen(wrapper, false);
+      setPanelOpen(wrapper, false);
     }
   });
 }
@@ -636,40 +574,48 @@ function closeOpenCatalogAutocompletes(target: Node | null): void {
 bootstrapApplication(AppComponent, appConfig)
   .then(() => {
     document.addEventListener('click', (event) => {
-      const openCatalogMenu = document.querySelector<HTMLDetailsElement>('.settings-menu[open]');
       const target = event.target as Node | null;
+      const settingsMenu = document.querySelector<HTMLDetailsElement>('.settings-menu[open]');
 
-      if (openCatalogMenu && target && !openCatalogMenu.contains(target)) {
-        openCatalogMenu.open = false;
+      if (settingsMenu && target && !settingsMenu.contains(target)) {
+        settingsMenu.open = false;
       }
 
-      closeOpenCatalogAutocompletes(target);
+      closeOpenAutocompletes(target);
     });
 
-    let updateScheduled = false;
+    let scheduled = false;
     const scheduleUiUpdate = (): void => {
-      if (updateScheduled) {
+      if (scheduled) {
         return;
       }
 
-      updateScheduled = true;
+      scheduled = true;
       requestAnimationFrame(() => {
-        updateScheduled = false;
+        scheduled = false;
         updateCatalogResultsCounter();
         setDefaultRepairDate();
-        initializeSearchableCatalogSelects();
+        initializeCatalogAutocompletes();
       });
     };
 
     document.addEventListener('input', (event) => {
       const target = event.target as Element | null;
-
       if (target?.matches('.catalog-page .search-field input')) {
         scheduleUiUpdate();
       }
     });
 
-    const observer = new MutationObserver(scheduleUiUpdate);
+    const observer = new MutationObserver((mutations) => {
+      const onlyAutocompletePanelChanges = mutations.every((mutation) =>
+        (mutation.target as Element).closest?.('.catalog-options-panel'),
+      );
+
+      if (!onlyAutocompletePanelChanges) {
+        scheduleUiUpdate();
+      }
+    });
+
     observer.observe(document.body, {
       childList: true,
       subtree: true,
