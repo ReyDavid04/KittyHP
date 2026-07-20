@@ -16,7 +16,7 @@ type CatalogDefinition = {
 };
 
 const CATALOGS: CatalogDefinition[] = [
-  { type: 'family', title: 'Familia', singular: 'familia', description: 'Familias disponibles para clasificar cada reporte.' },
+  { type: 'family', title: 'Family', singular: 'Family', description: 'Opciones de Family disponibles para clasificar cada reporte.' },
   { type: 'top_issue', title: 'Top Issue', singular: 'top issue', description: 'Fallas principales disponibles al crear un reporte.' },
   { type: 'category', title: 'Category', singular: 'categoría', description: 'Categorías utilizadas para clasificar los reportes.' },
   { type: 'major_part', title: 'Major Part', singular: 'parte principal', description: 'Partes principales relacionadas con una falla.' },
@@ -40,7 +40,7 @@ const CATALOGS: CatalogDefinition[] = [
         <form class="create-row" (ngSubmit)="createItem()">
           <label>
             <span>Nuevo valor</span>
-            <input type="text" name="newCatalogValue" [(ngModel)]="newValue" [placeholder]="'Escribe una ' + currentCatalog.singular" maxlength="255" autocomplete="off">
+            <input type="text" name="newCatalogValue" [(ngModel)]="newValue" [placeholder]="'Escribe ' + currentCatalog.singular" maxlength="255" autocomplete="off">
           </label>
           <button type="submit" [disabled]="saving || !newValue.trim()"><span aria-hidden="true">+</span>Agregar</button>
         </form>
