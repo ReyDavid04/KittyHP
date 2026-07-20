@@ -136,9 +136,9 @@ import {
   styles: [`
     :host, .users-page { display: block; min-height: calc(100dvh - 50px); background: #fff; }
     .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; padding: 9px 22px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg,#fff 0%,#fbfcfe 100%); }
-    .page-heading > div { display: grid; gap: 3px; }
+    .page-heading > div { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
     h1 { margin: 0; color: var(--text); font-size: clamp(1.15rem,1.6vw,1.4rem); font-weight: 800; line-height: 1.1; letter-spacing: -.025em; }
-    .page-heading > div > span { color: var(--muted); font-size: .7rem; }
+    .page-heading > div > span { overflow: hidden; color: var(--muted); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
     .users-content { display: grid; gap: 16px; padding: 20px 22px 28px; }
     .primary-button, .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 13px; border-radius: 9px; font-size: .73rem; font-weight: 750; cursor: pointer; transition: 150ms ease; }
     .primary-button { border: 1px solid var(--primary); color: #fff; background: var(--primary); box-shadow: 0 7px 16px rgba(22,76,140,.16); }
