@@ -5,7 +5,8 @@
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "build": "nest build"
+    "build": "nest build",
+    "email-worker": "node scripts/outlook-email-worker.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
