@@ -17,8 +17,7 @@ export type UserRole = 'admin' | 'user';
 
 export interface AuthenticatedUser {
   id: number;
-  username: string;
-  displayName: string;
+  email: string;
   role: UserRole;
 }
 
@@ -30,15 +29,14 @@ export interface ManagedUser extends AuthenticatedUser {
 
 export interface AuthTokenPayload {
   sub: number;
-  username: string;
+  email: string;
   role: UserRole;
   exp: number;
 }
 
 interface UserRow {
   id: number;
-  username: string;
-  display_name: string;
+  email: string;
   password_hash: string;
   password_salt: string;
   role: UserRole;
@@ -49,6 +47,14 @@ interface UserRow {
 
 interface CountRow {
   total: number | string;
+}
+
+interface ColumnRow {
+  columnName: string;
+}
+
+interface IndexRow {
+  indexName: string;
 }
 
 @Injectable()
@@ -69,24 +75,24 @@ export class AuthService implements OnModuleInit {
     await this.seedInitialAdministrator();
   }
 
-  async login(username: string, password: string): Promise<{
+  async login(email: string, password: string): Promise<{
     token: string;
     userId: number;
-    username: string;
-    displayName: string;
+    email: string;
     role: UserRole;
     expiresAt: string;
   }> {
-    const user = await this.findByUsername(username.trim());
+    const normalizedEmail = this.normalizeEmail(email);
+    const user = await this.findByEmail(normalizedEmail);
 
     if (!user || !this.toBoolean(user.is_active) || !this.verifyPassword(password, user.password_salt, user.password_hash)) {
-      throw new UnauthorizedException('Usuario o contraseña incorrectos.');
+      throw new UnauthorizedException('Correo o contraseña incorrectos.');
     }
 
     const expiresAt = Date.now() + this.tokenLifetimeMs;
     const payload: AuthTokenPayload = {
       sub: Number(user.id),
-      username: user.username,
+      email: user.email,
       role: user.role,
       exp: expiresAt,
     };
@@ -94,8 +100,7 @@ export class AuthService implements OnModuleInit {
     return {
       token: this.sign(payload),
       userId: Number(user.id),
-      username: user.username,
-      displayName: user.display_name,
+      email: user.email,
       role: user.role,
       expiresAt: new Date(expiresAt).toISOString(),
     };
@@ -117,7 +122,7 @@ export class AuthService implements OnModuleInit {
       const payload = JSON.parse(Buffer.from(encodedPayload, 'base64url').toString('utf8')) as AuthTokenPayload;
       if (
         !payload.sub ||
-        !payload.username ||
+        !payload.email ||
         !['admin', 'user'].includes(payload.role) ||
         !payload.exp ||
         payload.exp <= Date.now()
@@ -139,31 +144,30 @@ export class AuthService implements OnModuleInit {
 
   async listUsers(): Promise<ManagedUser[]> {
     const rows = await this.dataSource.query(
-      `SELECT id, username, display_name, password_hash, password_salt, role, is_active, created_at, updated_at
+      `SELECT id, email, password_hash, password_salt, role, is_active, created_at, updated_at
        FROM users
-       ORDER BY display_name ASC, username ASC`,
+       ORDER BY email ASC`,
     ) as UserRow[];
 
     return rows.map((row) => this.toManagedUser(row));
   }
 
   async createUser(dto: CreateUserDto): Promise<ManagedUser> {
-    const username = dto.username.trim();
-    const displayName = dto.displayName.trim();
+    const email = this.normalizeEmail(dto.email);
     const { salt, hash } = this.hashPassword(dto.password);
 
     try {
       const result = await this.dataSource.query(
-        `INSERT INTO users (username, display_name, password_hash, password_salt, role, is_active)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [username, displayName, hash, salt, dto.role, dto.isActive === false ? 0 : 1],
+        `INSERT INTO users (email, password_hash, password_salt, role, is_active)
+         VALUES (?, ?, ?, ?, ?)`,
+        [email, hash, salt, dto.role, dto.isActive === false ? 0 : 1],
       ) as { insertId?: number };
 
       const created = await this.findById(Number(result.insertId));
       if (!created) throw new NotFoundException('No fue posible recuperar el usuario creado.');
       return this.toManagedUser(created);
     } catch (error) {
-      this.handleDuplicateUsername(error);
+      this.handleDuplicateEmail(error);
       throw error;
     }
   }
@@ -195,11 +199,10 @@ export class AuthService implements OnModuleInit {
     try {
       await this.dataSource.query(
         `UPDATE users
-         SET username = ?, display_name = ?, password_hash = ?, password_salt = ?, role = ?, is_active = ?
+         SET email = ?, password_hash = ?, password_salt = ?, role = ?, is_active = ?
          WHERE id = ?`,
         [
-          dto.username?.trim() ?? user.username,
-          dto.displayName?.trim() ?? user.display_name,
+          dto.email ? this.normalizeEmail(dto.email) : user.email,
           passwordHash,
           passwordSalt,
           nextRole,
@@ -208,7 +211,7 @@ export class AuthService implements OnModuleInit {
         ],
       );
     } catch (error) {
-      this.handleDuplicateUsername(error);
+      this.handleDuplicateEmail(error);
       throw error;
     }
 
@@ -234,8 +237,7 @@ export class AuthService implements OnModuleInit {
     await this.dataSource.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-        username VARCHAR(80) NOT NULL,
-        display_name VARCHAR(120) NOT NULL,
+        email VARCHAR(160) NOT NULL,
         password_hash VARCHAR(128) NOT NULL,
         password_salt VARCHAR(64) NOT NULL,
         role VARCHAR(20) NOT NULL DEFAULT 'user',
@@ -243,24 +245,64 @@ export class AuthService implements OnModuleInit {
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
-        UNIQUE KEY uq_users_username (username)
+        UNIQUE KEY uq_users_email (email)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
+
+    const columns = await this.getUserColumns();
+    if (!columns.has('email')) {
+      await this.dataSource.query('ALTER TABLE users ADD COLUMN email VARCHAR(160) NULL AFTER id');
+    }
+
+    const migratedColumns = await this.getUserColumns();
+    if (migratedColumns.has('username')) {
+      await this.dataSource.query(`
+        UPDATE users
+        SET email = CASE
+          WHEN username LIKE '%@%' THEN CONCAT(SUBSTRING_INDEX(username, '@', 1), '@inventec.com')
+          ELSE CONCAT(username, '@inventec.com')
+        END
+        WHERE email IS NULL OR TRIM(email) = ''
+      `);
+    }
+
+    await this.dataSource.query(`
+      UPDATE users
+      SET email = CONCAT('usuario', id, '@inventec.com')
+      WHERE email IS NULL OR TRIM(email) = ''
+    `);
+    await this.dataSource.query('ALTER TABLE users MODIFY COLUMN email VARCHAR(160) NOT NULL');
+
+    const indexes = await this.getUserIndexes();
+    if (!indexes.has('uq_users_email')) {
+      await this.dataSource.query('ALTER TABLE users ADD UNIQUE KEY uq_users_email (email)');
+    }
+
+    const finalColumns = await this.getUserColumns();
+    const finalIndexes = await this.getUserIndexes();
+    if (finalIndexes.has('uq_users_username')) {
+      await this.dataSource.query('ALTER TABLE users DROP INDEX uq_users_username');
+    }
+    if (finalColumns.has('username')) {
+      await this.dataSource.query('ALTER TABLE users DROP COLUMN username');
+    }
+    if (finalColumns.has('display_name')) {
+      await this.dataSource.query('ALTER TABLE users DROP COLUMN display_name');
+    }
   }
 
   private async seedInitialAdministrator(): Promise<void> {
     const rows = await this.dataSource.query('SELECT COUNT(*) AS total FROM users') as CountRow[];
     if (Number(rows[0]?.total ?? 0) > 0) return;
 
-    const username = this.configService.get<string>('AUTH_USERNAME', 'admin').trim();
-    const displayName = this.configService.get<string>('AUTH_DISPLAY_NAME', 'Administrador').trim();
+    const email = this.normalizeEmail(this.configService.get<string>('AUTH_EMAIL', 'Ramos.Rey@inventec.com'));
     const password = this.configService.get<string>('AUTH_PASSWORD', 'KittyHP2026!');
     const { salt, hash } = this.hashPassword(password);
 
     await this.dataSource.query(
-      `INSERT INTO users (username, display_name, password_hash, password_salt, role, is_active)
-       VALUES (?, ?, ?, ?, 'admin', 1)`,
-      [username, displayName, hash, salt],
+      `INSERT INTO users (email, password_hash, password_salt, role, is_active)
+       VALUES (?, ?, ?, 'admin', 1)`,
+      [email, hash, salt],
     );
   }
 
@@ -278,22 +320,56 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  private async findByUsername(username: string): Promise<UserRow | null> {
+  private async findByEmail(email: string): Promise<UserRow | null> {
     const rows = await this.dataSource.query(
-      `SELECT id, username, display_name, password_hash, password_salt, role, is_active, created_at, updated_at
-       FROM users WHERE username = ? LIMIT 1`,
-      [username],
+      `SELECT id, email, password_hash, password_salt, role, is_active, created_at, updated_at
+       FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1`,
+      [email],
     ) as UserRow[];
     return rows[0] ?? null;
   }
 
   private async findById(id: number): Promise<UserRow | null> {
     const rows = await this.dataSource.query(
-      `SELECT id, username, display_name, password_hash, password_salt, role, is_active, created_at, updated_at
+      `SELECT id, email, password_hash, password_salt, role, is_active, created_at, updated_at
        FROM users WHERE id = ? LIMIT 1`,
       [id],
     ) as UserRow[];
     return rows[0] ?? null;
+  }
+
+  private async getUserColumns(): Promise<Set<string>> {
+    const rows = await this.dataSource.query(
+      `SELECT COLUMN_NAME AS columnName
+       FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`,
+    ) as ColumnRow[];
+    return new Set(rows.map((row) => row.columnName));
+  }
+
+  private async getUserIndexes(): Promise<Set<string>> {
+    const rows = await this.dataSource.query(
+      `SELECT DISTINCT INDEX_NAME AS indexName
+       FROM INFORMATION_SCHEMA.STATISTICS
+       WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'`,
+    ) as IndexRow[];
+    return new Set(rows.map((row) => row.indexName));
+  }
+
+  private normalizeEmail(value: string): string {
+    const trimmed = value.trim();
+    const parts = trimmed.split('@');
+
+    if (parts.length > 2 || (parts.length === 2 && parts[1].toLowerCase() !== 'inventec.com')) {
+      throw new BadRequestException('El correo debe pertenecer al dominio @inventec.com.');
+    }
+
+    const localPart = parts[0]?.trim();
+    if (!localPart || localPart.length < 3 || !/^[a-zA-Z0-9._-]+$/.test(localPart)) {
+      throw new BadRequestException('Captura un correo válido, por ejemplo Ramos.Rey@inventec.com.');
+    }
+
+    return `${localPart}@inventec.com`;
   }
 
   private hashPassword(password: string): { salt: string; hash: string } {
@@ -323,8 +399,7 @@ export class AuthService implements OnModuleInit {
   private toAuthenticatedUser(user: UserRow): AuthenticatedUser {
     return {
       id: Number(user.id),
-      username: user.username,
-      displayName: user.display_name,
+      email: user.email,
       role: user.role,
     };
   }
@@ -342,9 +417,9 @@ export class AuthService implements OnModuleInit {
     return value === true || Number(value) === 1;
   }
 
-  private handleDuplicateUsername(error: unknown): void {
+  private handleDuplicateEmail(error: unknown): void {
     if ((error as { code?: string }).code === 'ER_DUP_ENTRY') {
-      throw new ConflictException('El nombre de usuario ya está registrado.');
+      throw new ConflictException('El correo ya está registrado.');
     }
   }
 }
