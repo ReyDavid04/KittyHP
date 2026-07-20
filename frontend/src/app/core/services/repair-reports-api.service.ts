@@ -3,7 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { RepairReport, RepairUpsertPayload } from '../models/repair-report.model';
 
-type RepairReportResponse = Omit<RepairReport, 'frPercentage'> & { frPercentage: string | number };
+type RepairReportResponse = Omit<RepairReport, 'frPercentage' | 'returnYesQty' | 'returnNoQty'> & {
+  frPercentage: string | number;
+  returnYesQty: string | number;
+  returnNoQty: string | number;
+};
 
 export type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_part' | 'failure_factor';
 
@@ -80,7 +84,9 @@ export class RepairReportsApiService {
   private normalize(repair: RepairReportResponse): RepairReport {
     return {
       ...repair,
-      frPercentage: typeof repair.frPercentage === 'string' ? Number(repair.frPercentage) : repair.frPercentage,
+      frPercentage: Number(repair.frPercentage),
+      returnYesQty: Number(repair.returnYesQty),
+      returnNoQty: Number(repair.returnNoQty),
     };
   }
 
@@ -94,7 +100,7 @@ export class RepairReportsApiService {
     this.appendText(formData, 'buildQty', payload.buildQty);
     this.appendText(formData, 'frPercentage', payload.frPercentage);
     this.appendText(formData, 'category', payload.category);
-    this.appendText(formData, 'returnStatus', payload.returnStatus);
+    this.appendText(formData, 'returnYesQty', payload.returnYesQty);
     this.appendText(formData, 'majorPart', payload.majorPart);
     this.appendText(formData, 'repairResult', payload.repairResult);
     this.appendText(formData, 'failureFactor', payload.failureFactor);
