@@ -7,7 +7,7 @@ export class AdminGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<RequestWithAuth>();
 
     if (request.user?.role !== 'admin') {
-      throw new ForbiddenException('Solo los administradores pueden gestionar usuarios.');
+      throw new ForbiddenException('Esta acción está disponible únicamente para administradores.');
     }
 
     return true;
