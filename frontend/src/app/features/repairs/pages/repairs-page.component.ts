@@ -52,7 +52,9 @@ export class RepairsPageComponent {
         String(repair.buildQty),
         String(repair.frPercentage),
         repair.category,
-        repair.returnStatus ?? '',
+        this.returnSummary(repair),
+        String(repair.returnYesQty),
+        String(repair.returnNoQty),
         repair.majorPart ?? '',
         repair.repairResult ?? '',
         repair.failureFactor ?? '',
@@ -119,7 +121,8 @@ export class RepairsPageComponent {
       "Build q'ty",
       'F/R (%)',
       'Category',
-      'Return',
+      'Return Yes',
+      'Return No',
       'Fail Picture',
       'Major Part',
       'Repair Result',
@@ -138,7 +141,8 @@ export class RepairsPageComponent {
       this.excelNumberCell(repair.buildQty),
       this.excelNumberCell(Number(repair.frPercentage), 'Decimal'),
       this.excelTextCell(repair.category),
-      this.excelTextCell(repair.returnStatus),
+      this.excelNumberCell(repair.returnYesQty),
+      this.excelNumberCell(repair.returnNoQty),
       this.excelTextCell(repair.failPicture),
       this.excelTextCell(repair.majorPart),
       this.excelTextCell(repair.repairResult),
@@ -162,8 +166,8 @@ export class RepairsPageComponent {
   <Table>
    <Column ss:Width="60"/><Column ss:Width="80"/><Column ss:Width="110"/><Column ss:Width="180"/>
    <Column ss:Width="80"/><Column ss:Width="80"/><Column ss:Width="70"/><Column ss:Width="110"/>
-   <Column ss:Width="80"/><Column ss:Width="180"/><Column ss:Width="120"/><Column ss:Width="180"/>
-   <Column ss:Width="140"/><Column ss:Width="220"/><Column ss:Width="180"/>
+   <Column ss:Width="75"/><Column ss:Width="75"/><Column ss:Width="180"/><Column ss:Width="120"/>
+   <Column ss:Width="180"/><Column ss:Width="140"/><Column ss:Width="220"/><Column ss:Width="180"/>
    ${headerRow}${dataRows}
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions>
@@ -251,8 +255,8 @@ export class RepairsPageComponent {
   }
 
   private compareRepairValues(first: RepairReport, second: RepairReport, key: RepairColumnKey, multiplier: number): number {
-    const firstRaw = (first as unknown as Record<string, unknown>)[key];
-    const secondRaw = (second as unknown as Record<string, unknown>)[key];
+    const firstRaw = this.rawValueForKey(first, key);
+    const secondRaw = this.rawValueForKey(second, key);
     const firstBlank = firstRaw === null || firstRaw === undefined || String(firstRaw).trim() === '';
     const secondBlank = secondRaw === null || secondRaw === undefined || String(secondRaw).trim() === '';
 
@@ -286,13 +290,22 @@ export class RepairsPageComponent {
   private createEmptyFilters(): RepairColumnFilters {
     return {
       recordDate: [], family: [], topIssue: [], failureQty: [], buildQty: [], frPercentage: [], category: [],
-      returnStatus: [], failPicture: [], majorPart: [], repairResult: [], failureFactor: [], actions: [], evidencePicture: [],
+      returnSummary: [], failPicture: [], majorPart: [], repairResult: [], failureFactor: [], actions: [], evidencePicture: [],
     };
   }
 
   private valueForKey(repair: RepairReport, key: RepairColumnKey): string {
-    const raw = String((repair as unknown as Record<string, unknown>)[key] ?? '').trim();
+    const raw = String(this.rawValueForKey(repair, key) ?? '').trim();
     return raw ? raw.toLowerCase() : FILTER_BLANK_VALUE;
+  }
+
+  private rawValueForKey(repair: RepairReport, key: RepairColumnKey): unknown {
+    if (key === 'returnSummary') return this.returnSummary(repair);
+    return (repair as unknown as Record<string, unknown>)[key];
+  }
+
+  private returnSummary(repair: RepairReport): string {
+    return `Yes: ${Number(repair.returnYesQty ?? 0)} · No: ${Number(repair.returnNoQty ?? 0)}`;
   }
 
   private buildAvailableValues(repairs: RepairReport[]): RepairColumnValues {
@@ -314,7 +327,7 @@ export class RepairsPageComponent {
       buildQty: unique('buildQty'),
       frPercentage: unique('frPercentage'),
       category: unique('category'),
-      returnStatus: unique('returnStatus'),
+      returnSummary: unique('returnSummary'),
       failPicture: [],
       majorPart: unique('majorPart'),
       repairResult: unique('repairResult'),
