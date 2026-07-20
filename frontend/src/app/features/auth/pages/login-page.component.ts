@@ -33,7 +33,7 @@ type AccessMode = 'login' | 'register' | 'forgot';
             <span>Correo</span>
             <div class="input-shell email-shell" [class.invalid]="isInvalid(loginForm, 'email')">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
-              <input type="text" formControlName="email" autocomplete="username" placeholder="Ramos.Rey">
+              <input type="text" formControlName="email" autocomplete="username" placeholder="Apellido.Nombre">
               <span class="email-suffix">&#64;inventec.com</span>
             </div>
           </label>
@@ -66,7 +66,7 @@ type AccessMode = 'login' | 'register' | 'forgot';
               <span>Correo corporativo</span>
               <div class="input-shell email-shell" [class.invalid]="isInvalid(registrationForm, 'email')">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
-                <input type="text" formControlName="email" autocomplete="username" placeholder="Ramos.Rey">
+                <input type="text" formControlName="email" autocomplete="username" placeholder="Apellido.Nombre">
                 <span class="email-suffix">&#64;inventec.com</span>
               </div>
             </label>
@@ -119,7 +119,7 @@ type AccessMode = 'login' | 'register' | 'forgot';
               <span>Correo corporativo</span>
               <div class="input-shell email-shell" [class.invalid]="isInvalid(recoveryEmailForm, 'email')">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
-                <input type="text" formControlName="email" autocomplete="username" placeholder="Ramos.Rey">
+                <input type="text" formControlName="email" autocomplete="username" placeholder="Apellido.Nombre">
                 <span class="email-suffix">&#64;inventec.com</span>
               </div>
             </label>
