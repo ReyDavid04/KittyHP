@@ -41,7 +41,7 @@ import {
               <span>Correo</span>
               <div class="email-input" [class.invalid]="isInvalid('email')">
                 <input type="text" formControlName="email" autocomplete="off" placeholder="Ramos.Rey">
-                <span>@inventec.com</span>
+                <span>&#64;inventec.com</span>
               </div>
             </label>
 
