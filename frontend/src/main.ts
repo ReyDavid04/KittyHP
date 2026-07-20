@@ -3,7 +3,7 @@ import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 
 const SEARCHABLE_CATALOG_FIELDS: Record<string, string> = {
-  family: 'Escribe o selecciona la familia',
+  family: 'Escribe o selecciona Family',
   topIssue: 'Escribe o selecciona el top issue',
   category: 'Escribe o selecciona la categoría',
   majorPart: 'Escribe o selecciona la parte principal',
