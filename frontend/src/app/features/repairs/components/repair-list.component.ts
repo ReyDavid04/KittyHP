@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { RepairReport } from '../../../core/models/repair-report.model';
 
 export const FILTER_BLANK_VALUE = '__BLANK__';
@@ -55,7 +56,7 @@ interface RepairColumnDefinition {
 @Component({
   selector: 'app-repair-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './repair-list.component.html',
   styleUrls: ['./repair-list.component.css', './repair-list-thumbnail.css'],
 })
