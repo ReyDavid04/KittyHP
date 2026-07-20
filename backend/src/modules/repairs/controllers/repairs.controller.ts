@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { extname } from 'node:path';
+import { AuthGuard } from '../../auth/auth.guard';
 import { CreateRepairCatalogItemDto } from '../dto/create-repair-catalog-item.dto';
 import { CreateRepairDto } from '../dto/create-repair.dto';
 import { UpdateRepairCatalogItemDto } from '../dto/update-repair-catalog-item.dto';
@@ -20,6 +21,7 @@ type UploadFile = { filename: string; originalname: string };
 type UploadFields = { failPicture?: UploadFile[]; evidencePicture?: UploadFile[] };
 
 @Controller('repairs')
+@UseGuards(AuthGuard)
 export class RepairsController {
   constructor(private readonly repairsService: RepairsService) {}
 
