@@ -1,6 +1,7 @@
 export interface RepairReport {
   id: string;
   recordDate: string;
+  family?: string | null;
   topIssue: string;
   failureQty: number;
   buildQty: number;
@@ -18,6 +19,7 @@ export interface RepairReport {
 
 export interface RepairUpsertPayload {
   recordDate: string;
+  family: string;
   topIssue: string;
   failureQty: number;
   buildQty: number;
@@ -33,5 +35,3 @@ export interface RepairUpsertPayload {
   failPictureFile?: File | null;
   evidencePictureFile?: File | null;
 }
-
-
