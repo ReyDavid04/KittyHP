@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { RepairReport } from '../../../core/models/repair-report.model';
+import { AuthService } from '../../../core/services/auth.service';
 
 export const FILTER_BLANK_VALUE = '__BLANK__';
 
@@ -63,6 +64,8 @@ interface RepairColumnDefinition {
   styleUrls: ['./repair-list.component.css', './repair-list-thumbnail.css'],
 })
 export class RepairListComponent {
+  readonly authService = inject(AuthService);
+
   @Input() repairs: RepairReport[] | null = [];
   @Input() filters: RepairColumnFilters = this.emptyFilters();
   @Input() availableValues: RepairColumnValues = this.emptyFilters();
