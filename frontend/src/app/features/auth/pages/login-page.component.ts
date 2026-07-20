@@ -32,7 +32,7 @@ import { AuthService } from '../../../core/services/auth.service';
             <div class="input-shell email-shell" [class.invalid]="isInvalid('email')">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
               <input type="text" formControlName="email" autocomplete="username" placeholder="Ramos.Rey">
-              <span class="email-suffix">@inventec.com</span>
+              <span class="email-suffix">&#64;inventec.com</span>
             </div>
           </label>
 
