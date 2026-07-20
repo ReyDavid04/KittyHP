@@ -309,6 +309,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
       :host ::ng-deep .catalog-page .page-header {
         justify-content: flex-start !important;
+        min-height: 58px !important;
+        padding: 9px 22px !important;
+      }
+
+      :host ::ng-deep .catalog-page .page-header h1 {
+        font-size: clamp(1.15rem, 1.6vw, 1.4rem) !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.025em !important;
       }
 
       @media (max-width: 760px) {
