@@ -23,15 +23,16 @@ import { AuthService } from '../../../core/services/auth.service';
         <div class="login-heading">
           <span>Acceso al sistema</span>
           <h1>Iniciar sesión</h1>
-          <p>Ingresa tus credenciales para consultar y administrar los reportes.</p>
+          <p>Ingresa tu correo corporativo y contraseña para continuar.</p>
         </div>
 
         <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <label>
-            <span>Usuario</span>
-            <div class="input-shell" [class.invalid]="isInvalid('username')">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
-              <input type="text" formControlName="username" autocomplete="username" placeholder="Ingresa tu usuario">
+            <span>Correo</span>
+            <div class="input-shell email-shell" [class.invalid]="isInvalid('email')">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
+              <input type="text" formControlName="email" autocomplete="username" placeholder="Ramos.Rey">
+              <span class="email-suffix">@inventec.com</span>
             </div>
           </label>
 
@@ -89,6 +90,8 @@ import { AuthService } from '../../../core/services/auth.service';
     .input-shell > svg { width: 18px; flex: 0 0 18px; fill: none; stroke: #708096; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
     input { min-width: 0; flex: 1; height: 100%; border: 0; outline: 0; color: var(--text); font: inherit; font-size: .8rem; font-weight: 450; background: transparent; }
     input::placeholder { color: #9ba7b6; }
+    .email-shell { gap: 8px; }
+    .email-suffix { flex: 0 0 auto; color: #66758a; font-size: .78rem; font-weight: 600; }
     .password-toggle { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; color: #708096; background: transparent; cursor: pointer; }
     .password-toggle svg { width: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.65; }
     .login-error { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 1px solid rgba(180,35,58,.18); border-radius: 9px; color: #a71d39; font-size: .72rem; background: #fff6f7; }
@@ -116,7 +119,7 @@ export class LoginPageComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly form = new FormBuilder().nonNullable.group({
-    username: ['', Validators.required],
+    email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._-]+(?:@inventec\.com)?$/i)]],
     password: ['', Validators.required],
   });
 
@@ -124,7 +127,7 @@ export class LoginPageComponent {
   isSubmitting = false;
   errorMessage = '';
 
-  isInvalid(controlName: 'username' | 'password'): boolean {
+  isInvalid(controlName: 'email' | 'password'): boolean {
     const control = this.form.controls[controlName];
     return control.invalid && control.touched;
   }
@@ -138,7 +141,7 @@ export class LoginPageComponent {
 
     this.isSubmitting = true;
     const value = this.form.getRawValue();
-    this.authService.login(value.username.trim(), value.password).pipe(
+    this.authService.login(value.email.trim(), value.password).pipe(
       finalize(() => { this.isSubmitting = false; }),
     ).subscribe({
       next: () => {
