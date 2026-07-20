@@ -254,7 +254,7 @@ export class RepairEditorPageComponent {
   }
 
   get isSaveDisabled(): boolean {
-    return this.isLoading || !this.repairForm || this.repairForm.catalogsLoading || this.repairForm.form.invalid;
+    return this.isLoading || !this.repairForm || this.repairForm.catalogsLoading;
   }
 
   submitRepair(): void {
