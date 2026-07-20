@@ -18,6 +18,25 @@ function calculateFrPercentage(failureQty: number, buildQty: number): string {
   return frPercentage.toFixed(2);
 }
 
+function calculateReturnQuantities(failureQty: number, returnYesQty: number): { returnYesQty: number; returnNoQty: number } {
+  if (!Number.isInteger(failureQty) || failureQty <= 0) {
+    throw new BadRequestException('Failure qty debe ser un número entero mayor que cero.');
+  }
+
+  if (!Number.isInteger(returnYesQty) || returnYesQty < 0) {
+    throw new BadRequestException('Return Yes debe ser un número entero igual o mayor que cero.');
+  }
+
+  if (returnYesQty > failureQty) {
+    throw new BadRequestException('Return Yes no puede ser mayor que Failure qty.');
+  }
+
+  return {
+    returnYesQty,
+    returnNoQty: failureQty - returnYesQty,
+  };
+}
+
 @Injectable()
 export class RepairRepository {
   constructor(
@@ -27,6 +46,9 @@ export class RepairRepository {
 
   create(data: CreateRepairDto): Promise<RepairEntity> {
     const frPercentage = calculateFrPercentage(data.failureQty, data.buildQty);
+    const returns = calculateReturnQuantities(data.failureQty, data.returnYesQty);
+    const returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+
     const entity = this.repository.create({
       recordDate: data.recordDate,
       family: data.family,
@@ -35,7 +57,9 @@ export class RepairRepository {
       buildQty: data.buildQty,
       frPercentage,
       category: data.category,
-      returnStatus: data.returnStatus ?? (data.isReturned === undefined ? null : data.isReturned ? 'YES' : 'NO'),
+      returnStatus,
+      returnYesQty: returns.returnYesQty,
+      returnNoQty: returns.returnNoQty,
       failPicture: data.failPicture ?? null,
       majorPart: data.majorPart ?? null,
       repairResult: data.repairResult ?? null,
@@ -45,6 +69,8 @@ export class RepairRepository {
       sourcePayload: {
         ...(data as unknown as Record<string, unknown>),
         frPercentage: Number(frPercentage),
+        returnYesQty: returns.returnYesQty,
+        returnNoQty: returns.returnNoQty,
       },
     });
 
@@ -69,10 +95,15 @@ export class RepairRepository {
     if (data.buildQty !== undefined) entity.buildQty = data.buildQty;
     entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
     if (data.category !== undefined) entity.category = data.category;
-    if (data.returnStatus !== undefined) entity.returnStatus = data.returnStatus;
-    if (data.isReturned !== undefined && data.returnStatus === undefined) {
-      entity.returnStatus = data.isReturned ? 'YES' : 'NO';
-    }
+
+    const returns = calculateReturnQuantities(
+      entity.failureQty,
+      data.returnYesQty ?? entity.returnYesQty,
+    );
+    entity.returnYesQty = returns.returnYesQty;
+    entity.returnNoQty = returns.returnNoQty;
+    entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+
     if (data.failPicture !== undefined) entity.failPicture = data.failPicture ?? null;
     if (data.majorPart !== undefined) entity.majorPart = data.majorPart ?? null;
     if (data.repairResult !== undefined) entity.repairResult = data.repairResult ?? null;
@@ -84,6 +115,8 @@ export class RepairRepository {
       ...(entity.sourcePayload ?? {}),
       ...data,
       frPercentage: Number(entity.frPercentage),
+      returnYesQty: entity.returnYesQty,
+      returnNoQty: entity.returnNoQty,
     };
 
     return this.repository.save(entity);
