@@ -417,9 +417,13 @@ export class RepairFormComponent implements OnChanges {
   }
 
   private updateReturnNoQty(): void {
-    const failureQty = Number(this.form.controls.failureQty.value);
-    const returnYesQty = Number(this.form.controls.returnYesQty.value);
-    const isValid = Number.isInteger(failureQty)
+    const failureRaw = this.form.controls.failureQty.value;
+    const returnYesRaw = this.form.controls.returnYesQty.value;
+    const failureQty = Number(failureRaw);
+    const returnYesQty = Number(returnYesRaw);
+    const hasValues = failureRaw !== '' && returnYesRaw !== '';
+    const isValid = hasValues
+      && Number.isInteger(failureQty)
       && Number.isInteger(returnYesQty)
       && failureQty > 0
       && returnYesQty >= 0
