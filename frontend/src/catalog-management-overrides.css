@@ -24,20 +24,43 @@
   background: #fff !important;
 }
 
+.catalog-page .panel-heading > div {
+  display: flex !important;
+  align-items: baseline !important;
+  flex-wrap: wrap;
+  gap: 4px 12px !important;
+  min-width: 0;
+}
+
 .catalog-page .panel-heading h2 {
   margin: 0 !important;
   font-size: clamp(1.15rem, 1.6vw, 1.4rem) !important;
   font-weight: 800 !important;
   line-height: 1.1 !important;
   letter-spacing: -0.025em !important;
+  white-space: nowrap;
 }
 
 .catalog-page .panel-heading p {
-  display: none !important;
+  display: block !important;
+  margin: 0 !important;
+  color: var(--muted) !important;
+  font-size: 0.72rem !important;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .catalog-page .create-row {
   background: #fff !important;
+}
+
+/* The catalog menu only shows the catalog names. */
+.settings-dropdown a {
+  gap: 0 !important;
+}
+
+.settings-dropdown small {
+  display: none !important;
 }
 
 @media (max-width: 720px) {
@@ -45,5 +68,13 @@
     align-items: center !important;
     flex-direction: row !important;
     padding: 9px 12px !important;
+  }
+
+  .catalog-page .panel-heading > div {
+    gap: 3px 8px !important;
+  }
+
+  .catalog-page .panel-heading p {
+    font-size: 0.67rem !important;
   }
 }
