@@ -25,7 +25,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
             <div class="settings-dropdown">
               <span class="dropdown-title">Catálogos</span>
-              <a routerLink="/settings/catalogs/family" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Familia</strong></a>
+              <a routerLink="/settings/catalogs/family" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Family</strong></a>
               <a routerLink="/settings/catalogs/top_issue" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Top Issue</strong></a>
               <a routerLink="/settings/catalogs/category" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Category</strong></a>
               <a routerLink="/settings/catalogs/major_part" routerLinkActive="active" (click)="$any(configMenu).open = false"><strong>Major Part</strong></a>
