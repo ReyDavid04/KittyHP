@@ -28,7 +28,7 @@ import { RepairReportsApiService } from '../../../core/services/repair-reports-a
       <section class="report-content" *ngIf="!isLoading && repair as item">
         <div class="summary-grid">
           <article class="detail-card"><span>Date</span><strong>{{ item.recordDate || '—' }}</strong></article>
-          <article class="detail-card"><span>Familia</span><strong>{{ item.family || '—' }}</strong></article>
+          <article class="detail-card"><span>Family</span><strong>{{ item.family || '—' }}</strong></article>
           <article class="detail-card wide"><span>Top issue</span><strong>{{ item.topIssue || '—' }}</strong></article>
           <article class="detail-card number-card"><span>Failure qty</span><strong>{{ item.failureQty | number }}</strong></article>
           <article class="detail-card number-card"><span>Build qty</span><strong>{{ item.buildQty | number }}</strong></article>
