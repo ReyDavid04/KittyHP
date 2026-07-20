@@ -5,6 +5,14 @@ import { CreateRepairDto } from '../dto/create-repair.dto';
 import { UpdateRepairDto } from '../dto/update-repair.dto';
 import { RepairEntity } from '../entities/repair.entity';
 
+function calculateFrPercentage(failureQty: number, buildQty: number): string {
+  if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || buildQty <= 0) {
+    return '0.00';
+  }
+
+  return ((failureQty / buildQty) * 100).toFixed(2);
+}
+
 @Injectable()
 export class RepairRepository {
   constructor(
@@ -13,13 +21,14 @@ export class RepairRepository {
   ) {}
 
   create(data: CreateRepairDto): Promise<RepairEntity> {
+    const frPercentage = calculateFrPercentage(data.failureQty, data.buildQty);
     const entity = this.repository.create({
       recordDate: data.recordDate,
       family: data.family,
       topIssue: data.topIssue,
       failureQty: data.failureQty,
       buildQty: data.buildQty,
-      frPercentage: data.frPercentage.toFixed(2),
+      frPercentage,
       category: data.category,
       returnStatus: data.returnStatus ?? (data.isReturned === undefined ? null : data.isReturned ? 'YES' : 'NO'),
       failPicture: data.failPicture ?? null,
@@ -28,7 +37,10 @@ export class RepairRepository {
       failureFactor: data.failureFactor ?? null,
       actions: data.actions ?? null,
       evidencePicture: data.evidencePicture ?? null,
-      sourcePayload: data as unknown as Record<string, unknown>,
+      sourcePayload: {
+        ...(data as unknown as Record<string, unknown>),
+        frPercentage: Number(frPercentage),
+      },
     });
 
     return this.repository.save(entity);
@@ -50,7 +62,7 @@ export class RepairRepository {
     if (data.topIssue !== undefined) entity.topIssue = data.topIssue;
     if (data.failureQty !== undefined) entity.failureQty = data.failureQty;
     if (data.buildQty !== undefined) entity.buildQty = data.buildQty;
-    if (data.frPercentage !== undefined) entity.frPercentage = data.frPercentage.toFixed(2);
+    entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
     if (data.category !== undefined) entity.category = data.category;
     if (data.returnStatus !== undefined) entity.returnStatus = data.returnStatus;
     if (data.isReturned !== undefined && data.returnStatus === undefined) {
@@ -63,7 +75,11 @@ export class RepairRepository {
     if (data.actions !== undefined) entity.actions = data.actions ?? null;
     if (data.evidencePicture !== undefined) entity.evidencePicture = data.evidencePicture ?? null;
 
-    entity.sourcePayload = { ...(entity.sourcePayload ?? {}), ...data };
+    entity.sourcePayload = {
+      ...(entity.sourcePayload ?? {}),
+      ...data,
+      frPercentage: Number(entity.frPercentage),
+    };
 
     return this.repository.save(entity);
   }
