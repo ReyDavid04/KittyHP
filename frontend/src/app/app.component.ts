@@ -115,6 +115,10 @@ import { AuthService } from './core/services/auth.service';
       :host ::ng-deep app-repair-form .grid-family { grid-column: 3 / span 3 !important; grid-row: 1 !important; }
       :host ::ng-deep app-repair-form .grid-top-issue { grid-column: 6 / span 3 !important; grid-row: 1 !important; }
       :host ::ng-deep app-repair-form .grid-failure-qty { grid-column: 9 / span 2 !important; grid-row: 1 !important; }
+      :host ::ng-deep app-repair-form .grid-build-qty { grid-column: 1 / span 2 !important; grid-row: 2 !important; }
+      :host ::ng-deep app-repair-form .grid-fr { grid-column: 3 / span 2 !important; grid-row: 2 !important; }
+      :host ::ng-deep app-repair-form .grid-category { grid-column: 5 / span 3 !important; grid-row: 2 !important; }
+      :host ::ng-deep app-repair-form .grid-return { grid-column: 8 / span 3 !important; grid-row: 2 !important; }
     }
 
     @media (max-width: 760px) {
