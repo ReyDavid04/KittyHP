@@ -29,6 +29,12 @@ export class RepairEntity {
   @Column({ name: 'return_status', type: 'varchar', length: 50, nullable: true })
   returnStatus!: string | null;
 
+  @Column({ name: 'return_yes_qty', type: 'int', unsigned: true, default: 0 })
+  returnYesQty!: number;
+
+  @Column({ name: 'return_no_qty', type: 'int', unsigned: true, default: 0 })
+  returnNoQty!: number;
+
   @Column({ name: 'fail_picture', type: 'varchar', length: 255, nullable: true })
   failPicture!: string | null;
 
