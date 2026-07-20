@@ -75,7 +75,7 @@ export class RepairListComponent {
 
   readonly columns: RepairColumnDefinition[] = [
     { key: 'recordDate', label: 'Date', className: 'date-column' },
-    { key: 'family', label: 'Familia' },
+    { key: 'family', label: 'Family' },
     { key: 'topIssue', label: 'Top issue', className: 'issue-column' },
     { key: 'failureQty', label: 'Failure qty', className: 'number-column', numeric: true },
     { key: 'buildQty', label: 'Build qty', className: 'number-column', numeric: true },
