@@ -8,6 +8,9 @@ export class RepairEntity {
   @Column({ name: 'record_date', type: 'date' })
   recordDate!: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  family!: string | null;
+
   @Column({ name: 'top_issue', type: 'varchar', length: 255 })
   topIssue!: string;
 
@@ -53,4 +56,3 @@ export class RepairEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }
-
