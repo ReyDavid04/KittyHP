@@ -126,7 +126,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
 
       <footer class="form-actions">
         <div class="action-buttons">
-          <button type="submit" class="save-button" [disabled]="form.invalid || catalogsLoading">
+          <button type="submit" class="save-button" [disabled]="catalogsLoading">
             <span aria-hidden="true">✓</span>{{ repair ? 'Guardar cambios' : 'Guardar reporte' }}
           </button>
         </div>
@@ -152,6 +152,11 @@ const EMPTY_CATALOGS: RepairCatalogs = {
     .field input::placeholder, .field textarea::placeholder { color: #98a3b2; }
     .field input:focus, .field select:focus, .field textarea:focus { border-color: rgba(47,126,199,.7); background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(47,126,199,.1); }
     .field input.invalid, .field select.invalid, .field textarea.invalid, .upload-zone.invalid { border-color: rgba(180,35,58,.65); background: #fffafb; }
+    :host ::ng-deep .catalog-autocomplete:has(+ select.invalid) .catalog-search-input {
+      border-color: rgba(180,35,58,.72) !important;
+      background: #fffafb !important;
+      box-shadow: 0 0 0 3px rgba(180,35,58,.08) !important;
+    }
     .suffix-input { position: relative; display: flex; align-items: center; }
     .suffix-input input { padding-right: 38px; }
     .suffix-input > span { position: absolute; right: 14px; color: var(--primary); font-weight: 800; }
