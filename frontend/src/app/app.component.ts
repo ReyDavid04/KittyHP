@@ -48,7 +48,7 @@ import { AuthService } from './core/services/auth.service';
         <div class="session-area">
           <span class="user-chip" [title]="authService.currentUser()?.email || ''">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
-            <span>{{ authService.currentUser()?.email }}</span>
+            <span>{{ authService.emailLocalPart(authService.currentUser()?.email || '') }} IMP</span>
           </span>
           <button type="button" class="logout-button" (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5m4-3 4-4-4-4m4 4H9"></path></svg>
