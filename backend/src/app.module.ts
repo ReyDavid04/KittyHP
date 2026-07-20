@@ -10,6 +10,7 @@ import { RepairsModule } from './modules/repairs/repairs.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      ignoreEnvVars: true,
       validate: validateEnvironment,
     }),
     TypeOrmModule.forRootAsync({
