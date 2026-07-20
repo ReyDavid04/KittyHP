@@ -17,17 +17,17 @@ export class CreateRepairDto {
 
   @IsNumber()
   @Type(() => Number)
-  @Min(0)
+  @Min(1)
   failureQty!: number;
 
   @IsNumber()
   @Type(() => Number)
-  @Min(0)
+  @Min(1)
   buildQty!: number;
 
   @IsNumber()
   @Type(() => Number)
-  @Min(0)
+  @Min(0.01)
   @IsOptional()
   frPercentage?: number;
 
