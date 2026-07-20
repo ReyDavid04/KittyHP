@@ -1,105 +1,29 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Socket, connect as connectNet } from 'node:net';
-import { TLSSocket, connect as connectTls } from 'node:tls';
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 
-type SmtpSocket = Socket | TLSSocket;
-
-class SmtpSession {
-  private buffer = '';
-  private responseLines: string[] = [];
-  private completedResponses: string[][] = [];
-  private waiters: Array<{ resolve: (lines: string[]) => void; reject: (error: Error) => void }> = [];
-
-  constructor(private readonly socket: SmtpSocket) {
-    socket.setTimeout(15000);
-    socket.on('data', (chunk: Buffer) => this.consume(chunk.toString('utf8')));
-    socket.on('timeout', () => this.fail(new Error('El servidor SMTP agotó el tiempo de espera.')));
-    socket.on('error', (error) => this.fail(error));
-    socket.on('close', () => {
-      if (this.waiters.length > 0) this.fail(new Error('La conexión SMTP se cerró inesperadamente.'));
-    });
-  }
-
-  async expect(expectedCodes: number[]): Promise<string[]> {
-    const response = await this.readResponse();
-    const lastLine = response.at(-1) ?? '';
-    const code = Number(lastLine.slice(0, 3));
-    if (!expectedCodes.includes(code)) {
-      throw new Error(`SMTP ${code || 'sin respuesta'}: ${response.join(' ')}`);
-    }
-    return response;
-  }
-
-  async command(command: string, expectedCodes: number[]): Promise<string[]> {
-    this.socket.write(`${command}\r\n`);
-    return this.expect(expectedCodes);
-  }
-
-  writeRaw(content: string): void {
-    this.socket.write(content);
-  }
-
-  close(): void {
-    this.socket.end();
-  }
-
-  private readResponse(): Promise<string[]> {
-    const ready = this.completedResponses.shift();
-    if (ready) return Promise.resolve(ready);
-
-    return new Promise<string[]>((resolve, reject) => {
-      this.waiters.push({ resolve, reject });
-    });
-  }
-
-  private consume(chunk: string): void {
-    this.buffer += chunk;
-    const pieces = this.buffer.split(/\r?\n/);
-    this.buffer = pieces.pop() ?? '';
-
-    for (const line of pieces) {
-      if (!line) continue;
-      this.responseLines.push(line);
-      if (/^\d{3} /.test(line)) {
-        const completed = this.responseLines;
-        this.responseLines = [];
-        const waiter = this.waiters.shift();
-        if (waiter) waiter.resolve(completed);
-        else this.completedResponses.push(completed);
-      }
-    }
-  }
-
-  private fail(error: Error): void {
-    for (const waiter of this.waiters.splice(0)) waiter.reject(error);
-  }
-}
+type AuthenticationPurpose = 'registration' | 'password_reset';
 
 @Injectable()
-export class MailService {
-  constructor(private readonly configService: ConfigService) {}
+export class MailService implements OnModuleInit {
+  constructor(private readonly dataSource: DataSource) {}
 
-  isConfigured(): boolean {
-    return Boolean(this.configService.get<string>('SMTP_HOST', '').trim());
+  async onModuleInit(): Promise<void> {
+    await this.ensureEmailQueueTable();
   }
 
   async sendAuthenticationCode(
     email: string,
     code: string,
-    purpose: 'registration' | 'password_reset',
+    purpose: AuthenticationPurpose,
   ): Promise<boolean> {
-    if (!this.isConfigured()) {
-      if (this.configService.get<string>('NODE_ENV', 'development') === 'production') {
-        throw new ServiceUnavailableException('El envío de correo no está configurado. Contacta al administrador.');
-      }
-      return false;
-    }
-
     const isRegistration = purpose === 'registration';
-    const subject = isRegistration ? 'Código de registro de KittyHP' : 'Código para cambiar tu contraseña';
-    const action = isRegistration ? 'completar tu registro' : 'cambiar tu contraseña';
-    const text = [
+    const subject = isRegistration
+      ? 'Código de registro de KittyHP'
+      : 'Código para cambiar tu contraseña';
+    const action = isRegistration
+      ? 'completar tu registro'
+      : 'cambiar tu contraseña';
+    const bodyText = [
       'KittyHP',
       '',
       `Tu código para ${action} es: ${code}`,
@@ -107,92 +31,120 @@ export class MailService {
       'El código vence en 10 minutos y solo puede utilizarse una vez.',
       'Si tú no solicitaste esta operación, ignora este mensaje.',
     ].join('\r\n');
+    const bodyHtml = this.buildAuthenticationCodeHtml(code, action);
+    const uniqueKey = `kittyhp-auth:${purpose}:${email.toLowerCase()}`;
 
-    await this.sendMail(email, subject, text);
+    await this.dataSource.query(
+      `INSERT INTO email_queue
+        (
+          to_email,
+          cc_email,
+          bcc_email,
+          subject,
+          body_html,
+          body_text,
+          status,
+          attempts,
+          max_attempts,
+          error_message,
+          locked_by,
+          locked_at,
+          sent_at,
+          unique_key
+        )
+       VALUES (?, NULL, NULL, ?, ?, ?, 'pending', 0, 3, NULL, NULL, NULL, NULL, ?)
+       ON DUPLICATE KEY UPDATE
+         to_email = VALUES(to_email),
+         subject = VALUES(subject),
+         body_html = VALUES(body_html),
+         body_text = VALUES(body_text),
+         status = 'pending',
+         attempts = 0,
+         max_attempts = VALUES(max_attempts),
+         error_message = NULL,
+         locked_by = NULL,
+         locked_at = NULL,
+         sent_at = NULL,
+         updated_at = CURRENT_TIMESTAMP`,
+      [email, subject, bodyHtml, bodyText, uniqueKey],
+    );
+
     return true;
   }
 
-  private async sendMail(to: string, subject: string, text: string): Promise<void> {
-    const host = this.configService.get<string>('SMTP_HOST', '').trim();
-    const port = Number(this.configService.get<string>('SMTP_PORT', '25'));
-    const secure = this.configService.get<string>('SMTP_SECURE', 'false').toLowerCase() === 'true';
-    const username = this.configService.get<string>('SMTP_USER', '').trim();
-    const password = this.configService.get<string>('SMTP_PASSWORD', '');
-    const from = this.sanitizeHeader(this.configService.get<string>('SMTP_FROM', 'KittyHP <no-reply@inventec.com>'));
-
-    const socket = await this.connect(host, port, secure);
-    const session = new SmtpSession(socket);
-
-    try {
-      await session.expect([220]);
-      await session.command(`EHLO ${this.hostname()}`, [250]);
-
-      if (username) {
-        await session.command('AUTH LOGIN', [334]);
-        await session.command(Buffer.from(username, 'utf8').toString('base64'), [334]);
-        await session.command(Buffer.from(password, 'utf8').toString('base64'), [235]);
-      }
-
-      const envelopeFrom = this.extractEmail(from);
-      await session.command(`MAIL FROM:<${envelopeFrom}>`, [250]);
-      await session.command(`RCPT TO:<${to}>`, [250, 251]);
-      await session.command('DATA', [354]);
-
-      const message = [
-        `From: ${from}`,
-        `To: ${this.sanitizeHeader(to)}`,
-        `Subject: ${this.encodeSubject(subject)}`,
-        'MIME-Version: 1.0',
-        'Content-Type: text/plain; charset=UTF-8',
-        'Content-Transfer-Encoding: 8bit',
-        '',
-        this.escapeDots(text),
-        '.',
-        '',
-      ].join('\r\n');
-
-      session.writeRaw(message);
-      await session.expect([250]);
-      await session.command('QUIT', [221]);
-    } catch (error) {
-      throw new ServiceUnavailableException(
-        error instanceof Error ? `No fue posible enviar el correo: ${error.message}` : 'No fue posible enviar el correo.',
-      );
-    } finally {
-      session.close();
-    }
+  private async ensureEmailQueueTable(): Promise<void> {
+    await this.dataSource.query(`
+      CREATE TABLE IF NOT EXISTS email_queue (
+        id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        to_email VARCHAR(255) NOT NULL,
+        cc_email VARCHAR(500) NULL,
+        bcc_email VARCHAR(500) NULL,
+        subject VARCHAR(500) NOT NULL,
+        body_html LONGTEXT NULL,
+        body_text LONGTEXT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'pending',
+        attempts INT UNSIGNED NOT NULL DEFAULT 0,
+        max_attempts INT UNSIGNED NOT NULL DEFAULT 3,
+        error_message TEXT NULL,
+        locked_by VARCHAR(120) NULL,
+        locked_at DATETIME NULL,
+        sent_at DATETIME NULL,
+        unique_key VARCHAR(255) NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        UNIQUE KEY uq_email_queue_unique_key (unique_key),
+        KEY idx_email_queue_status_created (status, created_at),
+        KEY idx_email_queue_locked_at (locked_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
   }
 
-  private connect(host: string, port: number, secure: boolean): Promise<SmtpSocket> {
-    return new Promise((resolve, reject) => {
-      const socket = secure
-        ? connectTls({ host, port, servername: host, rejectUnauthorized: true })
-        : connectNet({ host, port });
-
-      const eventName = secure ? 'secureConnect' : 'connect';
-      socket.once(eventName, () => resolve(socket));
-      socket.once('error', reject);
-    });
+  private buildAuthenticationCodeHtml(code: string, action: string): string {
+    return `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KittyHP</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f6fa;font-family:Arial,Helvetica,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="padding:36px 16px;background:#f3f6fa;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" style="width:560px;max-width:560px;overflow:hidden;border:1px solid #dce4ee;border-radius:14px;background:#ffffff;">
+          <tr>
+            <td style="padding:28px 32px;border-top:6px solid #174c8c;text-align:center;">
+              <div style="font-size:28px;font-weight:800;color:#14213d;">KittyHP</div>
+              <div style="margin-top:7px;font-size:13px;color:#66758a;">Control de fallas y reparaciones</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:26px 32px;border-top:1px solid #edf1f5;text-align:center;">
+              <div style="font-size:14px;line-height:1.6;color:#344054;">Utiliza el siguiente código para ${this.escapeHtml(action)}:</div>
+              <div style="margin:22px auto;padding:14px 20px;border:1px solid #cddbec;border-radius:10px;background:#f4f8fc;font-size:32px;font-weight:800;letter-spacing:8px;color:#174c8c;">${this.escapeHtml(code)}</div>
+              <div style="font-size:12px;line-height:1.6;color:#7a8798;">El código vence en 10 minutos y solo puede utilizarse una vez.</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 32px;border-top:1px solid #edf1f5;background:#fafbfc;text-align:center;font-size:11px;line-height:1.6;color:#98a2b3;">
+              Si tú no solicitaste esta operación, ignora este mensaje.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
   }
 
-  private hostname(): string {
-    return this.configService.get<string>('SMTP_HELO_NAME', 'kittyhp.local').replace(/[^a-zA-Z0-9.-]/g, '') || 'kittyhp.local';
-  }
-
-  private sanitizeHeader(value: string): string {
-    return value.replace(/[\r\n]/g, '').trim();
-  }
-
-  private extractEmail(value: string): string {
-    const match = value.match(/<([^>]+)>/);
-    return (match?.[1] ?? value).replace(/[\r\n<>]/g, '').trim();
-  }
-
-  private encodeSubject(subject: string): string {
-    return `=?UTF-8?B?${Buffer.from(this.sanitizeHeader(subject), 'utf8').toString('base64')}?=`;
-  }
-
-  private escapeDots(text: string): string {
-    return text.replace(/(^|\r\n)\./g, '$1..');
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 }
