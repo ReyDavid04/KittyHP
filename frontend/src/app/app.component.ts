@@ -301,6 +301,10 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
         padding: 0;
       }
 
+      :host ::ng-deep .catalog-tabs {
+        display: none !important;
+      }
+
       @media (max-width: 760px) {
         .app-header {
           display: flex;
