@@ -3,16 +3,11 @@ import { IsBoolean, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } 
 export class CreateUserDto {
   @IsString()
   @MinLength(3)
-  @MaxLength(80)
-  @Matches(/^[a-zA-Z0-9._-]+$/, {
-    message: 'El usuario solo puede contener letras, números, punto, guion y guion bajo.',
+  @MaxLength(160)
+  @Matches(/^[a-zA-Z0-9._-]+(?:@inventec\.com)?$/i, {
+    message: 'El correo debe pertenecer al dominio @inventec.com.',
   })
-  username!: string;
-
-  @IsString()
-  @MinLength(2)
-  @MaxLength(120)
-  displayName!: string;
+  email!: string;
 
   @IsString()
   @MinLength(8)
