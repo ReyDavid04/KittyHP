@@ -45,7 +45,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
             <span>Failure qty <b>*</b></span>
             <input
               type="number"
-              min="0"
+              min="1"
               formControlName="failureQty"
               placeholder="Captura la cantidad"
               [class.invalid]="isInvalid('failureQty')"
@@ -56,7 +56,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
             <span>Build qty <b>*</b></span>
             <input
               type="number"
-              min="0"
+              min="1"
               formControlName="buildQty"
               placeholder="Captura la cantidad"
               [class.invalid]="isInvalid('buildQty')"
@@ -64,17 +64,20 @@ const EMPTY_CATALOGS: RepairCatalogs = {
           </label>
 
           <label class="field grid-fr">
-            <span>F/R</span>
+            <span>F/R <b>*</b></span>
             <div class="suffix-input">
               <input
                 type="text"
                 formControlName="frPercentage"
                 readonly
+                placeholder="Automático"
+                [class.invalid]="isInvalid('frPercentage')"
                 aria-label="F/R calculado automáticamente"
                 title="Calculado automáticamente: Failure qty / Build qty"
               >
               <span>%</span>
             </div>
+            <small *ngIf="isInvalid('frPercentage')">El F/R debe ser mayor a 0.00%.</small>
           </label>
 
           <label class="field grid-category">
@@ -163,6 +166,7 @@ const EMPTY_CATALOGS: RepairCatalogs = {
     .field { display: grid; align-content: start; gap: 8px; min-width: 0; color: #455267; font-size: .76rem; font-weight: 700; }
     .field > span:first-child { min-height: 18px; }
     .field b, .upload-content b { color: var(--danger); font-weight: 700; }
+    .field small { margin-top: -2px; color: var(--danger); font-size: .66rem; font-weight: 600; }
     .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: .82rem; font-weight: 450; background: var(--surface-subtle); transition: 150ms ease; }
     .field input, .field select { height: 46px; padding: 0 14px; }
     .field select { cursor: pointer; }
@@ -229,9 +233,9 @@ export class RepairFormComponent implements OnChanges {
     family: ['', Validators.required],
     topIssue: ['', Validators.required],
     category: ['', Validators.required],
-    failureQty: ['', [Validators.required, Validators.min(0)]],
-    buildQty: ['', [Validators.required, Validators.min(0)]],
-    frPercentage: ['0.00', [Validators.required, Validators.min(0)]],
+    failureQty: ['', [Validators.required, Validators.min(1)]],
+    buildQty: ['', [Validators.required, Validators.min(1)]],
+    frPercentage: ['', [Validators.required, Validators.min(0.01)]],
     returnStatus: ['', Validators.required],
     majorPart: ['', Validators.required],
     repairResult: ['', Validators.required],
@@ -358,11 +362,12 @@ export class RepairFormComponent implements OnChanges {
     const failureQty = Number(failureQtyValue);
     const buildQty = Number(buildQtyValue);
 
-    if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || buildQty <= 0) {
-      return '0.00';
+    if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || failureQty <= 0 || buildQty <= 0) {
+      return '';
     }
 
-    return ((failureQty / buildQty) * 100).toFixed(2);
+    const frPercentage = Number(((failureQty / buildQty) * 100).toFixed(2));
+    return frPercentage > 0 ? frPercentage.toFixed(2) : '';
   }
 
   private loadCatalogs(): void {
