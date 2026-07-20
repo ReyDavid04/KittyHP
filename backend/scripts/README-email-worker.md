@@ -11,14 +11,28 @@ Este worker procesa los registros `pending` de la tabla `email_queue` y los env�
 
 ## Configuración
 
-En la computadora que ejecutará el worker, crea `backend/.env` con los datos de la base de KittyHP:
+Crea el archivo `backend/.env` a partir de `backend/.env.example`:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Completa todos los valores del archivo. El backend ya no contiene datos de conexión, contraseñas, puertos ni secretos predeterminados.
 
 ```env
+PORT=3005
+NODE_ENV=development
+
 DB_HOST=IP_O_NOMBRE_DEL_SERVIDOR_MYSQL
 DB_PORT=3306
 DB_USER=usuario_mysql
 DB_PASSWORD=contraseña_mysql
 DB_NAME=kittyhp
+
+AUTH_EMAIL=Ramos.Rey@inventec.com
+AUTH_PASSWORD=contraseña_inicial_del_administrador
+AUTH_TOKEN_SECRET=secreto_aleatorio_de_al_menos_32_caracteres
+AUTH_TOKEN_LIFETIME_MS=28800000
 
 EMAIL_WORKER_INTERVAL_MS=5000
 EMAIL_WORKER_STALE_MINUTES=15
