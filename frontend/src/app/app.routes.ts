@@ -9,7 +9,9 @@ import { RepairViewPageComponent } from './features/repairs/pages/repair-view-pa
 import { RepairsPageComponent } from './features/repairs/pages/repairs-page.component';
 
 export const appRoutes: Routes = [
-  { path: 'login', component: LoginPageComponent },
+  { path: 'login', component: LoginPageComponent, data: { mode: 'login' } },
+  { path: 'register', component: LoginPageComponent, data: { mode: 'register' } },
+  { path: 'forgot-password', component: LoginPageComponent, data: { mode: 'forgot' } },
   { path: '', component: RepairsPageComponent, canActivate: [authGuard] },
   { path: 'repairs/new', component: RepairEditorPageComponent, canActivate: [authGuard] },
   { path: 'repairs/:id/view', component: RepairViewPageComponent, canActivate: [authGuard] },
