@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { extname } from 'node:path';
+import { AdminGuard } from '../../auth/admin.guard';
 import { AuthGuard } from '../../auth/auth.guard';
 import { CreateRepairCatalogItemDto } from '../dto/create-repair-catalog-item.dto';
 import { CreateRepairDto } from '../dto/create-repair.dto';
@@ -63,6 +64,7 @@ export class RepairsController {
   }
 
   @Post('catalog-items/:type')
+  @UseGuards(AdminGuard)
   createCatalogItem(
     @Param('type') type: string,
     @Body() createCatalogItemDto: CreateRepairCatalogItemDto,
@@ -71,6 +73,7 @@ export class RepairsController {
   }
 
   @Patch('catalog-items/:type/:catalogItemId')
+  @UseGuards(AdminGuard)
   updateCatalogItem(
     @Param('type') type: string,
     @Param('catalogItemId') catalogItemId: string,
@@ -80,6 +83,7 @@ export class RepairsController {
   }
 
   @Delete('catalog-items/:type/:catalogItemId')
+  @UseGuards(AdminGuard)
   deleteCatalogItem(
     @Param('type') type: string,
     @Param('catalogItemId') catalogItemId: string,
@@ -99,6 +103,7 @@ export class RepairsController {
   }
 
   @Patch(':id')
+  @UseGuards(AdminGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -132,6 +137,7 @@ export class RepairsController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   async remove(@Param('id') id: string) {
     const deleted = await this.repairsService.delete(id);
 
