@@ -94,7 +94,7 @@
             <div class="row-actions">
               <a
                 class="icon-button view"
-                [href]="'/repairs/' + repair.id + '/view'"
+                [routerLink]="['/repairs', repair.id, 'view']"
                 aria-label="Visualizar reporte"
                 title="Visualizar"
               >
