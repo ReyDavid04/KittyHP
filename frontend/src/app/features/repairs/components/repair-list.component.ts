@@ -14,7 +14,7 @@ export type RepairColumnKey =
   | 'buildQty'
   | 'frPercentage'
   | 'category'
-  | 'returnStatus'
+  | 'returnSummary'
   | 'failPicture'
   | 'majorPart'
   | 'repairResult'
@@ -37,7 +37,7 @@ export interface RepairColumnFilters {
   buildQty: string[];
   frPercentage: string[];
   category: string[];
-  returnStatus: string[];
+  returnSummary: string[];
   failPicture: string[];
   majorPart: string[];
   repairResult: string[];
@@ -84,7 +84,7 @@ export class RepairListComponent {
     { key: 'buildQty', label: 'Build qty', className: 'number-column', numeric: true },
     { key: 'frPercentage', label: 'F/R', className: 'rate-column', numeric: true },
     { key: 'category', label: 'Category' },
-    { key: 'returnStatus', label: 'Return', className: 'return-column' },
+    { key: 'returnSummary', label: 'Return', className: 'return-column' },
     { key: 'failPicture', label: 'Fail picture', className: 'image-column', filterable: false },
     { key: 'majorPart', label: 'Major part' },
     { key: 'repairResult', label: 'Repair result', className: 'text-column' },
@@ -169,7 +169,15 @@ export class RepairListComponent {
   displayOption(value: string): string { return value === FILTER_BLANK_VALUE ? '(Vacíos)' : value; }
   isFiltered(key: RepairColumnKey): boolean { return this.filters[key].length > 0; }
   headerLabel(key: RepairColumnKey): string { return this.columns.find((column) => column.key === key)?.label ?? key; }
-  valueForColumn(repair: RepairReport, key: RepairColumnKey): string { return String((repair as unknown as Record<string, unknown>)[key] ?? ''); }
+
+  valueForColumn(repair: RepairReport, key: RepairColumnKey): string {
+    if (key === 'returnSummary') return this.returnSummary(repair);
+    return String((repair as unknown as Record<string, unknown>)[key] ?? '');
+  }
+
+  returnSummary(repair: RepairReport): string {
+    return `Yes: ${Number(repair.returnYesQty ?? 0)} · No: ${Number(repair.returnNoQty ?? 0)}`;
+  }
 
   private isFilterable(key: RepairColumnKey): boolean { return this.columns.find((column) => column.key === key)?.filterable !== false; }
   private isNumericColumn(key: RepairColumnKey): boolean { return this.columns.find((column) => column.key === key)?.numeric === true; }
@@ -189,7 +197,7 @@ export class RepairListComponent {
   private emptyFilters(): RepairColumnFilters {
     return {
       recordDate: [], family: [], topIssue: [], failureQty: [], buildQty: [], frPercentage: [], category: [],
-      returnStatus: [], failPicture: [], majorPart: [], repairResult: [], failureFactor: [], actions: [], evidencePicture: [],
+      returnSummary: [], failPicture: [], majorPart: [], repairResult: [], failureFactor: [], actions: [], evidencePicture: [],
     };
   }
 }
