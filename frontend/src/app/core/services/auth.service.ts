@@ -6,16 +6,14 @@ export type UserRole = 'admin' | 'user';
 
 export interface AuthUser {
   id: number;
-  username: string;
-  displayName: string;
+  email: string;
   role: UserRole;
 }
 
 interface LoginResponse {
   token: string;
   userId: number;
-  username: string;
-  displayName: string;
+  email: string;
   role: UserRole;
   expiresAt: string;
 }
@@ -31,8 +29,8 @@ export class AuthService {
 
   constructor(private readonly httpClient: HttpClient) {}
 
-  login(username: string, password: string): Observable<LoginResponse> {
-    return this.httpClient.post<LoginResponse>('/api/auth/login', { username, password }).pipe(
+  login(email: string, password: string): Observable<LoginResponse> {
+    return this.httpClient.post<LoginResponse>('/api/auth/login', { email: this.toCorporateEmail(email), password }).pipe(
       tap((session) => this.saveSession(session)),
     );
   }
@@ -60,6 +58,16 @@ export class AuthService {
     return this.isAuthenticated() ? this.currentSession()?.token ?? null : null;
   }
 
+  emailLocalPart(email: string): string {
+    return email.split('@')[0] ?? email;
+  }
+
+  private toCorporateEmail(value: string): string {
+    const trimmed = value.trim();
+    const localPart = trimmed.includes('@') ? trimmed.split('@')[0] : trimmed;
+    return `${localPart}@inventec.com`;
+  }
+
   private saveSession(session: StoredSession): void {
     localStorage.setItem(this.storageKey, JSON.stringify(session));
     this.currentSession.set(session);
@@ -76,8 +84,7 @@ export class AuthService {
       if (
         !session.token ||
         !session.userId ||
-        !session.username ||
-        !session.displayName ||
+        !session.email ||
         !validRole ||
         !session.expiresAt ||
         new Date(session.expiresAt).getTime() <= Date.now()
@@ -97,8 +104,7 @@ export class AuthService {
     if (!session) return null;
     return {
       id: session.userId,
-      username: session.username,
-      displayName: session.displayName,
+      email: session.email,
       role: session.role,
     };
   }
