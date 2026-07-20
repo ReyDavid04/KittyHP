@@ -41,7 +41,7 @@ export class AccountAccessService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
   ) {
-    this.codeSecret = this.configService.get<string>('AUTH_TOKEN_SECRET', 'kittyhp-auth-code-secret');
+    this.codeSecret = this.configService.getOrThrow<string>('AUTH_TOKEN_SECRET');
   }
 
   async onModuleInit(): Promise<void> {
@@ -146,7 +146,7 @@ export class AccountAccessService implements OnModuleInit {
 
     return delivered
       ? { message }
-      : { message: `${message} SMTP no está configurado; utiliza el código de desarrollo.`, developmentCode: code };
+      : { message: `${message} No fue posible registrar el correo.`, developmentCode: code };
   }
 
   private async verifyCode(email: string, purpose: RequestPurpose, code: string): Promise<RequestRow> {
