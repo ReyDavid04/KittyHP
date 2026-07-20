@@ -66,8 +66,8 @@
                 {{ repair.category || '—' }}
               </span>
 
-              <span *ngSwitchCase="'returnStatus'" class="truncate" [title]="repair.returnStatus || ''">
-                {{ repair.returnStatus || '—' }}
+              <span *ngSwitchCase="'returnSummary'" class="truncate" [title]="returnSummary(repair)">
+                {{ returnSummary(repair) }}
               </span>
 
               <ng-container *ngSwitchCase="'failPicture'">
