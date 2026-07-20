@@ -46,9 +46,9 @@ import { AuthService } from './core/services/auth.service';
         </nav>
 
         <div class="session-area">
-          <span class="user-chip">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
-            <span>{{ authService.currentUser()?.displayName || authService.currentUser()?.username }}</span>
+          <span class="user-chip" [title]="authService.currentUser()?.email || ''">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4V6Zm0 1 8 6 8-6"></path></svg>
+            <span>{{ authService.currentUser()?.email }}</span>
           </span>
           <button type="button" class="logout-button" (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5m4-3 4-4-4-4m4 4H9"></path></svg>
@@ -100,8 +100,9 @@ import { AuthService } from './core/services/auth.service';
     .menu-icon { width: 15px; flex: 0 0 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.65; }
     .menu-divider { height: 1px; margin: 7px 5px; background: #edf1f5; }
     .session-area { display: flex; align-items: center; gap: 8px; }
-    .user-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid #e0e7ef; border-radius: 9px; color: #526176; font-size: .69rem; font-weight: 650; background: #f8fafc; }
-    .user-chip svg, .logout-button svg { width: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+    .user-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 240px; min-height: 30px; padding: 4px 9px; border: 1px solid #e0e7ef; border-radius: 9px; color: #526176; font-size: .69rem; font-weight: 650; background: #f8fafc; }
+    .user-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-chip svg, .logout-button svg { width: 15px; flex: 0 0 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
     .logout-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid #e0e7ef; border-radius: 9px; color: #66758a; font-size: .68rem; font-weight: 700; background: #fff; cursor: pointer; transition: 150ms ease; }
     .logout-button:hover { border-color: rgba(180,35,58,.25); color: #a71d39; background: #fff7f8; }
     .app-content { width: 100%; max-width: none; margin: 0; padding: 0; }
