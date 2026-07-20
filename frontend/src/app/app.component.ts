@@ -76,6 +76,14 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     .settings-dropdown a.active::before { position: absolute; top: 9px; bottom: 9px; left: 7px; width: 3px; border-radius: 999px; background: var(--primary); content: ''; }
     .settings-dropdown strong { font-size: .74rem; font-weight: 750; line-height: 1.2; }
     .app-content { width: 100%; max-width: none; margin: 0; padding: 0; }
+
+    @media (min-width: 1181px) {
+      :host ::ng-deep app-repair-form .grid-date { grid-column: 1 / span 2 !important; grid-row: 1 !important; }
+      :host ::ng-deep app-repair-form .grid-family { grid-column: 3 / span 3 !important; grid-row: 1 !important; }
+      :host ::ng-deep app-repair-form .grid-top-issue { grid-column: 6 / span 3 !important; grid-row: 1 !important; }
+      :host ::ng-deep app-repair-form .grid-failure-qty { grid-column: 9 / span 2 !important; grid-row: 1 !important; }
+    }
+
     @media (max-width: 760px) {
       .app-header { display: flex; justify-content: space-between; min-height: 48px; padding: 0 12px; }
       .main-nav { gap: 12px; height: 48px; }
