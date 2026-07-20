@@ -5,9 +5,10 @@ import { RepairReport, RepairUpsertPayload } from '../models/repair-report.model
 
 type RepairReportResponse = Omit<RepairReport, 'frPercentage'> & { frPercentage: string | number };
 
-export type RepairCatalogType = 'top_issue' | 'category' | 'major_part' | 'failure_factor';
+export type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_part' | 'failure_factor';
 
 export interface RepairCatalogs {
+  families: string[];
   topIssues: string[];
   categories: string[];
   majorParts: string[];
@@ -87,6 +88,7 @@ export class RepairReportsApiService {
     const formData = new FormData();
 
     this.appendText(formData, 'recordDate', payload.recordDate);
+    this.appendText(formData, 'family', payload.family);
     this.appendText(formData, 'topIssue', payload.topIssue);
     this.appendText(formData, 'failureQty', payload.failureQty);
     this.appendText(formData, 'buildQty', payload.buildQty);
