@@ -19,7 +19,7 @@ import {
       <header class="page-heading">
         <div>
           <h1>Usuarios</h1>
-          <span>Administra las cuentas que pueden ingresar al sistema.</span>
+          <span>Administra los correos que pueden ingresar al sistema.</span>
         </div>
         <button type="button" class="primary-button" (click)="startCreate()" *ngIf="!showForm">
           <span aria-hidden="true">＋</span> Agregar usuario
@@ -31,20 +31,18 @@ import {
           <div class="form-heading">
             <div>
               <strong>{{ editingUserId ? 'Editar usuario' : 'Nuevo usuario' }}</strong>
-              <span>{{ editingUserId ? 'La contraseña solo cambiará si capturas una nueva.' : 'Todos los campos son obligatorios.' }}</span>
+              <span>{{ editingUserId ? 'La contraseña solo cambiará si capturas una nueva.' : 'Captura el correo y la contraseña.' }}</span>
             </div>
             <button type="button" class="close-form" (click)="cancelForm()" aria-label="Cerrar formulario">×</button>
           </div>
 
           <div class="form-grid">
-            <label>
-              <span>Nombre</span>
-              <input type="text" formControlName="displayName" placeholder="Nombre para mostrar" [class.invalid]="isInvalid('displayName')">
-            </label>
-
-            <label>
-              <span>Usuario</span>
-              <input type="text" formControlName="username" autocomplete="off" placeholder="Nombre de usuario" [class.invalid]="isInvalid('username')">
+            <label class="email-field">
+              <span>Correo</span>
+              <div class="email-input" [class.invalid]="isInvalid('email')">
+                <input type="text" formControlName="email" autocomplete="off" placeholder="Ramos.Rey">
+                <span>@inventec.com</span>
+              </div>
             </label>
 
             <label>
@@ -87,7 +85,7 @@ import {
         <div class="toolbar">
           <div class="search-box">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
-            <input type="search" [value]="searchTerm" (input)="searchTerm = $any($event.target).value" placeholder="Buscar usuario o nombre...">
+            <input type="search" [value]="searchTerm" (input)="searchTerm = $any($event.target).value" placeholder="Buscar correo...">
           </div>
           <span class="record-count">{{ filteredUsers.length }} {{ filteredUsers.length === 1 ? 'registro' : 'registros' }}</span>
         </div>
@@ -99,8 +97,7 @@ import {
           <table class="users-table">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Usuario</th>
+                <th>Correo</th>
                 <th>Rol</th>
                 <th>Estado</th>
                 <th>Actualizado</th>
@@ -110,12 +107,11 @@ import {
             <tbody>
               <tr *ngFor="let user of filteredUsers; trackBy: trackByUserId">
                 <td>
-                  <div class="user-name">
-                    <span class="avatar">{{ initials(user.displayName) }}</span>
-                    <div><strong>{{ user.displayName }}</strong><small *ngIf="isCurrentUser(user)">Tu cuenta</small></div>
+                  <div class="user-email">
+                    <span class="avatar">{{ initials(user.email) }}</span>
+                    <div><strong>{{ user.email }}</strong><small *ngIf="isCurrentUser(user)">Tu cuenta</small></div>
                   </div>
                 </td>
-                <td>{{ user.username }}</td>
                 <td><span class="role-badge" [class.admin]="user.role === 'admin'">{{ user.role === 'admin' ? 'Administrador' : 'Usuario' }}</span></td>
                 <td><span class="status-badge" [class.inactive]="!user.isActive"><i></i>{{ user.isActive ? 'Activo' : 'Inactivo' }}</span></td>
                 <td>{{ user.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
@@ -129,7 +125,7 @@ import {
                 </td>
               </tr>
               <tr *ngIf="filteredUsers.length === 0">
-                <td colspan="6" class="empty-state">No se encontraron usuarios.</td>
+                <td colspan="5" class="empty-state">No se encontraron usuarios.</td>
               </tr>
             </tbody>
           </table>
@@ -160,7 +156,12 @@ import {
     label { display: grid; align-content: start; gap: 7px; color: #455267; font-size: .7rem; font-weight: 750; }
     input, select { width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px; outline: 0; color: var(--text); font-size: .78rem; font-weight: 450; background: #fff; transition: 150ms ease; }
     input:focus, select:focus { border-color: rgba(47,126,199,.7); box-shadow: 0 0 0 3px rgba(47,126,199,.1); }
-    input.invalid { border-color: rgba(180,35,58,.68); background: #fffafb; box-shadow: 0 0 0 3px rgba(180,35,58,.07); }
+    input.invalid, .email-input.invalid { border-color: rgba(180,35,58,.68); background: #fffafb; box-shadow: 0 0 0 3px rgba(180,35,58,.07); }
+    .email-field { grid-column: span 2; }
+    .email-input { display: flex; align-items: center; height: 42px; padding-right: 12px; border: 1px solid var(--border); border-radius: 9px; background: #fff; transition: 150ms ease; }
+    .email-input:focus-within { border-color: rgba(47,126,199,.7); box-shadow: 0 0 0 3px rgba(47,126,199,.1); }
+    .email-input input { min-width: 0; height: 40px; border: 0; box-shadow: none; background: transparent; }
+    .email-input > span { flex: 0 0 auto; color: #66758a; font-size: .76rem; font-weight: 600; }
     .status-toggle { display: flex; align-items: center; gap: 9px; width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px; color: #68778b; font-size: .76rem; font-weight: 650; background: #fff; cursor: pointer; }
     .toggle-track { position: relative; width: 32px; height: 18px; border-radius: 999px; background: #c7d0dc; transition: 150ms ease; }
     .toggle-track i { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: 150ms ease; }
@@ -177,16 +178,16 @@ import {
     .search-box input { height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
     .record-count { color: #65748a; font-size: .7rem; font-weight: 700; white-space: nowrap; }
     .users-table-wrap { overflow: auto; border: 1px solid #dce4ee; border-radius: 10px; }
-    .users-table { width: 100%; border-collapse: collapse; min-width: 820px; }
+    .users-table { width: 100%; min-width: 720px; border-collapse: collapse; }
     th { padding: 11px 14px; border-bottom: 1px solid #dce4ee; color: #65748a; font-size: .65rem; font-weight: 800; text-align: left; text-transform: uppercase; letter-spacing: .055em; background: #f8fafc; }
     td { padding: 12px 14px; border-bottom: 1px solid #edf1f5; color: #344054; font-size: .75rem; vertical-align: middle; }
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover { background: #fbfdff; }
-    .user-name { display: flex; align-items: center; gap: 10px; }
+    .user-email { display: flex; align-items: center; gap: 10px; }
     .avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: var(--primary); font-size: .65rem; font-weight: 800; background: var(--primary-soft); }
-    .user-name > div { display: grid; gap: 2px; }
-    .user-name strong { color: var(--text); font-size: .76rem; font-weight: 700; }
-    .user-name small { color: var(--primary); font-size: .61rem; font-weight: 650; }
+    .user-email > div { display: grid; gap: 2px; }
+    .user-email strong { color: var(--text); font-size: .75rem; font-weight: 650; }
+    .user-email small { color: var(--primary); font-size: .6rem; font-weight: 700; }
     .role-badge, .status-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 25px; padding: 4px 8px; border-radius: 7px; color: #526176; font-size: .65rem; font-weight: 700; background: #f0f3f7; }
     .role-badge.admin { color: #174c8c; background: #eaf2fb; }
     .status-badge { color: #17623b; background: #ebf8f1; }
@@ -209,6 +210,7 @@ import {
       .page-heading > div > span { display: none; }
       .users-content { padding: 14px 12px 22px; }
       .form-grid { grid-template-columns: 1fr; }
+      .email-field { grid-column: auto; }
       .toolbar { align-items: stretch; flex-direction: column; }
       .search-box { width: 100%; }
     }
@@ -219,8 +221,7 @@ export class UserManagementPageComponent {
   readonly authService = inject(AuthService);
 
   readonly form = new FormBuilder().nonNullable.group({
-    displayName: ['', [Validators.required, Validators.minLength(2)]],
-    username: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9._-]+$/)]],
+    email: ['', [Validators.required, Validators.minLength(3), Validators.pattern(/^[a-zA-Z0-9._-]+(?:@inventec\.com)?$/i)]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', Validators.required],
     role: ['user' as UserRole, Validators.required],
@@ -243,7 +244,7 @@ export class UserManagementPageComponent {
   get filteredUsers(): ManagedUser[] {
     const search = this.searchTerm.trim().toLowerCase();
     if (!search) return this.users;
-    return this.users.filter((user) => `${user.displayName} ${user.username} ${user.role}`.toLowerCase().includes(search));
+    return this.users.filter((user) => `${user.email} ${user.role}`.toLowerCase().includes(search));
   }
 
   get passwordsDoNotMatch(): boolean {
@@ -252,7 +253,7 @@ export class UserManagementPageComponent {
     return Boolean((password || confirmation) && password !== confirmation && this.form.controls.confirmPassword.touched);
   }
 
-  isInvalid(controlName: 'displayName' | 'username' | 'password' | 'confirmPassword'): boolean {
+  isInvalid(controlName: 'email' | 'password' | 'confirmPassword'): boolean {
     const control = this.form.controls[controlName];
     return control.invalid && control.touched;
   }
@@ -262,7 +263,7 @@ export class UserManagementPageComponent {
     this.showForm = true;
     this.formError = '';
     this.setPasswordRequired(true);
-    this.form.reset({ displayName: '', username: '', password: '', confirmPassword: '', role: 'user', isActive: true });
+    this.form.reset({ email: '', password: '', confirmPassword: '', role: 'user', isActive: true });
   }
 
   startEdit(user: ManagedUser): void {
@@ -271,8 +272,7 @@ export class UserManagementPageComponent {
     this.formError = '';
     this.setPasswordRequired(false);
     this.form.reset({
-      displayName: user.displayName,
-      username: user.username,
+      email: this.authService.emailLocalPart(user.email),
       password: '',
       confirmPassword: '',
       role: user.role,
@@ -294,7 +294,6 @@ export class UserManagementPageComponent {
   saveUser(): void {
     this.formError = '';
     this.form.markAllAsTouched();
-
     if (this.form.invalid) return;
 
     const value = this.form.getRawValue();
@@ -303,11 +302,12 @@ export class UserManagementPageComponent {
       return;
     }
 
-    this.isSaving = true;
+    const email = `${value.email.split('@')[0]}@inventec.com`;
     const request$ = this.editingUserId
-      ? this.userApi.update(this.editingUserId, this.buildUpdatePayload(value))
-      : this.userApi.create(this.buildCreatePayload(value));
+      ? this.userApi.update(this.editingUserId, this.buildUpdatePayload(email, value.password, value.role, value.isActive))
+      : this.userApi.create(this.buildCreatePayload(email, value.password, value.role, value.isActive));
 
+    this.isSaving = true;
     request$.pipe(finalize(() => { this.isSaving = false; })).subscribe({
       next: () => {
         this.cancelForm();
@@ -319,7 +319,7 @@ export class UserManagementPageComponent {
 
   deleteUser(user: ManagedUser): void {
     if (this.isCurrentUser(user)) return;
-    const confirmed = window.confirm(`¿Estás seguro de eliminar al usuario ${user.displayName} (${user.username})?\n\nEsta acción no se puede deshacer.`);
+    const confirmed = window.confirm(`¿Estás seguro de eliminar el correo ${user.email}?\n\nEsta acción no se puede deshacer.`);
     if (!confirmed) return;
 
     this.pageError = '';
@@ -333,8 +333,8 @@ export class UserManagementPageComponent {
     return this.authService.currentUser()?.id === user.id;
   }
 
-  initials(name: string): string {
-    return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U';
+  initials(email: string): string {
+    return this.authService.emailLocalPart(email).split(/[._-]+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'U';
   }
 
   trackByUserId(_index: number, user: ManagedUser): number {
@@ -357,24 +357,12 @@ export class UserManagementPageComponent {
     this.form.controls.confirmPassword.updateValueAndValidity();
   }
 
-  private buildCreatePayload(value: typeof this.form.value & Record<string, unknown>): CreateUserPayload {
-    return {
-      displayName: String(value.displayName ?? '').trim(),
-      username: String(value.username ?? '').trim(),
-      password: String(value.password ?? ''),
-      role: value.role as UserRole,
-      isActive: Boolean(value.isActive),
-    };
+  private buildCreatePayload(email: string, password: string, role: UserRole, isActive: boolean): CreateUserPayload {
+    return { email, password, role, isActive };
   }
 
-  private buildUpdatePayload(value: typeof this.form.value & Record<string, unknown>): UpdateUserPayload {
-    const payload: UpdateUserPayload = {
-      displayName: String(value.displayName ?? '').trim(),
-      username: String(value.username ?? '').trim(),
-      role: value.role as UserRole,
-      isActive: Boolean(value.isActive),
-    };
-    const password = String(value.password ?? '');
+  private buildUpdatePayload(email: string, password: string, role: UserRole, isActive: boolean): UpdateUserPayload {
+    const payload: UpdateUserPayload = { email, role, isActive };
     if (password) payload.password = password;
     return payload;
   }
