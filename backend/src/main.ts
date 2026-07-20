@@ -1,4 +1,5 @@
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -7,6 +8,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const configService = app.get(ConfigService);
+
   app.setGlobalPrefix('api');
   const uploadsPath = join(process.cwd(), 'uploads');
 
@@ -22,7 +25,7 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const port = Number(process.env.PORT ?? 3005);
+  const port = Number(configService.getOrThrow<string>('PORT'));
   await app.listen(port);
 }
 
