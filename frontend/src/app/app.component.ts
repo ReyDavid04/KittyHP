@@ -1,13 +1,15 @@
-import { Component } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <div class="app-shell">
-      <header class="app-header">
+      <header class="app-header" *ngIf="authService.isAuthenticated()">
         <a class="brand" routerLink="/" aria-label="Ir al inicio de KittyHP">
           <img class="brand-icon" src="assets/laptop-repair.svg" alt="">
           <strong>KittyHP</strong>
@@ -33,6 +35,17 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
             </div>
           </details>
         </nav>
+
+        <div class="session-area">
+          <span class="user-chip">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7 8a7 7 0 0 0-14 0"></path></svg>
+            <span>{{ authService.currentUser() }}</span>
+          </span>
+          <button type="button" class="logout-button" (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5m4-3 4-4-4-4m4 4H9"></path></svg>
+            <span>Salir</span>
+          </button>
+        </div>
       </header>
 
       <main class="app-content"><router-outlet></router-outlet></main>
@@ -42,7 +55,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     :host, .app-shell { display: block; min-height: 100dvh; }
     .app-header {
       position: sticky; top: 0; z-index: 50; display: grid;
-      grid-template-columns: minmax(160px, auto) 1fr; align-items: center; gap: 18px;
+      grid-template-columns: minmax(160px, auto) 1fr auto; align-items: center; gap: 18px;
       min-height: 50px; padding: 0 18px; border-bottom: 1px solid rgba(200,211,223,.9);
       background: rgba(255,255,255,.94); box-shadow: 0 1px 0 rgba(18,35,55,.02); backdrop-filter: blur(18px);
     }
@@ -75,6 +88,11 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     .settings-dropdown a.active { padding-left: 18px; color: var(--primary); border-color: rgba(47,126,199,.1); background: #eaf2fb; }
     .settings-dropdown a.active::before { position: absolute; top: 9px; bottom: 9px; left: 7px; width: 3px; border-radius: 999px; background: var(--primary); content: ''; }
     .settings-dropdown strong { font-size: .74rem; font-weight: 750; line-height: 1.2; }
+    .session-area { display: flex; align-items: center; gap: 8px; }
+    .user-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid #e0e7ef; border-radius: 9px; color: #526176; font-size: .69rem; font-weight: 650; background: #f8fafc; }
+    .user-chip svg, .logout-button svg { width: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+    .logout-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 30px; padding: 4px 9px; border: 1px solid #e0e7ef; border-radius: 9px; color: #66758a; font-size: .68rem; font-weight: 700; background: #fff; cursor: pointer; transition: 150ms ease; }
+    .logout-button:hover { border-color: rgba(180,35,58,.25); color: #a71d39; background: #fff7f8; }
     .app-content { width: 100%; max-width: none; margin: 0; padding: 0; }
 
     @media (min-width: 1181px) {
@@ -86,11 +104,22 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
     @media (max-width: 760px) {
       .app-header { display: flex; justify-content: space-between; min-height: 48px; padding: 0 12px; }
-      .main-nav { gap: 12px; height: 48px; }
+      .main-nav { gap: 12px; height: 48px; margin-left: auto; }
       .main-nav > a { display: none; }
       .settings-menu summary { height: 48px; }
       .settings-dropdown { right: 0; left: auto; width: min(232px,calc(100vw - 24px)); }
+      .user-chip { display: none; }
+      .logout-button span { display: none; }
+      .logout-button { width: 32px; padding: 0; }
     }
   `],
 })
-export class AppComponent {}
+export class AppComponent {
+  readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  logout(): void {
+    this.authService.logout();
+    void this.router.navigate(['/login']);
+  }
+}
