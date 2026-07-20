@@ -41,6 +41,29 @@ function updateCatalogResultsCounter(): void {
   }
 }
 
+function setDefaultRepairDate(): void {
+  if (!window.location.pathname.endsWith('/repairs/new')) {
+    return;
+  }
+
+  const dateInput = document.querySelector<HTMLInputElement>(
+    'app-repair-form input[formcontrolname="recordDate"]',
+  );
+
+  if (!dateInput || dateInput.value) {
+    return;
+  }
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+
+  dateInput.value = `${year}-${month}-${day}`;
+  dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+  dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
 bootstrapApplication(AppComponent, appConfig)
   .then(() => {
     document.addEventListener('click', (event) => {
@@ -53,7 +76,7 @@ bootstrapApplication(AppComponent, appConfig)
     });
 
     let updateScheduled = false;
-    const scheduleCatalogCounterUpdate = (): void => {
+    const scheduleUiUpdate = (): void => {
       if (updateScheduled) {
         return;
       }
@@ -62,6 +85,7 @@ bootstrapApplication(AppComponent, appConfig)
       requestAnimationFrame(() => {
         updateScheduled = false;
         updateCatalogResultsCounter();
+        setDefaultRepairDate();
       });
     };
 
@@ -69,17 +93,17 @@ bootstrapApplication(AppComponent, appConfig)
       const target = event.target as Element | null;
 
       if (target?.matches('.catalog-page .search-field input')) {
-        scheduleCatalogCounterUpdate();
+        scheduleUiUpdate();
       }
     });
 
-    const observer = new MutationObserver(scheduleCatalogCounterUpdate);
+    const observer = new MutationObserver(scheduleUiUpdate);
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       characterData: true,
     });
 
-    scheduleCatalogCounterUpdate();
+    scheduleUiUpdate();
   })
   .catch((error) => console.error(error));
