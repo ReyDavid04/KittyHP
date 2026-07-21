@@ -1,19 +1,19 @@
-<section class="production-page" style="background:#fff;">
-  <header class="page-header" style="align-items:center; min-height:58px; margin-bottom:14px; padding:9px 4px; border-bottom:1px solid var(--border); background:#fff;">
-    <div class="title-block" style="display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 12px; min-width:0;">
-      <h1 style="font-size:clamp(1.15rem,1.6vw,1.4rem); font-weight:800; line-height:1.1; letter-spacing:-0.025em; white-space:nowrap;">Overall FPF Trend</h1>
-      <p style="max-width:none; margin:0; font-size:0.72rem; font-weight:500; line-height:1.35;">Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
+<section class="production-page" style="padding:0 18px 18px; background:#fff;">
+  <header class="page-header" style="align-items:center; min-height:50px; margin-bottom:8px; padding:4px; border-bottom:1px solid var(--border); background:#fff;">
+    <div class="title-block" style="display:flex; align-items:baseline; flex-wrap:wrap; gap:3px 12px; min-width:0;">
+      <h1 style="font-size:clamp(1.1rem,1.45vw,1.3rem); font-weight:800; line-height:1.05; letter-spacing:-0.025em; white-space:nowrap;">Overall FPF Trend</h1>
+      <p style="max-width:none; margin:0; font-size:0.7rem; font-weight:500; line-height:1.25;">Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
     </div>
 
-    <div class="week-toolbar" style="align-items:center;">
-      <button type="button" class="icon-button" style="height:38px;" (click)="changeWeek(-1)" [disabled]="isLoading || isSaving" aria-label="Semana anterior">‹</button>
-      <label class="week-picker">
+    <div class="week-toolbar" style="align-items:center; gap:6px;">
+      <button type="button" class="icon-button" style="width:34px; height:34px;" (click)="changeWeek(-1)" [disabled]="isLoading || isSaving" aria-label="Semana anterior">‹</button>
+      <label class="week-picker" style="display:flex; align-items:center; gap:6px;">
         <span>Semana</span>
-        <input type="date" style="height:38px;" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
+        <input type="date" style="height:34px;" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
       </label>
-      <button type="button" class="icon-button" style="height:38px;" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
-      <button type="button" class="secondary-button" style="height:38px;" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
-      <button type="button" class="save-button" style="height:38px;" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
+      <button type="button" class="icon-button" style="width:34px; height:34px;" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
+      <button type="button" class="secondary-button" style="height:34px;" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
+      <button type="button" class="save-button" style="height:34px;" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
         {{ isSaving ? 'Guardando...' : 'Guardar semana' }}
       </button>
     </div>
