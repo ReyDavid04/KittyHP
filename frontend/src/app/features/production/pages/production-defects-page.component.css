@@ -1,0 +1,388 @@
+:host {
+  display: block;
+  min-height: calc(100dvh - 50px);
+  background: #f5f7fa;
+}
+
+.production-page {
+  min-height: calc(100dvh - 50px);
+  padding: 18px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+
+.title-block {
+  min-width: 280px;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #6d7c90;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: #1e2b3d;
+  font-size: 1.45rem;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.title-block p {
+  max-width: 680px;
+  margin: 6px 0 0;
+  color: #7a8797;
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.week-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.week-picker {
+  display: grid;
+  gap: 4px;
+  color: #657387;
+  font-size: 0.62rem;
+  font-weight: 600;
+}
+
+.week-picker input,
+.icon-button,
+.secondary-button,
+.save-button {
+  height: 36px;
+  border: 1px solid #d7e0e9;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.week-picker input {
+  min-width: 138px;
+  padding: 0 9px;
+  color: #2d3b4f;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  padding: 0;
+  color: #536277;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.secondary-button,
+.save-button {
+  padding: 0 13px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.secondary-button {
+  color: #526176;
+}
+
+.save-button {
+  border-color: #164c8c;
+  color: #fff;
+  background: #164c8c;
+}
+
+.icon-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled) {
+  border-color: #b9c8d8;
+  color: #164c8c;
+  background: #f8fafc;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #103d73;
+}
+
+button:disabled,
+input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.week-summary {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(110px, 0.7fr));
+  margin-bottom: 12px;
+  border: 1px solid #dce4ed;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.week-summary > div {
+  display: grid;
+  gap: 3px;
+  min-height: 58px;
+  padding: 10px 14px;
+  border-right: 1px solid #e8edf3;
+}
+
+.week-summary > div:last-child {
+  border-right: 0;
+}
+
+.week-summary span {
+  color: #8591a1;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.week-summary strong {
+  color: #2b394c;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.week-summary .rate-value {
+  color: #1458a0;
+}
+
+.message,
+.loading-state {
+  margin-bottom: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.69rem;
+}
+
+.message.success {
+  border: 1px solid #cce9d8;
+  color: #17623b;
+  background: #f2fbf6;
+}
+
+.message.error {
+  border: 1px solid #f0cdd4;
+  color: #a71d39;
+  background: #fff7f8;
+}
+
+.loading-state {
+  border: 1px solid #dce4ed;
+  color: #657387;
+  background: #fff;
+}
+
+.table-shell {
+  max-width: 100%;
+  border: 1px solid #cfd9e4;
+  border-radius: 10px;
+  background: #fff;
+  overflow: auto;
+  box-shadow: 0 4px 14px rgba(29, 47, 68, 0.04);
+}
+
+.production-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #263449;
+  font-size: 0.69rem;
+  table-layout: fixed;
+}
+
+.production-table th,
+.production-table td {
+  height: 31px;
+  padding: 3px 6px;
+  border-right: 1px solid #cfd9e4;
+  border-bottom: 1px solid #cfd9e4;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.production-table tr:last-child td,
+.production-table tr:last-child th {
+  border-bottom: 0;
+}
+
+.production-table th:last-child,
+.production-table td:last-child {
+  border-right: 0;
+}
+
+.production-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  height: 40px;
+  color: #fff;
+  font-size: 0.69rem;
+  font-weight: 700;
+  background: #153a6b;
+}
+
+.series-column {
+  width: 150px;
+  left: 0;
+  z-index: 8 !important;
+  text-align: left !important;
+}
+
+.metric-column {
+  width: 138px;
+  left: 150px;
+  z-index: 8 !important;
+  text-align: left !important;
+}
+
+.day-column {
+  width: 102px;
+}
+
+.week-column {
+  width: 104px;
+  background: #102f58 !important;
+}
+
+.series-name {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  width: 150px;
+  padding-left: 10px !important;
+  color: #172235;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: left !important;
+  background: #f7f8fa;
+}
+
+.metric-name {
+  position: sticky;
+  left: 150px;
+  z-index: 2;
+  width: 138px;
+  color: #334155;
+  font-weight: 550;
+  text-align: left !important;
+  background: #f7f8fa;
+}
+
+.series-row.alt-series .series-name,
+.series-row.alt-series .metric-name,
+.series-row.alt-series td {
+  background: #f4f8fc;
+}
+
+.series-start th,
+.series-start td {
+  border-top: 1px solid #aebdcd;
+}
+
+.overall-row th,
+.overall-row td {
+  background: #fff4ce;
+}
+
+.overall-name,
+.overall-row .metric-name {
+  background: #fff0b8 !important;
+}
+
+.calculated-cell,
+.week-total {
+  color: #263449;
+  font-weight: 650;
+}
+
+.week-total {
+  background: #eef3f8 !important;
+}
+
+.overall-row .week-total {
+  background: #f9e7aa !important;
+}
+
+.rate-cell {
+  color: #0d56b3;
+  font-weight: 650;
+}
+
+.input-cell {
+  padding: 0 !important;
+}
+
+.input-cell input {
+  width: 100%;
+  height: 30px;
+  padding: 0 6px;
+  border: 0;
+  outline: 0;
+  color: #233249;
+  font: inherit;
+  font-size: 0.71rem;
+  text-align: center;
+  background: transparent;
+}
+
+.input-cell input:focus {
+  box-shadow: inset 0 0 0 2px #2f7ec7;
+  background: #fff;
+}
+
+.input-cell input.invalid {
+  color: #a71d39;
+  box-shadow: inset 0 0 0 2px rgba(180, 35, 58, 0.65);
+  background: #fff4f6;
+}
+
+.input-cell input::-webkit-inner-spin-button,
+.input-cell input::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+@media (max-width: 900px) {
+  .production-page {
+    padding: 12px;
+  }
+
+  .page-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .week-toolbar {
+    justify-content: flex-start;
+  }
+
+  .week-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .week-summary > div {
+    border-bottom: 1px solid #e8edf3;
+  }
+}
