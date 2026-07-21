@@ -169,12 +169,19 @@
             <th
               *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek"
               class="trend-week-column"
-              [class.active-detail-week]="detailWeek?.weekStart === trendWeek.weekStart"
+              style="padding:0;"
+              [style.background]="detailWeek?.weekStart === trendWeek.weekStart ? '#0f2f58' : '#153a6b'"
             >
-              <button type="button" class="trend-week-button" (click)="selectDetailWeek(trendWeek)" [attr.aria-label]="'Ver detalle diario de ' + weekName(trendWeek)">
-                <strong>{{ weekName(trendWeek) }}</strong>
-                <small>{{ formatTrendWeekRange(trendWeek) }}</small>
-                <span>Ver detalle</span>
+              <button
+                type="button"
+                class="trend-week-button"
+                style="display:grid; place-items:center; width:100%; min-height:40px; padding:3px 4px; border:0; color:#fff; font:inherit; line-height:1.15; background:transparent; cursor:pointer;"
+                (click)="selectDetailWeek(trendWeek)"
+                [attr.aria-label]="'Ver detalle diario de ' + weekName(trendWeek)"
+              >
+                <strong style="display:block;">{{ weekName(trendWeek) }}</strong>
+                <small style="display:block; margin-top:2px; color:#c8d7e8; font-size:0.57rem; font-weight:550;">{{ formatTrendWeekRange(trendWeek) }}</small>
+                <span style="display:block; margin-top:2px; color:#dce8f5; font-size:0.52rem; font-weight:550;">Ver detalle</span>
               </button>
             </th>
           </tr>
@@ -222,17 +229,17 @@
       </table>
     </div>
 
-    <section class="week-detail" *ngIf="viewMode !== 'single' && detailWeek as selectedDetailWeek">
-      <header class="week-detail-heading">
-        <div>
-          <span>Detalle diario</span>
-          <strong>{{ weekName(selectedDetailWeek) }}</strong>
-          <small>{{ formatTrendWeekRange(selectedDetailWeek) }}</small>
+    <section class="week-detail" style="margin-top:12px;" *ngIf="viewMode !== 'single' && detailWeek as selectedDetailWeek">
+      <header class="week-detail-heading" style="display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:42px; padding:7px 11px; border:1px solid #d9e3ed; border-bottom:0; border-radius:9px 9px 0 0; background:#f8fafc;">
+        <div style="display:flex; align-items:baseline; gap:8px; min-width:0;">
+          <span style="color:#748196; font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Detalle diario</span>
+          <strong style="color:#24344b; font-size:0.78rem;">{{ weekName(selectedDetailWeek) }}</strong>
+          <small style="color:#7a8797; font-size:0.64rem;">{{ formatTrendWeekRange(selectedDetailWeek) }}</small>
         </div>
-        <p>Consulta por día de la semana. Esta vista es de solo lectura.</p>
+        <p style="margin:0; color:#7a8797; font-size:0.65rem; white-space:nowrap;">Consulta por día de la semana · Solo lectura</p>
       </header>
 
-      <div class="table-shell">
+      <div class="table-shell" style="border-radius:0 0 10px 10px;">
         <table class="production-table detail-table">
           <thead>
             <tr>
