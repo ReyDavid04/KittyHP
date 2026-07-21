@@ -1,5 +1,6 @@
 name: Tailwind visual migration
 
+# Flujo temporal; la validación principal se ejecuta desde el pull request.
 on:
   workflow_dispatch:
   push:
