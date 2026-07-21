@@ -5,7 +5,7 @@ import { RepairReport } from '../../../core/models/repair-report.model';
 
 @Injectable({ providedIn: 'root' })
 export class RepairExcelExportService {
-  private writerPromise?: Promise<typeof import('wasm-xlsxwriter/web')>;
+  private writerPromise?: Promise<typeof import('wasm-xlsxwriter')>;
 
   constructor(private readonly httpClient: HttpClient) {}
 
@@ -110,9 +110,9 @@ export class RepairExcelExportService {
     this.download(output, `KittyHP_Reportes_${new Date().toISOString().slice(0, 10)}.xlsx`);
   }
 
-  private loadWriter(): Promise<typeof import('wasm-xlsxwriter/web')> {
+  private loadWriter(): Promise<typeof import('wasm-xlsxwriter')> {
     if (!this.writerPromise) {
-      this.writerPromise = import('wasm-xlsxwriter/web').then(async (writer) => {
+      this.writerPromise = import('wasm-xlsxwriter').then(async (writer) => {
         const wasmUrl = new URL('assets/wasm_xlsxwriter_bg.wasm', document.baseURI);
         await writer.default({ module_or_path: wasmUrl });
         return writer;
@@ -126,12 +126,12 @@ export class RepairExcelExportService {
   }
 
   private embedImage(
-    xlsx: typeof import('wasm-xlsxwriter/web'),
-    worksheet: InstanceType<typeof xlsx.Worksheet>,
+    xlsx: typeof import('wasm-xlsxwriter'),
+    worksheet: import('wasm-xlsxwriter').Worksheet,
     row: number,
     column: number,
     bytes: Uint8Array | null,
-    format: InstanceType<typeof xlsx.Format>,
+    format: import('wasm-xlsxwriter').Format,
     altText: string,
   ): void {
     if (!bytes?.length) {
