@@ -49,6 +49,11 @@ function calculateReturnQuantities(failureQty: number, returnYesQty: number): { 
   };
 }
 
+function catalogValuesEqual(currentValue: string | null, nextValue: string | null | undefined): boolean {
+  return String(currentValue ?? '').trim().toLocaleLowerCase()
+    === String(nextValue ?? '').trim().toLocaleLowerCase();
+}
+
 @Injectable()
 export class RepairRepository implements OnModuleInit {
   constructor(
@@ -131,13 +136,13 @@ export class RepairRepository implements OnModuleInit {
 
     if (data.recordDate !== undefined) entity.recordDate = data.recordDate;
 
-    if (data.family !== undefined) {
+    if (data.family !== undefined && !catalogValuesEqual(entity.family, data.family)) {
       const reference = await this.resolveCatalogReference('family', data.family, true);
       entity.family = reference!.value;
       entity.familyCatalogItemId = reference!.id;
     }
 
-    if (data.topIssue !== undefined) {
+    if (data.topIssue !== undefined && !catalogValuesEqual(entity.topIssue, data.topIssue)) {
       const reference = await this.resolveCatalogReference('top_issue', data.topIssue, true);
       entity.topIssue = reference!.value;
       entity.topIssueCatalogItemId = reference!.id;
@@ -147,7 +152,7 @@ export class RepairRepository implements OnModuleInit {
     if (data.buildQty !== undefined) entity.buildQty = data.buildQty;
     entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
 
-    if (data.category !== undefined) {
+    if (data.category !== undefined && !catalogValuesEqual(entity.category, data.category)) {
       const reference = await this.resolveCatalogReference('category', data.category, true);
       entity.category = reference!.value;
       entity.categoryCatalogItemId = reference!.id;
@@ -163,7 +168,7 @@ export class RepairRepository implements OnModuleInit {
 
     if (data.failPicture !== undefined) entity.failPicture = data.failPicture ?? null;
 
-    if (data.majorPart !== undefined) {
+    if (data.majorPart !== undefined && !catalogValuesEqual(entity.majorPart, data.majorPart)) {
       const reference = await this.resolveCatalogReference('major_part', data.majorPart, false);
       entity.majorPart = reference?.value ?? null;
       entity.majorPartCatalogItemId = reference?.id ?? null;
@@ -171,7 +176,7 @@ export class RepairRepository implements OnModuleInit {
 
     if (data.repairResult !== undefined) entity.repairResult = data.repairResult ?? null;
 
-    if (data.failureFactor !== undefined) {
+    if (data.failureFactor !== undefined && !catalogValuesEqual(entity.failureFactor, data.failureFactor)) {
       const reference = await this.resolveCatalogReference('failure_factor', data.failureFactor, false);
       entity.failureFactor = reference?.value ?? null;
       entity.failureFactorCatalogItemId = reference?.id ?? null;
