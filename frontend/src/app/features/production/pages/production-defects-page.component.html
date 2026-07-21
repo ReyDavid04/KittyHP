@@ -146,18 +146,18 @@
           <tr class="overall-row overall-start">
             <th rowspan="3" class="series-name overall-name">IDS Overall</th>
             <td class="metric-name">Input Quantity</td>
-            <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayInputTotal(day) | number }}</td>
-            <td class="week-total">{{ overallInputTotal() | number }}</td>
+            <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayInputTotal(day) > 0 ? (dayInputTotal(day) | number) : '' }}</td>
+            <td class="week-total">{{ overallInputTotal() > 0 ? (overallInputTotal() | number) : '' }}</td>
           </tr>
           <tr class="overall-row">
             <td class="metric-name">Defect Quantity</td>
-            <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayDefectTotal(day) | number }}</td>
-            <td class="week-total">{{ overallDefectTotal() | number }}</td>
+            <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayDefectTotal(day) > 0 ? (dayDefectTotal(day) | number) : '' }}</td>
+            <td class="week-total">{{ overallDefectTotal() > 0 ? (overallDefectTotal() | number) : '' }}</td>
           </tr>
           <tr class="overall-row overall-end">
             <td class="metric-name">Defect Rate</td>
-            <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">{{ defectRate(dayDefectTotal(day), dayInputTotal(day)) }}</td>
-            <td class="week-total rate-cell">{{ defectRate(overallDefectTotal(), overallInputTotal()) }}</td>
+            <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">{{ dayInputTotal(day) > 0 && dayDefectTotal(day) > 0 ? defectRate(dayDefectTotal(day), dayInputTotal(day)) : '' }}</td>
+            <td class="week-total rate-cell">{{ overallInputTotal() > 0 && overallDefectTotal() > 0 ? defectRate(overallDefectTotal(), overallInputTotal()) : '' }}</td>
           </tr>
 
           <ng-container *ngFor="let productionSeries of series; trackBy: trackBySeries; let seriesIndex = index">
@@ -176,7 +176,7 @@
                   [attr.aria-label]="productionSeries.name + ' Input Quantity ' + formatDay(day)"
                 >
               </td>
-              <td class="week-total">{{ seriesInputTotal(productionSeries) | number }}</td>
+              <td class="week-total">{{ seriesInputTotal(productionSeries) > 0 ? (seriesInputTotal(productionSeries) | number) : '' }}</td>
             </tr>
             <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
               <td class="metric-name">Defect Quantity</td>
@@ -192,15 +192,15 @@
                   [attr.aria-label]="productionSeries.name + ' Defect Quantity ' + formatDay(day)"
                 >
               </td>
-              <td class="week-total">{{ seriesDefectTotal(productionSeries) | number }}</td>
+              <td class="week-total">{{ seriesDefectTotal(productionSeries) > 0 ? (seriesDefectTotal(productionSeries) | number) : '' }}</td>
             </tr>
             <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
               <td class="metric-name">Defect Rate</td>
               <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">
-                {{ defectRate(cell(productionSeries, day).defectQuantity, cell(productionSeries, day).inputQuantity) }}
+                {{ cell(productionSeries, day).inputQuantity > 0 && cell(productionSeries, day).defectQuantity > 0 ? defectRate(cell(productionSeries, day).defectQuantity, cell(productionSeries, day).inputQuantity) : '' }}
               </td>
               <td class="week-total rate-cell">
-                {{ defectRate(seriesDefectTotal(productionSeries), seriesInputTotal(productionSeries)) }}
+                {{ seriesInputTotal(productionSeries) > 0 && seriesDefectTotal(productionSeries) > 0 ? defectRate(seriesDefectTotal(productionSeries), seriesInputTotal(productionSeries)) : '' }}
               </td>
             </tr>
           </ng-container>
@@ -239,16 +239,16 @@
           <tr class="overall-row overall-start">
             <th rowspan="3" class="series-name overall-name">IDS Overall</th>
             <td class="metric-name">Input Quantity</td>
-            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">{{ weekOverallInputTotal(trendWeek) | number }}</td>
+            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">{{ weekOverallInputTotal(trendWeek) > 0 ? (weekOverallInputTotal(trendWeek) | number) : '' }}</td>
           </tr>
           <tr class="overall-row">
             <td class="metric-name">Defect Quantity</td>
-            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">{{ weekOverallDefectTotal(trendWeek) | number }}</td>
+            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">{{ weekOverallDefectTotal(trendWeek) > 0 ? (weekOverallDefectTotal(trendWeek) | number) : '' }}</td>
           </tr>
           <tr class="overall-row overall-end">
             <td class="metric-name">Defect Rate</td>
             <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="rate-cell">
-              {{ defectRate(weekOverallDefectTotal(trendWeek), weekOverallInputTotal(trendWeek)) }}
+              {{ weekOverallInputTotal(trendWeek) > 0 && weekOverallDefectTotal(trendWeek) > 0 ? defectRate(weekOverallDefectTotal(trendWeek), weekOverallInputTotal(trendWeek)) : '' }}
             </td>
           </tr>
 
@@ -257,19 +257,19 @@
               <th rowspan="3" class="series-name">{{ productionSeries.name }}</th>
               <td class="metric-name">Input Quantity</td>
               <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">
-                {{ weekSeriesInputTotal(trendWeek, productionSeries.id) | number }}
+                {{ weekSeriesInputTotal(trendWeek, productionSeries.id) > 0 ? (weekSeriesInputTotal(trendWeek, productionSeries.id) | number) : '' }}
               </td>
             </tr>
             <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
               <td class="metric-name">Defect Quantity</td>
               <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">
-                {{ weekSeriesDefectTotal(trendWeek, productionSeries.id) | number }}
+                {{ weekSeriesDefectTotal(trendWeek, productionSeries.id) > 0 ? (weekSeriesDefectTotal(trendWeek, productionSeries.id) | number) : '' }}
               </td>
             </tr>
             <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
               <td class="metric-name">Defect Rate</td>
               <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="rate-cell">
-                {{ defectRate(weekSeriesDefectTotal(trendWeek, productionSeries.id), weekSeriesInputTotal(trendWeek, productionSeries.id)) }}
+                {{ weekSeriesInputTotal(trendWeek, productionSeries.id) > 0 && weekSeriesDefectTotal(trendWeek, productionSeries.id) > 0 ? defectRate(weekSeriesDefectTotal(trendWeek, productionSeries.id), weekSeriesInputTotal(trendWeek, productionSeries.id)) : '' }}
               </td>
             </tr>
           </ng-container>
@@ -302,20 +302,20 @@
             <tr class="overall-row overall-start">
               <th rowspan="3" class="series-name overall-name">IDS Overall</th>
               <td class="metric-name">Input Quantity</td>
-              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">{{ weekDayInputTotal(selectedDetailWeek, day) | number }}</td>
-              <td class="week-total">{{ weekOverallInputTotal(selectedDetailWeek) | number }}</td>
+              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">{{ weekDayInputTotal(selectedDetailWeek, day) > 0 ? (weekDayInputTotal(selectedDetailWeek, day) | number) : '' }}</td>
+              <td class="week-total">{{ weekOverallInputTotal(selectedDetailWeek) > 0 ? (weekOverallInputTotal(selectedDetailWeek) | number) : '' }}</td>
             </tr>
             <tr class="overall-row">
               <td class="metric-name">Defect Quantity</td>
-              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">{{ weekDayDefectTotal(selectedDetailWeek, day) | number }}</td>
-              <td class="week-total">{{ weekOverallDefectTotal(selectedDetailWeek) | number }}</td>
+              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">{{ weekDayDefectTotal(selectedDetailWeek, day) > 0 ? (weekDayDefectTotal(selectedDetailWeek, day) | number) : '' }}</td>
+              <td class="week-total">{{ weekOverallDefectTotal(selectedDetailWeek) > 0 ? (weekOverallDefectTotal(selectedDetailWeek) | number) : '' }}</td>
             </tr>
             <tr class="overall-row overall-end">
               <td class="metric-name">Defect Rate</td>
               <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="rate-cell">
-                {{ defectRate(weekDayDefectTotal(selectedDetailWeek, day), weekDayInputTotal(selectedDetailWeek, day)) }}
+                {{ weekDayInputTotal(selectedDetailWeek, day) > 0 && weekDayDefectTotal(selectedDetailWeek, day) > 0 ? defectRate(weekDayDefectTotal(selectedDetailWeek, day), weekDayInputTotal(selectedDetailWeek, day)) : '' }}
               </td>
-              <td class="week-total rate-cell">{{ defectRate(weekOverallDefectTotal(selectedDetailWeek), weekOverallInputTotal(selectedDetailWeek)) }}</td>
+              <td class="week-total rate-cell">{{ weekOverallInputTotal(selectedDetailWeek) > 0 && weekOverallDefectTotal(selectedDetailWeek) > 0 ? defectRate(weekOverallDefectTotal(selectedDetailWeek), weekOverallInputTotal(selectedDetailWeek)) : '' }}</td>
             </tr>
 
             <ng-container *ngFor="let productionSeries of detailSeries; trackBy: trackBySeries; let seriesIndex = index">
@@ -323,24 +323,24 @@
                 <th rowspan="3" class="series-name">{{ productionSeries.name }}</th>
                 <td class="metric-name">Input Quantity</td>
                 <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">
-                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity | number }}
+                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity > 0 ? (weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity | number) : '' }}
                 </td>
-                <td class="week-total">{{ weekSeriesInputTotal(selectedDetailWeek, productionSeries.id) | number }}</td>
+                <td class="week-total">{{ weekSeriesInputTotal(selectedDetailWeek, productionSeries.id) > 0 ? (weekSeriesInputTotal(selectedDetailWeek, productionSeries.id) | number) : '' }}</td>
               </tr>
               <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
                 <td class="metric-name">Defect Quantity</td>
                 <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">
-                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity | number }}
+                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity > 0 ? (weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity | number) : '' }}
                 </td>
-                <td class="week-total">{{ weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id) | number }}</td>
+                <td class="week-total">{{ weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id) > 0 ? (weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id) | number) : '' }}</td>
               </tr>
               <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
                 <td class="metric-name">Defect Rate</td>
                 <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="rate-cell">
-                  {{ defectRate(weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity, weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity) }}
+                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity > 0 && weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity > 0 ? defectRate(weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity, weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity) : '' }}
                 </td>
                 <td class="week-total rate-cell">
-                  {{ defectRate(weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id), weekSeriesInputTotal(selectedDetailWeek, productionSeries.id)) }}
+                  {{ weekSeriesInputTotal(selectedDetailWeek, productionSeries.id) > 0 && weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id) > 0 ? defectRate(weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id), weekSeriesInputTotal(selectedDetailWeek, productionSeries.id)) : '' }}
                 </td>
               </tr>
             </ng-container>
