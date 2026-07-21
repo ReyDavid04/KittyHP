@@ -20,29 +20,6 @@
     </div>
   </header>
 
-  <div class="week-summary" *ngIf="week">
-    <div>
-      <span>Periodo</span>
-      <strong>{{ formatWeekRange() }}</strong>
-    </div>
-    <div>
-      <span>Semana</span>
-      <strong>{{ weekLabel }}</strong>
-    </div>
-    <div>
-      <span>Input total</span>
-      <strong>{{ overallInputTotal() | number }}</strong>
-    </div>
-    <div>
-      <span>Defect total</span>
-      <strong>{{ overallDefectTotal() | number }}</strong>
-    </div>
-    <div>
-      <span>Defect Rate</span>
-      <strong class="rate-value">{{ defectRate(overallDefectTotal(), overallInputTotal()) }}</strong>
-    </div>
-  </div>
-
   <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
   <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
   <div class="loading-state" *ngIf="isLoading">Cargando información semanal...</div>
