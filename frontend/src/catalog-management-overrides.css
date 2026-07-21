@@ -136,12 +136,12 @@
   display: none !important;
 }
 
-/* Login: use a single centered form and remove the decorative blue panel. */
+/* Login: one continuous white surface without lateral color divisions. */
 .login-page {
-  grid-template-columns: minmax(0, 620px) !important;
-  justify-content: center !important;
+  display: block !important;
+  width: 100% !important;
   min-height: 100dvh !important;
-  background: #edf3f9 !important;
+  background: #fff !important;
 }
 
 .login-page .login-visual {
@@ -151,9 +151,12 @@
 .login-page .login-panel {
   position: relative !important;
   width: 100% !important;
+  max-width: 620px !important;
   min-height: 100dvh !important;
+  margin: 0 auto !important;
   padding: clamp(88px, 8vw, 110px) clamp(32px, 6vw, 76px) 48px !important;
-  box-shadow: 0 0 48px rgba(18, 35, 55, 0.08) !important;
+  background: #fff !important;
+  box-shadow: none !important;
 }
 
 @media (max-width: 720px) {
@@ -175,12 +178,8 @@
     width: min(232px, calc(100vw - 24px)) !important;
   }
 
-  .login-page {
-    grid-template-columns: minmax(0, 1fr) !important;
-  }
-
   .login-page .login-panel {
+    max-width: none !important;
     padding: 88px 24px 36px !important;
-    box-shadow: none !important;
   }
 }
