@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { extname } from 'node:path';
 import { AdminGuard } from '../../auth/admin.guard';
-import { AuthGuard } from '../../auth/auth.guard';
+import { AuthGuard, RequestWithAuth } from '../../auth/auth.guard';
 import { CreateRepairCatalogItemDto } from '../dto/create-repair-catalog-item.dto';
 import { CreateRepairDto } from '../dto/create-repair.dto';
 import { UpdateRepairCatalogItemDto } from '../dto/update-repair-catalog-item.dto';
@@ -20,6 +20,7 @@ function toUploadedPath(file?: { filename?: string }): string | undefined {
 
 type UploadFile = { filename: string; originalname: string };
 type UploadFields = { failPicture?: UploadFile[]; evidencePicture?: UploadFile[] };
+type CreateRepairWithCreator = CreateRepairDto & { createdByUserId: number };
 
 @Controller('repairs')
 @UseGuards(AuthGuard)
@@ -42,9 +43,14 @@ export class RepairsController {
       },
     ),
   )
-  create(@Body() createRepairDto: CreateRepairDto, @UploadedFiles() files: UploadFields) {
+  create(
+    @Body() createRepairDto: CreateRepairDto,
+    @UploadedFiles() files: UploadFields,
+    @Req() request: RequestWithAuth,
+  ) {
     createRepairDto.failPicture = toUploadedPath(files.failPicture?.[0]) ?? createRepairDto.failPicture ?? undefined;
     createRepairDto.evidencePicture = toUploadedPath(files.evidencePicture?.[0]) ?? createRepairDto.evidencePicture ?? undefined;
+    (createRepairDto as CreateRepairWithCreator).createdByUserId = request.user!.id;
     return this.repairsService.create(createRepairDto);
   }
 
