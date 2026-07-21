@@ -1,25 +1,25 @@
-<section class="production-page">
-  <header class="page-header">
-    <div class="title-block">
-      <h1>Overall FPF Trend</h1>
-      <p>Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
+<section class="production-page" style="padding:0; background:#fff;">
+  <header class="page-header" style="align-items:center; gap:18px; min-height:58px; margin-bottom:0; padding:9px 22px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);">
+    <div class="title-block" style="display:flex; align-items:baseline; gap:10px; min-width:0;">
+      <h1 style="margin:0; color:var(--text); font-size:clamp(1.15rem,1.6vw,1.4rem); font-weight:800; line-height:1.1; letter-spacing:-0.025em; white-space:nowrap;">Overall FPF Trend</h1>
+      <p style="overflow:hidden; max-width:none; margin:0; color:var(--muted); font-size:0.7rem; line-height:1.35; text-overflow:ellipsis; white-space:nowrap;">Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
     </div>
 
-    <div class="week-toolbar">
-      <button type="button" class="icon-button" (click)="changeWeek(-1)" [disabled]="isLoading || isSaving" aria-label="Semana anterior">‹</button>
-      <label class="week-picker">
+    <div class="week-toolbar" style="align-items:center; gap:7px;">
+      <button type="button" class="icon-button" style="width:36px; min-height:36px; height:36px; border-radius:9px;" (click)="changeWeek(-1)" [disabled]="isLoading || isSaving" aria-label="Semana anterior">‹</button>
+      <label class="week-picker" style="display:flex; align-items:center; gap:6px;">
         <span>Semana</span>
-        <input type="date" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
+        <input type="date" style="height:36px; border-radius:9px;" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
       </label>
-      <button type="button" class="icon-button" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
-      <button type="button" class="secondary-button" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
-      <button type="button" class="save-button" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
+      <button type="button" class="icon-button" style="width:36px; min-height:36px; height:36px; border-radius:9px;" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
+      <button type="button" class="secondary-button" style="min-height:36px; height:36px; padding:7px 13px; border-radius:9px; font-size:0.73rem; font-weight:750;" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
+      <button type="button" class="save-button" style="min-height:36px; height:36px; padding:7px 13px; border-radius:9px; font-size:0.73rem; font-weight:750; box-shadow:0 7px 16px rgba(22,76,140,.16);" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
         {{ isSaving ? 'Guardando...' : 'Guardar semana' }}
       </button>
     </div>
   </header>
 
-  <div class="production-content">
+  <div class="production-content" style="padding:20px 22px 28px;">
     <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
     <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
     <div class="loading-state" *ngIf="isLoading">Cargando información semanal...</div>
