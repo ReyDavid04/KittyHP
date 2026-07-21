@@ -176,10 +176,10 @@ export class ProductionDefectsExcelExportService {
 
     worksheet.mergeRange(startRow, 0, startRow + 2, 0, seriesName, textFormat);
     worksheet.writeWithFormat(startRow, 1, 'Input Quantity', textFormat);
-    values.forEach((cell, index) => worksheet.writeWithFormat(startRow, index + 2, cell.inputQuantity, integerFormat));
+    values.forEach((cell, index) => this.writeQuantity(worksheet, startRow, index + 2, cell.inputQuantity, integerFormat));
 
     worksheet.writeWithFormat(startRow + 1, 1, 'Defect Quantity', textFormat);
-    values.forEach((cell, index) => worksheet.writeWithFormat(startRow + 1, index + 2, cell.defectQuantity, integerFormat));
+    values.forEach((cell, index) => this.writeQuantity(worksheet, startRow + 1, index + 2, cell.defectQuantity, integerFormat));
 
     worksheet.writeWithFormat(startRow + 2, 1, 'Defect Rate', textFormat);
     values.forEach((cell, index) => this.writeRate(worksheet, startRow + 2, index + 2, cell, rateFormat, textFormat));
@@ -205,12 +205,12 @@ export class ProductionDefectsExcelExportService {
 
     worksheet.mergeRange(startRow, 0, startRow + 2, 0, seriesName, textFormat);
     worksheet.writeWithFormat(startRow, 1, 'Input Quantity', textFormat);
-    values.forEach((cell, index) => worksheet.writeWithFormat(startRow, index + 2, cell.inputQuantity, integerFormat));
-    worksheet.writeWithFormat(startRow, totalColumn, inputTotal, overall ? formats.overallInteger : formats.weekTotal);
+    values.forEach((cell, index) => this.writeQuantity(worksheet, startRow, index + 2, cell.inputQuantity, integerFormat));
+    this.writeQuantity(worksheet, startRow, totalColumn, inputTotal, overall ? formats.overallInteger : formats.weekTotal);
 
     worksheet.writeWithFormat(startRow + 1, 1, 'Defect Quantity', textFormat);
-    values.forEach((cell, index) => worksheet.writeWithFormat(startRow + 1, index + 2, cell.defectQuantity, integerFormat));
-    worksheet.writeWithFormat(startRow + 1, totalColumn, defectTotal, overall ? formats.overallInteger : formats.weekTotal);
+    values.forEach((cell, index) => this.writeQuantity(worksheet, startRow + 1, index + 2, cell.defectQuantity, integerFormat));
+    this.writeQuantity(worksheet, startRow + 1, totalColumn, defectTotal, overall ? formats.overallInteger : formats.weekTotal);
 
     worksheet.writeWithFormat(startRow + 2, 1, 'Defect Rate', textFormat);
     values.forEach((cell, index) => this.writeRate(worksheet, startRow + 2, index + 2, cell, rateFormat, textFormat));
@@ -226,6 +226,16 @@ export class ProductionDefectsExcelExportService {
     return startRow + 3;
   }
 
+  private writeQuantity(
+    worksheet: Worksheet,
+    row: number,
+    column: number,
+    value: number,
+    format: Format,
+  ): void {
+    worksheet.writeWithFormat(row, column, value > 0 ? value : '', format);
+  }
+
   private writeRate(
     worksheet: Worksheet,
     row: number,
@@ -234,8 +244,8 @@ export class ProductionDefectsExcelExportService {
     rateFormat: Format,
     emptyFormat: Format,
   ): void {
-    if (cell.inputQuantity <= 0) {
-      worksheet.writeWithFormat(row, column, '—', emptyFormat);
+    if (cell.inputQuantity <= 0 || cell.defectQuantity <= 0) {
+      worksheet.writeWithFormat(row, column, '', emptyFormat);
       return;
     }
     worksheet.writeWithFormat(row, column, cell.defectQuantity / cell.inputQuantity, rateFormat);
@@ -257,14 +267,14 @@ export class ProductionDefectsExcelExportService {
     const center = text.clone()
       .setAlign(xlsx.FormatAlign.Center)
       .setAlign(xlsx.FormatAlign.VerticalCenter);
-    const integer = center.clone().setNumFormat('#,##0');
-    const rate = center.clone().setNumFormat('0.00%').setFontColor(xlsx.Color.parse('#0D56B3'));
+    const integer = center.clone().setNumFormat('#,##0;-#,##0;;');
+    const rate = center.clone().setNumFormat('0.00%;-0.00%;;').setFontColor(xlsx.Color.parse('#0D56B3'));
     const overallText = text.clone().setBold().setBackgroundColor(xlsx.Color.parse('#FFF0B8'));
     const overallCenter = center.clone().setBold().setBackgroundColor(xlsx.Color.parse('#FFF4CE'));
-    const overallInteger = overallCenter.clone().setNumFormat('#,##0');
-    const overallRate = overallCenter.clone().setNumFormat('0.00%').setFontColor(xlsx.Color.parse('#0D56B3'));
-    const weekTotal = center.clone().setBold().setBackgroundColor(xlsx.Color.parse('#EEF3F8')).setNumFormat('#,##0');
-    const weekTotalRate = center.clone().setBold().setBackgroundColor(xlsx.Color.parse('#EEF3F8')).setNumFormat('0.00%').setFontColor(xlsx.Color.parse('#0D56B3'));
+    const overallInteger = overallCenter.clone().setNumFormat('#,##0;-#,##0;;');
+    const overallRate = overallCenter.clone().setNumFormat('0.00%;-0.00%;;').setFontColor(xlsx.Color.parse('#0D56B3'));
+    const weekTotal = center.clone().setBold().setBackgroundColor(xlsx.Color.parse('#EEF3F8')).setNumFormat('#,##0;-#,##0;;');
+    const weekTotalRate = center.clone().setBold().setBackgroundColor(xlsx.Color.parse('#EEF3F8')).setNumFormat('0.00%;-0.00%;;').setFontColor(xlsx.Color.parse('#0D56B3'));
 
     return {
       header,
