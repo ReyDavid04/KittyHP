@@ -4,8 +4,11 @@ import { RepairRepository } from '../repositories/repair.repository';
 
 @Injectable()
 export class CreateRepairUseCase {
-  execute(createRepairDto: CreateRepairDto, repairRepository: RepairRepository) {
-    return repairRepository.create(createRepairDto);
+  execute(
+    createRepairDto: CreateRepairDto,
+    createdByUserId: number,
+    repairRepository: RepairRepository,
+  ) {
+    return repairRepository.create(createRepairDto, createdByUserId);
   }
 }
-
