@@ -52,7 +52,7 @@ import { RepairReportsApiService } from '../../../core/services/repair-reports-a
             <span class="detail-label">F/R</span>
             <span class="detail-value">{{ item.frPercentage | number: '1.2-2' }}%</span>
           </article>
-          <article class="detail-card category-wide">
+          <article class="detail-card">
             <span class="detail-label">Category</span>
             <span class="detail-value">{{ item.category || '—' }}</span>
           </article>
@@ -118,7 +118,7 @@ import { RepairReportsApiService } from '../../../core/services/repair-reports-a
     .summary-grid { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 10px; }
     .detail-card { display: grid; grid-column: span 1; align-content: center; gap: 8px; min-height: 82px; padding: 13px 15px; border: 1px solid #dce4ee; border-radius: 10px; background: #fff; transition: border-color 150ms ease, box-shadow 150ms ease; }
     .detail-card:hover { border-color: #cbd8e6; box-shadow: 0 5px 16px rgba(15,32,51,.05); }
-    .detail-card.wide, .detail-card.category-wide { grid-column: span 2; }
+    .detail-card.wide { grid-column: span 2; }
     .detail-label, .section-label { color: #66758a; font-size: .66rem; font-weight: 750; letter-spacing: .055em; text-transform: uppercase; }
     .detail-value { color: #263449; font-size: .86rem; font-weight: 450; line-height: 1.4; overflow-wrap: anywhere; }
     .number-card .detail-value { color: var(--primary); font-size: .94rem; font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -138,7 +138,7 @@ import { RepairReportsApiService } from '../../../core/services/repair-reports-a
 
     @media (max-width:1100px) {
       .summary-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
-      .detail-card.wide, .detail-card.category-wide { grid-column: span 2; }
+      .detail-card.wide { grid-column: span 2; }
     }
 
     @media (max-width:720px) {
@@ -147,7 +147,7 @@ import { RepairReportsApiService } from '../../../core/services/repair-reports-a
       h1 { font-size: 1rem; }
       .report-content { padding: 14px 12px; }
       .summary-grid, .text-grid, .image-grid { grid-template-columns: 1fr; }
-      .detail-card, .detail-card.wide, .detail-card.category-wide { grid-column: auto; }
+      .detail-card, .detail-card.wide { grid-column: auto; }
       .image-card a, .image-card img, .no-image { min-height: 220px; height: 220px; }
     }
   `],
