@@ -7,6 +7,7 @@ import {
   ProductionDefectsApiService,
   ProductionWeek,
 } from '../../../core/services/production-defects-api.service';
+import { ProductionDefectsExcelExportService } from '../services/production-defects-excel-export.service';
 
 type QuantityField = 'inputQuantity' | 'defectQuantity';
 type ProductionViewMode = 'single' | 'recent' | 'compare';
@@ -19,6 +20,7 @@ type ProductionViewMode = 'single' | 'recent' | 'compare';
 })
 export class ProductionDefectsPageComponent {
   private readonly productionApi = inject(ProductionDefectsApiService);
+  private readonly excelExport = inject(ProductionDefectsExcelExportService);
 
   readonly recentWeekOptions = [4, 8, 12, 16];
   readonly maxComparisonWeeks = 6;
@@ -33,6 +35,7 @@ export class ProductionDefectsPageComponent {
   selectedComparisonStarts: string[] = [];
   isLoading = false;
   isSaving = false;
+  isExportingExcel = false;
   isDirty = false;
   errorMessage = '';
   successMessage = '';
@@ -64,7 +67,9 @@ export class ProductionDefectsPageComponent {
         }
       }
     }
-    return [...seriesById.values()].sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+    return [...seriesById.values()].sort(
+      (left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name),
+    );
   }
 
   get detailWeek(): ProductionWeek | null {
@@ -74,6 +79,10 @@ export class ProductionDefectsPageComponent {
   get detailSeries(): ProductionDefectSeries[] {
     return [...(this.detailWeek?.series ?? [])]
       .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+  }
+
+  get canExportExcel(): boolean {
+    return this.viewMode === 'single' ? Boolean(this.week) : this.trendWeeks.length > 0;
   }
 
   setViewMode(mode: ProductionViewMode): void {
@@ -205,6 +214,28 @@ export class ProductionDefectsPageComponent {
 
   selectDetailWeek(week: ProductionWeek): void {
     this.activeDetailWeekStart = week.weekStart;
+  }
+
+  async exportToExcel(): Promise<void> {
+    if (!this.canExportExcel || this.isExportingExcel || this.isLoading) return;
+
+    this.isExportingExcel = true;
+    this.errorMessage = '';
+
+    try {
+      await this.excelExport.export({
+        mode: this.viewMode,
+        week: this.week,
+        weeks: this.trendWeeks,
+        detailWeek: this.detailWeek,
+        recentWeekCount: this.recentWeekCount,
+      });
+    } catch (error: unknown) {
+      console.error('No fue posible generar el archivo Excel de Overall FPF Trend.', error);
+      this.errorMessage = 'No fue posible generar el archivo Excel.';
+    } finally {
+      this.isExportingExcel = false;
+    }
   }
 
   saveWeek(): void {
