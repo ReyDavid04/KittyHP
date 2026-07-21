@@ -115,7 +115,8 @@ export class RepairExcelExportService {
   private loadWriter(): Promise<BrowserXlsxWriterModule> {
     if (!this.writerPromise) {
       this.writerPromise = import('wasm-xlsxwriter/web').then(async (writer) => {
-        await writer.default();
+        const wasmUrl = new URL('assets/wasm_xlsxwriter_bg.wasm', document.baseURI);
+        await writer.default(wasmUrl);
         return writer;
       }).catch((error: unknown) => {
         this.writerPromise = undefined;
