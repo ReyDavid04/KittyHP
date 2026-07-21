@@ -1,4 +1,19 @@
 /* Login typography: softer weights and lower-contrast supporting text. */
+.login-page .login-brand {
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.login-page .login-heading {
+  align-items: center !important;
+  text-align: center !important;
+}
+
+.login-page .login-heading p {
+  margin-right: auto !important;
+  margin-left: auto !important;
+}
+
 .login-page .login-brand strong {
   color: #263247 !important;
   font-size: 0.86rem !important;
