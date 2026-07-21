@@ -1,0 +1,50 @@
+name: Tailwind visual migration
+
+on:
+  push:
+    branches:
+      - agent/tailwind-visual-system
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: "!contains(github.event.head_commit.message, '[tailwind-migrated]')"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener repositorio
+        uses: actions/checkout@v4
+        with:
+          ref: agent/tailwind-visual-system
+          fetch-depth: 0
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Preparar Tailwind CSS
+        run: node .github/scripts/prepare-tailwind.cjs
+
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm install
+
+      - name: Migrar estilos existentes
+        run: node .github/scripts/migrate-tailwind.cjs
+
+      - name: Validar frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Publicar migración validada
+        run: |
+          rm -f .github/workflows/tailwind-migration.yml
+          rm -rf .github/scripts
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Migra la interfaz completa a Tailwind CSS [tailwind-migrated]"
+          git push origin HEAD:agent/tailwind-visual-system
