@@ -166,9 +166,16 @@
           <tr>
             <th class="series-column">Production Series</th>
             <th class="metric-column">Input / Failure</th>
-            <th *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="trend-week-column">
-              <strong>{{ weekName(trendWeek) }}</strong>
-              <small>{{ formatTrendWeekRange(trendWeek) }}</small>
+            <th
+              *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek"
+              class="trend-week-column"
+              [class.active-detail-week]="detailWeek?.weekStart === trendWeek.weekStart"
+            >
+              <button type="button" class="trend-week-button" (click)="selectDetailWeek(trendWeek)" [attr.aria-label]="'Ver detalle diario de ' + weekName(trendWeek)">
+                <strong>{{ weekName(trendWeek) }}</strong>
+                <small>{{ formatTrendWeekRange(trendWeek) }}</small>
+                <span>Ver detalle</span>
+              </button>
             </th>
           </tr>
         </thead>
@@ -214,6 +221,78 @@
         </tbody>
       </table>
     </div>
+
+    <section class="week-detail" *ngIf="viewMode !== 'single' && detailWeek as selectedDetailWeek">
+      <header class="week-detail-heading">
+        <div>
+          <span>Detalle diario</span>
+          <strong>{{ weekName(selectedDetailWeek) }}</strong>
+          <small>{{ formatTrendWeekRange(selectedDetailWeek) }}</small>
+        </div>
+        <p>Consulta por día de la semana. Esta vista es de solo lectura.</p>
+      </header>
+
+      <div class="table-shell">
+        <table class="production-table detail-table">
+          <thead>
+            <tr>
+              <th class="series-column">Production Series</th>
+              <th class="metric-column">Input / Failure</th>
+              <th *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="day-column">{{ formatDay(day) }}</th>
+              <th class="week-column">{{ weekName(selectedDetailWeek) }}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr class="overall-row overall-start">
+              <th rowspan="3" class="series-name overall-name">IDS Overall</th>
+              <td class="metric-name">Input Quantity</td>
+              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">{{ weekDayInputTotal(selectedDetailWeek, day) | number }}</td>
+              <td class="week-total">{{ weekOverallInputTotal(selectedDetailWeek) | number }}</td>
+            </tr>
+            <tr class="overall-row">
+              <td class="metric-name">Defect Quantity</td>
+              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">{{ weekDayDefectTotal(selectedDetailWeek, day) | number }}</td>
+              <td class="week-total">{{ weekOverallDefectTotal(selectedDetailWeek) | number }}</td>
+            </tr>
+            <tr class="overall-row overall-end">
+              <td class="metric-name">Defect Rate</td>
+              <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="rate-cell">
+                {{ defectRate(weekDayDefectTotal(selectedDetailWeek, day), weekDayInputTotal(selectedDetailWeek, day)) }}
+              </td>
+              <td class="week-total rate-cell">{{ defectRate(weekOverallDefectTotal(selectedDetailWeek), weekOverallInputTotal(selectedDetailWeek)) }}</td>
+            </tr>
+
+            <ng-container *ngFor="let productionSeries of detailSeries; trackBy: trackBySeries; let seriesIndex = index">
+              <tr class="series-row series-start" [class.alt-series]="seriesIndex % 2 === 1">
+                <th rowspan="3" class="series-name">{{ productionSeries.name }}</th>
+                <td class="metric-name">Input Quantity</td>
+                <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">
+                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity | number }}
+                </td>
+                <td class="week-total">{{ weekSeriesInputTotal(selectedDetailWeek, productionSeries.id) | number }}</td>
+              </tr>
+              <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
+                <td class="metric-name">Defect Quantity</td>
+                <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="calculated-cell">
+                  {{ weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity | number }}
+                </td>
+                <td class="week-total">{{ weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id) | number }}</td>
+              </tr>
+              <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
+                <td class="metric-name">Defect Rate</td>
+                <td *ngFor="let day of selectedDetailWeek.days; trackBy: trackByDay" class="rate-cell">
+                  {{ defectRate(weekCell(selectedDetailWeek, productionSeries.id, day).defectQuantity, weekCell(selectedDetailWeek, productionSeries.id, day).inputQuantity) }}
+                </td>
+                <td class="week-total rate-cell">
+                  {{ defectRate(weekSeriesDefectTotal(selectedDetailWeek, productionSeries.id), weekSeriesInputTotal(selectedDetailWeek, productionSeries.id)) }}
+                </td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <div class="empty-trend" *ngIf="viewMode === 'compare' && !selectedComparisonStarts.length && !isLoading">
       Selecciona las semanas que deseas comparar.
