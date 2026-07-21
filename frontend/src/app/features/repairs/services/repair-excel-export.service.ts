@@ -3,9 +3,7 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { RepairReport } from '../../../core/models/repair-report.model';
 
-type BrowserXlsxWriterModule = typeof import('wasm-xlsxwriter') & {
-  default: (moduleOrPath?: { module_or_path: URL } | URL) => Promise<unknown>;
-};
+type BrowserXlsxWriterModule = typeof import('wasm-xlsxwriter/web');
 
 @Injectable({ providedIn: 'root' })
 export class RepairExcelExportService {
@@ -116,8 +114,7 @@ export class RepairExcelExportService {
 
   private loadWriter(): Promise<BrowserXlsxWriterModule> {
     if (!this.writerPromise) {
-      this.writerPromise = import('wasm-xlsxwriter').then(async (module) => {
-        const writer = module as unknown as BrowserXlsxWriterModule;
+      this.writerPromise = import('wasm-xlsxwriter/web').then(async (writer) => {
         const wasmUrl = new URL('assets/wasm_xlsxwriter_bg.wasm', document.baseURI);
         await writer.default({ module_or_path: wasmUrl });
         return writer;
@@ -132,11 +129,11 @@ export class RepairExcelExportService {
 
   private embedImage(
     xlsx: BrowserXlsxWriterModule,
-    worksheet: import('wasm-xlsxwriter').Worksheet,
+    worksheet: import('wasm-xlsxwriter/web').Worksheet,
     row: number,
     column: number,
     bytes: Uint8Array | null,
-    format: import('wasm-xlsxwriter').Format,
+    format: import('wasm-xlsxwriter/web').Format,
     altText: string,
   ): void {
     if (!bytes?.length) {
