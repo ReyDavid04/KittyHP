@@ -20,7 +20,6 @@ function toUploadedPath(file?: { filename?: string }): string | undefined {
 
 type UploadFile = { filename: string; originalname: string };
 type UploadFields = { failPicture?: UploadFile[]; evidencePicture?: UploadFile[] };
-type CreateRepairWithCreator = CreateRepairDto & { createdByUserId: number };
 
 @Controller('repairs')
 @UseGuards(AuthGuard)
@@ -50,8 +49,7 @@ export class RepairsController {
   ) {
     createRepairDto.failPicture = toUploadedPath(files.failPicture?.[0]) ?? createRepairDto.failPicture ?? undefined;
     createRepairDto.evidencePicture = toUploadedPath(files.evidencePicture?.[0]) ?? createRepairDto.evidencePicture ?? undefined;
-    (createRepairDto as CreateRepairWithCreator).createdByUserId = request.user!.id;
-    return this.repairsService.create(createRepairDto);
+    return this.repairsService.create(createRepairDto, request.user!.id);
   }
 
   @Get()
