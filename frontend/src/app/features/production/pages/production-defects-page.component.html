@@ -15,6 +15,20 @@
         <strong style="display:inline-flex; align-items:center; justify-content:center; min-width:48px; height:34px; padding:0 10px; border:1px solid #c8d7e8; border-radius:8px; color:#164c8c; font-size:0.7rem; font-weight:750; background:#f4f8fc; white-space:nowrap;">{{ weekLabel }}</strong>
         <button type="button" class="icon-button" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
         <button type="button" class="secondary-button" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
+        <button
+          type="button"
+          class="secondary-button"
+          style="display:inline-flex; align-items:center; justify-content:center; gap:6px;"
+          (click)="exportToExcel()"
+          [disabled]="!canExportExcel || isLoading || isExportingExcel"
+          aria-label="Descargar tabla en Excel"
+          title="Descargar la semana seleccionada en Excel"
+        >
+          <svg style="width:14px; height:14px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.8;" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path>
+          </svg>
+          {{ isExportingExcel ? 'Generando...' : 'Descargar Excel' }}
+        </button>
         <button type="button" class="save-button" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
           <span style="display:grid; place-items:center; width:16px; height:16px; border-radius:4px; background:rgba(255,255,255,.14);" aria-hidden="true">
             <svg style="width:11px; height:11px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.8;" viewBox="0 0 24 24" focusable="false">
@@ -40,6 +54,20 @@
           </select>
         </label>
         <button type="button" class="secondary-button" (click)="goToCurrentWeek()" [disabled]="isLoading">Periodo actual</button>
+        <button
+          type="button"
+          class="secondary-button"
+          style="display:inline-flex; align-items:center; justify-content:center; gap:6px;"
+          (click)="exportToExcel()"
+          [disabled]="!canExportExcel || isLoading || isExportingExcel"
+          aria-label="Descargar últimas semanas en Excel"
+          title="Descargar el resumen y detalle activo en Excel"
+        >
+          <svg style="width:14px; height:14px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.8;" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path>
+          </svg>
+          {{ isExportingExcel ? 'Generando...' : 'Descargar Excel' }}
+        </button>
       </div>
 
       <div *ngSwitchCase="'compare'" class="week-toolbar">
@@ -49,6 +77,20 @@
         </label>
         <button type="button" class="save-button" (click)="addComparisonWeek()" [disabled]="isLoading || selectedComparisonStarts.length >= maxComparisonWeeks">
           + Agregar semana
+        </button>
+        <button
+          type="button"
+          class="secondary-button"
+          style="display:inline-flex; align-items:center; justify-content:center; gap:6px;"
+          (click)="exportToExcel()"
+          [disabled]="!canExportExcel || isLoading || isExportingExcel"
+          aria-label="Descargar comparación en Excel"
+          title="Descargar la comparación y detalle activo en Excel"
+        >
+          <svg style="width:14px; height:14px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.8;" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path>
+          </svg>
+          {{ isExportingExcel ? 'Generando...' : 'Descargar Excel' }}
         </button>
       </div>
     </ng-container>
