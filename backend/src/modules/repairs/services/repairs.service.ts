@@ -11,6 +11,50 @@ export type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_par
 
 const CATALOG_TYPES: RepairCatalogType[] = ['family', 'top_issue', 'category', 'major_part', 'failure_factor'];
 
+const CATALOG_RELATIONS: Record<RepairCatalogType, {
+  textColumn: string;
+  idColumn: string;
+  indexName: string;
+  foreignKeyName: string;
+  label: string;
+}> = {
+  family: {
+    textColumn: 'family',
+    idColumn: 'family_catalog_item_id',
+    indexName: 'idx_repairs_family_catalog_item_id',
+    foreignKeyName: 'fk_repairs_family_catalog_item',
+    label: 'Family',
+  },
+  top_issue: {
+    textColumn: 'top_issue',
+    idColumn: 'top_issue_catalog_item_id',
+    indexName: 'idx_repairs_top_issue_catalog_item_id',
+    foreignKeyName: 'fk_repairs_top_issue_catalog_item',
+    label: 'Top Issue',
+  },
+  category: {
+    textColumn: 'category',
+    idColumn: 'category_catalog_item_id',
+    indexName: 'idx_repairs_category_catalog_item_id',
+    foreignKeyName: 'fk_repairs_category_catalog_item',
+    label: 'Category',
+  },
+  major_part: {
+    textColumn: 'major_part',
+    idColumn: 'major_part_catalog_item_id',
+    indexName: 'idx_repairs_major_part_catalog_item_id',
+    foreignKeyName: 'fk_repairs_major_part_catalog_item',
+    label: 'Major Part',
+  },
+  failure_factor: {
+    textColumn: 'failure_factor',
+    idColumn: 'failure_factor_catalog_item_id',
+    indexName: 'idx_repairs_failure_factor_catalog_item_id',
+    foreignKeyName: 'fk_repairs_failure_factor_catalog_item',
+    label: 'Failure Factor',
+  },
+};
+
 type RepairCatalogRow = {
   catalogType: RepairCatalogType;
   value: string;
@@ -64,10 +108,14 @@ export class RepairsService implements OnModuleInit {
     await this.ensureRepairFamilyColumn();
     await this.ensureCatalogTable();
     await this.seedCatalogsFromRepairsIfEmpty();
+    await this.ensureMissingHistoricalCatalogItems();
+    await this.ensureRepairCatalogRelationColumns();
+    await this.backfillRepairCatalogRelations();
+    await this.ensureRepairCatalogForeignKeys();
   }
 
-  create(createRepairDto: CreateRepairDto) {
-    return this.createRepairUseCase.execute(createRepairDto, this.repairRepository);
+  create(createRepairDto: CreateRepairDto, createdByUserId: number) {
+    return this.createRepairUseCase.execute(createRepairDto, createdByUserId, this.repairRepository);
   }
 
   findAll() {
@@ -161,20 +209,20 @@ export class RepairsService implements OnModuleInit {
 
   async updateCatalogItem(type: string, id: string, dto: UpdateRepairCatalogItemDto): Promise<RepairCatalogItem> {
     const catalogType = this.parseCatalogType(type);
-    await this.getCatalogItemOrFail(catalogType, id);
-
+    const currentItem = await this.getCatalogItemOrFail(catalogType, id);
     const assignments: string[] = [];
     const parameters: unknown[] = [];
+    let nextValue: string | undefined;
 
     if (dto.value !== undefined) {
-      const value = dto.value.trim();
+      nextValue = dto.value.trim();
 
-      if (!value) {
+      if (!nextValue) {
         throw new BadRequestException('El valor del catálogo es obligatorio');
       }
 
       assignments.push('value = ?');
-      parameters.push(value);
+      parameters.push(nextValue);
     }
 
     if (dto.isActive !== undefined) {
@@ -188,18 +236,28 @@ export class RepairsService implements OnModuleInit {
     }
 
     if (!assignments.length) {
-      return this.getCatalogItemOrFail(catalogType, id);
+      return currentItem;
     }
 
     parameters.push(catalogType, id);
 
     try {
-      await this.dataSource.query(
-        `UPDATE repair_catalog_items
-         SET ${assignments.join(', ')}
-         WHERE catalog_type = ? AND id = ?`,
-        parameters,
-      );
+      await this.dataSource.transaction(async (manager) => {
+        await manager.query(
+          `UPDATE repair_catalog_items
+           SET ${assignments.join(', ')}
+           WHERE catalog_type = ? AND id = ?`,
+          parameters,
+        );
+
+        if (nextValue !== undefined && nextValue !== currentItem.value) {
+          const relation = CATALOG_RELATIONS[catalogType];
+          await manager.query(
+            `UPDATE repairs SET ${relation.textColumn} = ? WHERE ${relation.idColumn} = ?`,
+            [nextValue, id],
+          );
+        }
+      });
     } catch (error) {
       if (this.isDuplicateEntry(error)) {
         throw new ConflictException('Ese valor ya existe en el catálogo');
@@ -213,6 +271,19 @@ export class RepairsService implements OnModuleInit {
 
   async deleteCatalogItem(type: string, id: string): Promise<{ deleted: true }> {
     const catalogType = this.parseCatalogType(type);
+    await this.getCatalogItemOrFail(catalogType, id);
+    const relation = CATALOG_RELATIONS[catalogType];
+    const usageRows = await this.dataSource.query<Array<{ total: number | string }>>(
+      `SELECT COUNT(*) AS total FROM repairs WHERE ${relation.idColumn} = ?`,
+      [id],
+    );
+
+    if (Number(usageRows[0]?.total ?? 0) > 0) {
+      throw new ConflictException(
+        `${relation.label} está relacionado con reportes y no puede eliminarse. Puedes desactivarlo.`,
+      );
+    }
+
     const result = await this.dataSource.query(
       `DELETE FROM repair_catalog_items WHERE catalog_type = ? AND id = ?`,
       [catalogType, id],
@@ -280,24 +351,114 @@ export class RepairsService implements OnModuleInit {
       return;
     }
 
-    const catalogColumns: Array<{ type: RepairCatalogType; column: string }> = [
-      { type: 'family', column: 'family' },
-      { type: 'top_issue', column: 'top_issue' },
-      { type: 'category', column: 'category' },
-      { type: 'major_part', column: 'major_part' },
-      { type: 'failure_factor', column: 'failure_factor' },
-    ];
-
-    for (const catalog of catalogColumns) {
+    for (const type of CATALOG_TYPES) {
+      const relation = CATALOG_RELATIONS[type];
       await this.dataSource.query(
         `INSERT IGNORE INTO repair_catalog_items (catalog_type, value)
-         SELECT ?, TRIM(${catalog.column})
+         SELECT ?, TRIM(${relation.textColumn})
          FROM repairs
-         WHERE ${catalog.column} IS NOT NULL
-           AND TRIM(${catalog.column}) <> ''
-         GROUP BY TRIM(${catalog.column})`,
-        [catalog.type],
+         WHERE ${relation.textColumn} IS NOT NULL
+           AND TRIM(${relation.textColumn}) <> ''
+         GROUP BY TRIM(${relation.textColumn})`,
+        [type],
       );
+    }
+  }
+
+  private async ensureMissingHistoricalCatalogItems(): Promise<void> {
+    for (const type of CATALOG_TYPES) {
+      const relation = CATALOG_RELATIONS[type];
+      await this.dataSource.query(
+        `INSERT INTO repair_catalog_items (catalog_type, value, is_active, sort_order)
+         SELECT ?, TRIM(r.${relation.textColumn}), 0, 0
+         FROM repairs r
+         LEFT JOIN repair_catalog_items c
+           ON c.catalog_type = ?
+          AND LOWER(TRIM(c.value)) = LOWER(TRIM(r.${relation.textColumn}))
+         WHERE r.${relation.textColumn} IS NOT NULL
+           AND TRIM(r.${relation.textColumn}) <> ''
+           AND c.id IS NULL
+         GROUP BY TRIM(r.${relation.textColumn})`,
+        [type, type],
+      );
+    }
+  }
+
+  private async ensureRepairCatalogRelationColumns(): Promise<void> {
+    for (const type of CATALOG_TYPES) {
+      const relation = CATALOG_RELATIONS[type];
+      const columnRows = await this.dataSource.query<Array<{ total: number | string }>>(
+        `SELECT COUNT(*) AS total
+         FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'repairs'
+           AND COLUMN_NAME = ?`,
+        [relation.idColumn],
+      );
+
+      if (Number(columnRows[0]?.total ?? 0) === 0) {
+        await this.dataSource.query(
+          `ALTER TABLE repairs ADD COLUMN ${relation.idColumn} BIGINT UNSIGNED NULL AFTER ${relation.textColumn}`,
+        );
+      }
+
+      const indexRows = await this.dataSource.query<Array<{ total: number | string }>>(
+        `SELECT COUNT(*) AS total
+         FROM information_schema.STATISTICS
+         WHERE TABLE_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'repairs'
+           AND INDEX_NAME = ?`,
+        [relation.indexName],
+      );
+
+      if (Number(indexRows[0]?.total ?? 0) === 0) {
+        await this.dataSource.query(
+          `ALTER TABLE repairs ADD INDEX ${relation.indexName} (${relation.idColumn})`,
+        );
+      }
+    }
+  }
+
+  private async backfillRepairCatalogRelations(): Promise<void> {
+    for (const type of CATALOG_TYPES) {
+      const relation = CATALOG_RELATIONS[type];
+      await this.dataSource.query(
+        `UPDATE repairs r
+         INNER JOIN repair_catalog_items c
+           ON c.catalog_type = ?
+          AND LOWER(TRIM(c.value)) = LOWER(TRIM(r.${relation.textColumn}))
+         SET r.${relation.idColumn} = c.id
+         WHERE r.${relation.idColumn} IS NULL
+           AND r.${relation.textColumn} IS NOT NULL
+           AND TRIM(r.${relation.textColumn}) <> ''`,
+        [type],
+      );
+    }
+  }
+
+  private async ensureRepairCatalogForeignKeys(): Promise<void> {
+    for (const type of CATALOG_TYPES) {
+      const relation = CATALOG_RELATIONS[type];
+      const constraintRows = await this.dataSource.query<Array<{ total: number | string }>>(
+        `SELECT COUNT(*) AS total
+         FROM information_schema.TABLE_CONSTRAINTS
+         WHERE CONSTRAINT_SCHEMA = DATABASE()
+           AND TABLE_NAME = 'repairs'
+           AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+           AND CONSTRAINT_NAME = ?`,
+        [relation.foreignKeyName],
+      );
+
+      if (Number(constraintRows[0]?.total ?? 0) === 0) {
+        await this.dataSource.query(
+          `ALTER TABLE repairs
+           ADD CONSTRAINT ${relation.foreignKeyName}
+           FOREIGN KEY (${relation.idColumn})
+           REFERENCES repair_catalog_items(id)
+           ON UPDATE CASCADE
+           ON DELETE RESTRICT`,
+        );
+      }
     }
   }
 
