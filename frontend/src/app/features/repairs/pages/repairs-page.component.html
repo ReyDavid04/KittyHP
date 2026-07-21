@@ -77,15 +77,15 @@
           <button
             type="button"
             class="secondary-button"
-            [disabled]="!filteredRepairs.length"
+            [disabled]="!filteredRepairs.length || isExportingExcel"
             (click)="exportToExcel()"
             aria-label="Descargar tabla en Excel"
-            title="Descargar tabla en Excel"
+            title="Descargar tabla en Excel con imágenes dentro de las celdas"
           >
             <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8;" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path>
             </svg>
-            Descargar Excel
+            {{ isExportingExcel ? 'Generando Excel...' : 'Descargar Excel' }}
           </button>
 
           <button
