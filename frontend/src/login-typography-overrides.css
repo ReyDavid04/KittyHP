@@ -1,0 +1,73 @@
+/* Login typography: softer weights and lower-contrast supporting text. */
+.login-page .login-brand strong {
+  color: #263247 !important;
+  font-size: 0.86rem !important;
+  font-weight: 600 !important;
+}
+
+.login-page .login-brand span {
+  color: #919aa8 !important;
+  font-size: 0.62rem !important;
+  font-weight: 400 !important;
+}
+
+.login-page .login-heading > span {
+  color: #6f7d90 !important;
+  font-size: 0.59rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.075em !important;
+}
+
+.login-page .login-heading h1 {
+  color: #263247 !important;
+  font-size: clamp(1.72rem, 5vw, 2rem) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.login-page .login-heading p {
+  color: #8a95a5 !important;
+  font-size: 0.74rem !important;
+  font-weight: 400 !important;
+  line-height: 1.55 !important;
+}
+
+.login-page label {
+  color: #5c687a !important;
+  font-size: 0.67rem !important;
+  font-weight: 500 !important;
+}
+
+.login-page input {
+  color: #354154 !important;
+  font-size: 0.77rem !important;
+  font-weight: 400 !important;
+}
+
+.login-page input::placeholder {
+  color: #a3acb8 !important;
+  font-weight: 400 !important;
+}
+
+.login-page .email-suffix {
+  color: #748094 !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+}
+
+.login-page .login-button {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+.login-page .access-footer {
+  color: #939cab !important;
+  font-size: 0.68rem !important;
+  font-weight: 400 !important;
+}
+
+.login-page .label-row a,
+.login-page .access-footer a {
+  color: #426a98 !important;
+  font-weight: 500 !important;
+}
