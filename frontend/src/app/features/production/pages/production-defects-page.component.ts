@@ -9,6 +9,7 @@ import {
 } from '../../../core/services/production-defects-api.service';
 
 type QuantityField = 'inputQuantity' | 'defectQuantity';
+type ProductionViewMode = 'single' | 'recent' | 'compare';
 
 @Component({
   standalone: true,
@@ -19,8 +20,16 @@ type QuantityField = 'inputQuantity' | 'defectQuantity';
 export class ProductionDefectsPageComponent {
   private readonly productionApi = inject(ProductionDefectsApiService);
 
+  readonly recentWeekOptions = [4, 8, 12, 16];
+  readonly maxComparisonWeeks = 6;
+
+  viewMode: ProductionViewMode = 'single';
   week: ProductionWeek | null = null;
+  trendWeeks: ProductionWeek[] = [];
   selectedDate = this.formatDate(this.startOfIsoWeek(this.todayAsUtcDate()));
+  recentWeekCount = 4;
+  comparisonDate = '';
+  selectedComparisonStarts: string[] = [];
   isLoading = false;
   isSaving = false;
   isDirty = false;
@@ -28,6 +37,8 @@ export class ProductionDefectsPageComponent {
   successMessage = '';
 
   constructor() {
+    this.comparisonDate = this.selectedDate;
+    this.selectedComparisonStarts = this.buildRecentWeekStarts(4, this.selectedDate);
     this.loadWeek(this.selectedDate);
   }
 
@@ -40,13 +51,47 @@ export class ProductionDefectsPageComponent {
   }
 
   get weekLabel(): string {
-    return this.week ? `WK${String(this.week.weekNumber).padStart(2, '0')}` : 'WK--';
+    return this.week ? this.weekName(this.week) : 'WK--';
+  }
+
+  get trendSeries(): ProductionDefectSeries[] {
+    const seriesById = new Map<string, ProductionDefectSeries>();
+    for (const trendWeek of this.trendWeeks) {
+      for (const productionSeries of trendWeek.series) {
+        if (!seriesById.has(productionSeries.id)) {
+          seriesById.set(productionSeries.id, productionSeries);
+        }
+      }
+    }
+    return [...seriesById.values()].sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+  }
+
+  setViewMode(mode: ProductionViewMode): void {
+    if (mode === this.viewMode) return;
+    if (!this.confirmDiscardChanges()) return;
+
+    this.isDirty = false;
+    this.viewMode = mode;
+    this.clearMessages();
+
+    if (mode === 'single') {
+      this.loadWeek(this.selectedDate);
+      return;
+    }
+
+    if (mode === 'recent') {
+      this.loadRecentWeeks();
+      return;
+    }
+
+    this.loadComparisonWeeks();
   }
 
   loadWeek(start: string): void {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.trendWeeks = [];
 
     this.productionApi.getWeek(start)
       .pipe(finalize(() => { this.isLoading = false; }))
@@ -63,23 +108,91 @@ export class ProductionDefectsPageComponent {
       });
   }
 
+  loadRecentWeeks(): void {
+    const starts = this.buildRecentWeekStarts(this.recentWeekCount, this.selectedDate);
+    this.loadTrendWeeks(starts);
+  }
+
+  loadComparisonWeeks(): void {
+    this.loadTrendWeeks(this.selectedComparisonStarts);
+  }
+
   changeWeek(offset: number): void {
-    const current = this.parseDate(this.week?.weekStart ?? this.selectedDate);
+    const currentStart = this.viewMode === 'single'
+      ? this.week?.weekStart ?? this.selectedDate
+      : this.selectedDate;
+    const current = this.parseDate(currentStart);
     current.setUTCDate(current.getUTCDate() + (offset * 7));
-    this.navigateToWeek(this.formatDate(current));
+    const nextStart = this.formatDate(current);
+
+    if (this.viewMode === 'single') {
+      this.navigateToWeek(nextStart);
+      return;
+    }
+
+    this.selectedDate = nextStart;
+    this.loadRecentWeeks();
   }
 
   goToCurrentWeek(): void {
-    this.navigateToWeek(this.formatDate(this.startOfIsoWeek(this.todayAsUtcDate())));
+    const currentWeek = this.formatDate(this.startOfIsoWeek(this.todayAsUtcDate()));
+    if (this.viewMode === 'single') {
+      this.navigateToWeek(currentWeek);
+      return;
+    }
+
+    this.selectedDate = currentWeek;
+    this.loadRecentWeeks();
   }
 
   selectWeek(value: string): void {
     if (!value) return;
-    this.navigateToWeek(this.formatDate(this.startOfIsoWeek(this.parseDate(value))));
+    const selectedWeek = this.formatDate(this.startOfIsoWeek(this.parseDate(value)));
+    if (this.viewMode === 'single') {
+      this.navigateToWeek(selectedWeek);
+      return;
+    }
+
+    this.selectedDate = selectedWeek;
+    this.loadRecentWeeks();
+  }
+
+  selectRecentWeekCount(value: string): void {
+    const count = Number(value);
+    if (!this.recentWeekOptions.includes(count)) return;
+    this.recentWeekCount = count;
+    this.loadRecentWeeks();
+  }
+
+  setComparisonDate(value: string): void {
+    if (value) this.comparisonDate = value;
+  }
+
+  addComparisonWeek(): void {
+    const start = this.formatDate(this.startOfIsoWeek(this.parseDate(this.comparisonDate)));
+    if (this.selectedComparisonStarts.includes(start)) {
+      this.errorMessage = 'Esa semana ya está seleccionada.';
+      return;
+    }
+
+    if (this.selectedComparisonStarts.length >= this.maxComparisonWeeks) {
+      this.errorMessage = `Puedes comparar hasta ${this.maxComparisonWeeks} semanas.`;
+      return;
+    }
+
+    this.selectedComparisonStarts = [...this.selectedComparisonStarts, start].sort();
+    this.clearMessages();
+    this.loadComparisonWeeks();
+  }
+
+  removeComparisonWeek(start: string): void {
+    this.selectedComparisonStarts = this.selectedComparisonStarts.filter((item) => item !== start);
+    this.clearMessages();
+    this.loadComparisonWeeks();
   }
 
   saveWeek(): void {
-    if (!this.week || this.isSaving) return;
+    if (!this.week || this.isSaving || this.viewMode !== 'single') return;
 
     const invalidCell = this.findInvalidCell();
     if (invalidCell) {
@@ -121,8 +234,7 @@ export class ProductionDefectsPageComponent {
     const normalizedValue = Number.isFinite(numericValue) ? Math.max(0, Math.trunc(numericValue)) : 0;
     this.cell(series, date)[field] = normalizedValue;
     this.isDirty = true;
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.clearMessages();
   }
 
   cell(series: ProductionDefectSeries, date: string): ProductionDefectCell {
@@ -156,6 +268,26 @@ export class ProductionDefectsPageComponent {
     return this.days.reduce((total, date) => total + this.dayDefectTotal(date), 0);
   }
 
+  weekSeriesInputTotal(week: ProductionWeek, seriesId: string): number {
+    const series = week.series.find((item) => item.id === seriesId);
+    if (!series) return 0;
+    return week.days.reduce((total, day) => total + this.readCell(series, day).inputQuantity, 0);
+  }
+
+  weekSeriesDefectTotal(week: ProductionWeek, seriesId: string): number {
+    const series = week.series.find((item) => item.id === seriesId);
+    if (!series) return 0;
+    return week.days.reduce((total, day) => total + this.readCell(series, day).defectQuantity, 0);
+  }
+
+  weekOverallInputTotal(week: ProductionWeek): number {
+    return week.series.reduce((total, series) => total + this.weekSeriesInputTotal(week, series.id), 0);
+  }
+
+  weekOverallDefectTotal(week: ProductionWeek): number {
+    return week.series.reduce((total, series) => total + this.weekSeriesDefectTotal(week, series.id), 0);
+  }
+
   defectRate(defectQuantity: number, inputQuantity: number): string {
     if (inputQuantity <= 0) return '—';
     return `${((defectQuantity / inputQuantity) * 100).toFixed(2)}%`;
@@ -177,6 +309,21 @@ export class ProductionDefectsPageComponent {
     return `${this.formatDay(this.week.weekStart)} – ${this.formatDay(this.week.weekEnd)}`;
   }
 
+  formatTrendWeekRange(week: ProductionWeek): string {
+    return `${this.shortDate(week.weekStart)}–${this.shortDate(week.weekEnd)}`;
+  }
+
+  weekName(week: ProductionWeek): string {
+    return `WK${String(week.weekNumber).padStart(2, '0')}`;
+  }
+
+  comparisonLabel(start: string): string {
+    const startDate = this.parseDate(start);
+    const endDate = new Date(startDate);
+    endDate.setUTCDate(endDate.getUTCDate() + 6);
+    return `WK${String(this.getIsoWeekNumber(startDate)).padStart(2, '0')} · ${this.shortDate(start)}–${this.shortDate(this.formatDate(endDate))}`;
+  }
+
   trackBySeries(_index: number, series: ProductionDefectSeries): string {
     return series.id;
   }
@@ -185,11 +332,47 @@ export class ProductionDefectsPageComponent {
     return day;
   }
 
-  private navigateToWeek(start: string): void {
-    if (this.isDirty && !window.confirm('Hay cambios sin guardar. ¿Deseas cambiar de semana?')) {
+  trackByWeek(_index: number, week: ProductionWeek): string {
+    return week.weekStart;
+  }
+
+  trackByComparisonStart(_index: number, start: string): string {
+    return start;
+  }
+
+  private loadTrendWeeks(starts: string[]): void {
+    if (!starts.length) {
+      this.trendWeeks = [];
+      this.isLoading = false;
       return;
     }
+
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.week = null;
+
+    this.productionApi.getWeeks(starts)
+      .pipe(finalize(() => { this.isLoading = false; }))
+      .subscribe({
+        next: (weeks) => {
+          this.trendWeeks = [...weeks].sort((left, right) => left.weekStart.localeCompare(right.weekStart));
+        },
+        error: (error: unknown) => {
+          console.error('No fue posible cargar las semanas de producción.', error);
+          this.trendWeeks = [];
+          this.errorMessage = 'No fue posible cargar las semanas seleccionadas.';
+        },
+      });
+  }
+
+  private navigateToWeek(start: string): void {
+    if (!this.confirmDiscardChanges()) return;
     this.loadWeek(start);
+  }
+
+  private confirmDiscardChanges(): boolean {
+    return !this.isDirty || window.confirm('Hay cambios sin guardar. ¿Deseas continuar?');
   }
 
   private findInvalidCell(): { seriesName: string; date: string } | null {
@@ -201,6 +384,39 @@ export class ProductionDefectsPageComponent {
       }
     }
     return null;
+  }
+
+  private buildRecentWeekStarts(count: number, endStart: string): string[] {
+    const end = this.startOfIsoWeek(this.parseDate(endStart));
+    const starts: string[] = [];
+    for (let index = count - 1; index >= 0; index -= 1) {
+      const date = new Date(end);
+      date.setUTCDate(date.getUTCDate() - (index * 7));
+      starts.push(this.formatDate(date));
+    }
+    return starts;
+  }
+
+  private readCell(series: ProductionDefectSeries, date: string): ProductionDefectCell {
+    return series.entries[date] ?? { inputQuantity: 0, defectQuantity: 0 };
+  }
+
+  private clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  private shortDate(value: string): string {
+    const date = this.parseDate(value);
+    return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+  }
+
+  private getIsoWeekNumber(value: Date): number {
+    const date = new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
+    const day = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - day);
+    const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    return Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   }
 
   private todayAsUtcDate(): Date {
