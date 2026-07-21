@@ -19,19 +19,16 @@ export class RepairExcelExportService {
     const worksheet = workbook.addWorksheet();
     worksheet.setName('Reportes');
 
-    const borderColor = xlsx.Color.parse('#D9E2F0');
     const headerFormat = new xlsx.Format()
       .setBold()
       .setFontColor(xlsx.Color.white())
       .setBackgroundColor(xlsx.Color.parse('#164C8C'))
       .setBorder(xlsx.FormatBorder.Thin)
-      .setBorderColor(borderColor)
       .setAlign(xlsx.FormatAlign.Center)
       .setAlign(xlsx.FormatAlign.VerticalCenter)
       .setTextWrap();
     const textFormat = new xlsx.Format()
       .setBorder(xlsx.FormatBorder.Thin)
-      .setBorderColor(borderColor)
       .setAlign(xlsx.FormatAlign.VerticalCenter)
       .setTextWrap();
     const centerFormat = textFormat.clone()
@@ -116,7 +113,7 @@ export class RepairExcelExportService {
     if (!this.writerPromise) {
       this.writerPromise = import('wasm-xlsxwriter/web').then(async (writer) => {
         const wasmUrl = new URL('assets/wasm_xlsxwriter_bg.wasm', document.baseURI);
-        await writer.default(wasmUrl);
+        await writer.default({ module_or_path: wasmUrl });
         return writer;
       }).catch((error: unknown) => {
         this.writerPromise = undefined;
