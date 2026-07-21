@@ -174,15 +174,13 @@ export class ProductionDefectsExcelExportService {
     const integerFormat = overall ? formats.overallInteger : formats.integer;
     const rateFormat = overall ? formats.overallRate : formats.rate;
 
-    worksheet.writeWithFormat(startRow, 0, seriesName, textFormat);
+    worksheet.mergeRange(startRow, 0, startRow + 2, 0, seriesName, textFormat);
     worksheet.writeWithFormat(startRow, 1, 'Input Quantity', textFormat);
     values.forEach((cell, index) => worksheet.writeWithFormat(startRow, index + 2, cell.inputQuantity, integerFormat));
 
-    worksheet.writeWithFormat(startRow + 1, 0, '', textFormat);
     worksheet.writeWithFormat(startRow + 1, 1, 'Defect Quantity', textFormat);
     values.forEach((cell, index) => worksheet.writeWithFormat(startRow + 1, index + 2, cell.defectQuantity, integerFormat));
 
-    worksheet.writeWithFormat(startRow + 2, 0, '', textFormat);
     worksheet.writeWithFormat(startRow + 2, 1, 'Defect Rate', textFormat);
     values.forEach((cell, index) => this.writeRate(worksheet, startRow + 2, index + 2, cell, rateFormat, textFormat));
 
@@ -205,17 +203,15 @@ export class ProductionDefectsExcelExportService {
     const defectTotal = values.reduce((total, cell) => total + cell.defectQuantity, 0);
     const totalColumn = week.days.length + 2;
 
-    worksheet.writeWithFormat(startRow, 0, seriesName, textFormat);
+    worksheet.mergeRange(startRow, 0, startRow + 2, 0, seriesName, textFormat);
     worksheet.writeWithFormat(startRow, 1, 'Input Quantity', textFormat);
     values.forEach((cell, index) => worksheet.writeWithFormat(startRow, index + 2, cell.inputQuantity, integerFormat));
     worksheet.writeWithFormat(startRow, totalColumn, inputTotal, overall ? formats.overallInteger : formats.weekTotal);
 
-    worksheet.writeWithFormat(startRow + 1, 0, '', textFormat);
     worksheet.writeWithFormat(startRow + 1, 1, 'Defect Quantity', textFormat);
     values.forEach((cell, index) => worksheet.writeWithFormat(startRow + 1, index + 2, cell.defectQuantity, integerFormat));
     worksheet.writeWithFormat(startRow + 1, totalColumn, defectTotal, overall ? formats.overallInteger : formats.weekTotal);
 
-    worksheet.writeWithFormat(startRow + 2, 0, '', textFormat);
     worksheet.writeWithFormat(startRow + 2, 1, 'Defect Rate', textFormat);
     values.forEach((cell, index) => this.writeRate(worksheet, startRow + 2, index + 2, cell, rateFormat, textFormat));
     this.writeRate(
