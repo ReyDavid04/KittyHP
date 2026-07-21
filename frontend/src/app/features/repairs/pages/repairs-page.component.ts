@@ -48,6 +48,7 @@ export class RepairsPageComponent {
     const search = this.searchTerm.trim().toLowerCase();
     const filtered = this.repairs.filter((repair) => {
       const searchableValues = [
+        repair.id,
         repair.recordDate,
         repair.family ?? '',
         repair.topIssue,
@@ -201,7 +202,7 @@ export class RepairsPageComponent {
   }
 
   private isNumericKey(key: RepairColumnKey): boolean {
-    return key === 'failureQty' || key === 'buildQty' || key === 'frPercentage';
+    return key === 'id' || key === 'failureQty' || key === 'buildQty' || key === 'frPercentage';
   }
 
   private normalizeRecordDate(value: unknown): string {
@@ -215,7 +216,7 @@ export class RepairsPageComponent {
 
   private createEmptyFilters(): RepairColumnFilters {
     return {
-      recordDate: [], family: [], topIssue: [], failureQty: [], buildQty: [], frPercentage: [], category: [],
+      id: [], recordDate: [], family: [], topIssue: [], failureQty: [], buildQty: [], frPercentage: [], category: [],
       returnSummary: [], failPicture: [], majorPart: [], repairResult: [], failureFactor: [], actions: [], evidencePicture: [],
     };
   }
@@ -246,6 +247,7 @@ export class RepairsPageComponent {
     };
 
     return {
+      id: unique('id'),
       recordDate: unique('recordDate'),
       family: unique('family'),
       topIssue: unique('topIssue'),
