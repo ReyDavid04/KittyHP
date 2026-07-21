@@ -1,8 +1,8 @@
-<section class="production-page" style="padding:0 18px 18px; background:#fff;">
-  <header class="page-header" style="align-items:center; min-height:50px; margin-bottom:8px; padding:4px; border-bottom:1px solid var(--border); background:#fff;">
-    <div class="title-block" style="display:flex; align-items:baseline; flex-wrap:wrap; gap:3px 12px; min-width:0;">
-      <h1 style="font-size:clamp(1.1rem,1.45vw,1.3rem); font-weight:800; line-height:1.05; letter-spacing:-0.025em; white-space:nowrap;">Overall FPF Trend</h1>
-      <p style="max-width:none; margin:0; font-size:0.7rem; font-weight:500; line-height:1.25;">Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
+<section class="production-page" style="padding:0; background:#fff;">
+  <header class="page-header" style="display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:58px; margin-bottom:0; padding:9px 22px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);">
+    <div class="title-block" style="display:flex; align-items:baseline; gap:10px; min-width:0;">
+      <h1 style="margin:0; color:var(--text); font-size:clamp(1.15rem,1.6vw,1.4rem); font-weight:800; line-height:1.1; letter-spacing:-0.025em; white-space:nowrap;">Overall FPF Trend</h1>
+      <p style="overflow:hidden; max-width:none; margin:0; color:var(--muted); font-size:0.7rem; line-height:1.35; text-overflow:ellipsis; white-space:nowrap;">Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
     </div>
 
     <div class="week-toolbar" style="align-items:center; gap:6px;">
@@ -19,84 +19,86 @@
     </div>
   </header>
 
-  <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
-  <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
-  <div class="loading-state" *ngIf="isLoading">Cargando información semanal...</div>
+  <div class="production-content" style="padding:8px 18px 18px;">
+    <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
+    <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <div class="loading-state" *ngIf="isLoading">Cargando información semanal...</div>
 
-  <div class="table-shell" *ngIf="week && !isLoading">
-    <table class="production-table">
-      <thead>
-        <tr>
-          <th class="series-column">Production Series</th>
-          <th class="metric-column">Input / Failure</th>
-          <th *ngFor="let day of days; trackBy: trackByDay" class="day-column">{{ formatDay(day) }}</th>
-          <th class="week-column">{{ weekLabel }}</th>
-        </tr>
-      </thead>
+    <div class="table-shell" *ngIf="week && !isLoading">
+      <table class="production-table">
+        <thead>
+          <tr>
+            <th class="series-column">Production Series</th>
+            <th class="metric-column">Input / Failure</th>
+            <th *ngFor="let day of days; trackBy: trackByDay" class="day-column">{{ formatDay(day) }}</th>
+            <th class="week-column">{{ weekLabel }}</th>
+          </tr>
+        </thead>
 
-      <tbody>
-        <tr class="overall-row overall-start">
-          <th rowspan="3" class="series-name overall-name">IDS Overall</th>
-          <td class="metric-name">Input Quantity</td>
-          <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayInputTotal(day) | number }}</td>
-          <td class="week-total">{{ overallInputTotal() | number }}</td>
-        </tr>
-        <tr class="overall-row">
-          <td class="metric-name">Defect Quantity</td>
-          <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayDefectTotal(day) | number }}</td>
-          <td class="week-total">{{ overallDefectTotal() | number }}</td>
-        </tr>
-        <tr class="overall-row overall-end">
-          <td class="metric-name">Defect Rate</td>
-          <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">{{ defectRate(dayDefectTotal(day), dayInputTotal(day)) }}</td>
-          <td class="week-total rate-cell">{{ defectRate(overallDefectTotal(), overallInputTotal()) }}</td>
-        </tr>
-
-        <ng-container *ngFor="let productionSeries of series; trackBy: trackBySeries; let seriesIndex = index">
-          <tr class="series-row series-start" [class.alt-series]="seriesIndex % 2 === 1">
-            <th rowspan="3" class="series-name">{{ productionSeries.name }}</th>
+        <tbody>
+          <tr class="overall-row overall-start">
+            <th rowspan="3" class="series-name overall-name">IDS Overall</th>
             <td class="metric-name">Input Quantity</td>
-            <td *ngFor="let day of days; trackBy: trackByDay" class="input-cell">
-              <input
-                type="number"
-                min="0"
-                step="1"
-                inputmode="numeric"
-                [value]="cell(productionSeries, day).inputQuantity || ''"
-                (input)="updateQuantity(productionSeries, day, 'inputQuantity', $any($event.target).value)"
-                [class.invalid]="isInvalid(productionSeries, day)"
-                [attr.aria-label]="productionSeries.name + ' Input Quantity ' + formatDay(day)"
-              >
-            </td>
-            <td class="week-total">{{ seriesInputTotal(productionSeries) | number }}</td>
+            <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayInputTotal(day) | number }}</td>
+            <td class="week-total">{{ overallInputTotal() | number }}</td>
           </tr>
-          <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
+          <tr class="overall-row">
             <td class="metric-name">Defect Quantity</td>
-            <td *ngFor="let day of days; trackBy: trackByDay" class="input-cell">
-              <input
-                type="number"
-                min="0"
-                step="1"
-                inputmode="numeric"
-                [value]="cell(productionSeries, day).defectQuantity || ''"
-                (input)="updateQuantity(productionSeries, day, 'defectQuantity', $any($event.target).value)"
-                [class.invalid]="isInvalid(productionSeries, day)"
-                [attr.aria-label]="productionSeries.name + ' Defect Quantity ' + formatDay(day)"
-              >
-            </td>
-            <td class="week-total">{{ seriesDefectTotal(productionSeries) | number }}</td>
+            <td *ngFor="let day of days; trackBy: trackByDay" class="calculated-cell">{{ dayDefectTotal(day) | number }}</td>
+            <td class="week-total">{{ overallDefectTotal() | number }}</td>
           </tr>
-          <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
+          <tr class="overall-row overall-end">
             <td class="metric-name">Defect Rate</td>
-            <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">
-              {{ defectRate(cell(productionSeries, day).defectQuantity, cell(productionSeries, day).inputQuantity) }}
-            </td>
-            <td class="week-total rate-cell">
-              {{ defectRate(seriesDefectTotal(productionSeries), seriesInputTotal(productionSeries)) }}
-            </td>
+            <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">{{ defectRate(dayDefectTotal(day), dayInputTotal(day)) }}</td>
+            <td class="week-total rate-cell">{{ defectRate(overallDefectTotal(), overallInputTotal()) }}</td>
           </tr>
-        </ng-container>
-      </tbody>
-    </table>
+
+          <ng-container *ngFor="let productionSeries of series; trackBy: trackBySeries; let seriesIndex = index">
+            <tr class="series-row series-start" [class.alt-series]="seriesIndex % 2 === 1">
+              <th rowspan="3" class="series-name">{{ productionSeries.name }}</th>
+              <td class="metric-name">Input Quantity</td>
+              <td *ngFor="let day of days; trackBy: trackByDay" class="input-cell">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  [value]="cell(productionSeries, day).inputQuantity || ''"
+                  (input)="updateQuantity(productionSeries, day, 'inputQuantity', $any($event.target).value)"
+                  [class.invalid]="isInvalid(productionSeries, day)"
+                  [attr.aria-label]="productionSeries.name + ' Input Quantity ' + formatDay(day)"
+                >
+              </td>
+              <td class="week-total">{{ seriesInputTotal(productionSeries) | number }}</td>
+            </tr>
+            <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
+              <td class="metric-name">Defect Quantity</td>
+              <td *ngFor="let day of days; trackBy: trackByDay" class="input-cell">
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputmode="numeric"
+                  [value]="cell(productionSeries, day).defectQuantity || ''"
+                  (input)="updateQuantity(productionSeries, day, 'defectQuantity', $any($event.target).value)"
+                  [class.invalid]="isInvalid(productionSeries, day)"
+                  [attr.aria-label]="productionSeries.name + ' Defect Quantity ' + formatDay(day)"
+                >
+              </td>
+              <td class="week-total">{{ seriesDefectTotal(productionSeries) | number }}</td>
+            </tr>
+            <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
+              <td class="metric-name">Defect Rate</td>
+              <td *ngFor="let day of days; trackBy: trackByDay" class="rate-cell">
+                {{ defectRate(cell(productionSeries, day).defectQuantity, cell(productionSeries, day).inputQuantity) }}
+              </td>
+              <td class="week-total rate-cell">
+                {{ defectRate(seriesDefectTotal(productionSeries), seriesInputTotal(productionSeries)) }}
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
