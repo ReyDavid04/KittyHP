@@ -53,6 +53,9 @@ export class RepairEntity {
   @Column({ name: 'evidence_picture', type: 'varchar', length: 255, nullable: true })
   evidencePicture!: string | null;
 
+  @Column({ name: 'created_by_user_id', type: 'int', unsigned: true, nullable: true })
+  createdByUserId!: number | null;
+
   @Column({ name: 'source_payload', type: 'json', nullable: true })
   sourcePayload!: Record<string, unknown> | null;
 
