@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import {
   ProductionDefectCell,
@@ -13,7 +12,7 @@ type QuantityField = 'inputQuantity' | 'defectQuantity';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   templateUrl: './production-defects-page.component.html',
   styleUrl: './production-defects-page.component.css',
 })
@@ -21,7 +20,7 @@ export class ProductionDefectsPageComponent {
   private readonly productionApi = inject(ProductionDefectsApiService);
 
   week: ProductionWeek | null = null;
-  selectedDate = this.formatDate(this.startOfIsoWeek(new Date()));
+  selectedDate = this.formatDate(this.startOfIsoWeek(this.todayAsUtcDate()));
   isLoading = false;
   isSaving = false;
   isDirty = false;
@@ -71,7 +70,7 @@ export class ProductionDefectsPageComponent {
   }
 
   goToCurrentWeek(): void {
-    this.navigateToWeek(this.formatDate(this.startOfIsoWeek(new Date())));
+    this.navigateToWeek(this.formatDate(this.startOfIsoWeek(this.todayAsUtcDate())));
   }
 
   selectWeek(value: string): void {
@@ -204,8 +203,13 @@ export class ProductionDefectsPageComponent {
     return null;
   }
 
+  private todayAsUtcDate(): Date {
+    const today = new Date();
+    return new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+  }
+
   private startOfIsoWeek(value: Date): Date {
-    const date = new Date(Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()));
+    const date = new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
     const day = date.getUTCDay() || 7;
     date.setUTCDate(date.getUTCDate() - day + 1);
     return date;
@@ -213,7 +217,7 @@ export class ProductionDefectsPageComponent {
 
   private parseDate(value: string): Date {
     const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!match) return new Date();
+    if (!match) return this.todayAsUtcDate();
     return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
   }
 
