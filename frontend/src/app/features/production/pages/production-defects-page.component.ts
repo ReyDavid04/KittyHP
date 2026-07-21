@@ -26,6 +26,7 @@ export class ProductionDefectsPageComponent {
   viewMode: ProductionViewMode = 'single';
   week: ProductionWeek | null = null;
   trendWeeks: ProductionWeek[] = [];
+  activeDetailWeekStart = '';
   selectedDate = this.formatDate(this.startOfIsoWeek(this.todayAsUtcDate()));
   recentWeekCount = 4;
   comparisonDate = '';
@@ -66,12 +67,22 @@ export class ProductionDefectsPageComponent {
     return [...seriesById.values()].sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
   }
 
+  get detailWeek(): ProductionWeek | null {
+    return this.trendWeeks.find((item) => item.weekStart === this.activeDetailWeekStart) ?? null;
+  }
+
+  get detailSeries(): ProductionDefectSeries[] {
+    return [...(this.detailWeek?.series ?? [])]
+      .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name));
+  }
+
   setViewMode(mode: ProductionViewMode): void {
     if (mode === this.viewMode) return;
     if (!this.confirmDiscardChanges()) return;
 
     this.isDirty = false;
     this.viewMode = mode;
+    this.activeDetailWeekStart = '';
     this.clearMessages();
 
     if (mode === 'single') {
@@ -92,6 +103,7 @@ export class ProductionDefectsPageComponent {
     this.errorMessage = '';
     this.successMessage = '';
     this.trendWeeks = [];
+    this.activeDetailWeekStart = '';
 
     this.productionApi.getWeek(start)
       .pipe(finalize(() => { this.isLoading = false; }))
@@ -191,6 +203,10 @@ export class ProductionDefectsPageComponent {
     this.loadComparisonWeeks();
   }
 
+  selectDetailWeek(week: ProductionWeek): void {
+    this.activeDetailWeekStart = week.weekStart;
+  }
+
   saveWeek(): void {
     if (!this.week || this.isSaving || this.viewMode !== 'single') return;
 
@@ -244,12 +260,25 @@ export class ProductionDefectsPageComponent {
     return series.entries[date];
   }
 
+  weekCell(week: ProductionWeek, seriesId: string, date: string): ProductionDefectCell {
+    const series = week.series.find((item) => item.id === seriesId);
+    return series ? this.readCell(series, date) : { inputQuantity: 0, defectQuantity: 0 };
+  }
+
   dayInputTotal(date: string): number {
     return this.series.reduce((total, series) => total + this.cell(series, date).inputQuantity, 0);
   }
 
   dayDefectTotal(date: string): number {
     return this.series.reduce((total, series) => total + this.cell(series, date).defectQuantity, 0);
+  }
+
+  weekDayInputTotal(week: ProductionWeek, date: string): number {
+    return week.series.reduce((total, series) => total + this.readCell(series, date).inputQuantity, 0);
+  }
+
+  weekDayDefectTotal(week: ProductionWeek, date: string): number {
+    return week.series.reduce((total, series) => total + this.readCell(series, date).defectQuantity, 0);
   }
 
   seriesInputTotal(series: ProductionDefectSeries): number {
@@ -343,6 +372,7 @@ export class ProductionDefectsPageComponent {
   private loadTrendWeeks(starts: string[]): void {
     if (!starts.length) {
       this.trendWeeks = [];
+      this.activeDetailWeekStart = '';
       this.isLoading = false;
       return;
     }
@@ -357,10 +387,15 @@ export class ProductionDefectsPageComponent {
       .subscribe({
         next: (weeks) => {
           this.trendWeeks = [...weeks].sort((left, right) => left.weekStart.localeCompare(right.weekStart));
+          const activeStillExists = this.trendWeeks.some((item) => item.weekStart === this.activeDetailWeekStart);
+          if (!activeStillExists) {
+            this.activeDetailWeekStart = this.trendWeeks.at(-1)?.weekStart ?? '';
+          }
         },
         error: (error: unknown) => {
           console.error('No fue posible cargar las semanas de producción.', error);
           this.trendWeeks = [];
+          this.activeDetailWeekStart = '';
           this.errorMessage = 'No fue posible cargar las semanas seleccionadas.';
         },
       });
