@@ -12,9 +12,16 @@
           <span>Semana</span>
           <input type="date" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
         </label>
+        <strong style="display:inline-flex; align-items:center; justify-content:center; min-width:48px; height:34px; padding:0 10px; border:1px solid #c8d7e8; border-radius:8px; color:#164c8c; font-size:0.7rem; font-weight:750; background:#f4f8fc; white-space:nowrap;">{{ weekLabel }}</strong>
         <button type="button" class="icon-button" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
         <button type="button" class="secondary-button" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
-        <button type="button" class="save-button" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
+        <button type="button" class="save-button" style="display:inline-flex; align-items:center; justify-content:center; gap:6px;" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
+          <span style="display:grid; place-items:center; width:16px; height:16px; border-radius:4px; background:rgba(255,255,255,.14);" aria-hidden="true">
+            <svg style="width:11px; height:11px; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; stroke-width:1.8;" viewBox="0 0 24 24" focusable="false">
+              <path d="M5 4h11l3 3v13H5z"></path>
+              <path d="M8 4v6h8V4M8 16h8"></path>
+            </svg>
+          </span>
           {{ isSaving ? 'Guardando...' : 'Guardar semana' }}
         </button>
       </div>
