@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export const FILTER_BLANK_VALUE = '__BLANK__';
 
 export type RepairColumnKey =
+  | 'id'
   | 'recordDate'
   | 'family'
   | 'topIssue'
@@ -30,6 +31,7 @@ export interface RepairSort {
 }
 
 export interface RepairColumnFilters {
+  id: string[];
   recordDate: string[];
   family: string[];
   topIssue: string[];
@@ -77,6 +79,7 @@ export class RepairListComponent {
   @Output() sortChange = new EventEmitter<RepairSort>();
 
   readonly columns: RepairColumnDefinition[] = [
+    { key: 'id', label: 'ID', numeric: true },
     { key: 'recordDate', label: 'Date', className: 'date-column' },
     { key: 'family', label: 'Family' },
     { key: 'topIssue', label: 'Top issue', className: 'issue-column' },
@@ -196,7 +199,7 @@ export class RepairListComponent {
 
   private emptyFilters(): RepairColumnFilters {
     return {
-      recordDate: [], family: [], topIssue: [], failureQty: [], buildQty: [], frPercentage: [], category: [],
+      id: [], recordDate: [], family: [], topIssue: [], failureQty: [], buildQty: [], frPercentage: [], category: [],
       returnSummary: [], failPicture: [], majorPart: [], repairResult: [], failureFactor: [], actions: [], evidencePicture: [],
     };
   }
