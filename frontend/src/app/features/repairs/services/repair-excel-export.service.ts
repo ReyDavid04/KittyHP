@@ -35,7 +35,7 @@ export class RepairExcelExportService {
       .setAlign(xlsx.FormatAlign.Center)
       .setAlign(xlsx.FormatAlign.VerticalCenter);
     const decimalFormat = centerFormat.clone().setNumFormat('0.00');
-    const imageFormat = centerFormat.clone();
+    const imageCellFormat = centerFormat.clone();
 
     const headers = [
       'ID',
@@ -75,12 +75,12 @@ export class RepairExcelExportService {
       worksheet.writeWithFormat(row, 7, repair.category ?? '', textFormat);
       worksheet.writeWithFormat(row, 8, Number(repair.returnYesQty ?? 0), centerFormat);
       worksheet.writeWithFormat(row, 9, Number(repair.returnNoQty ?? 0), centerFormat);
-      worksheet.writeWithFormat(row, 10, '', imageFormat);
+      worksheet.writeWithFormat(row, 10, '', imageCellFormat);
       worksheet.writeWithFormat(row, 11, repair.majorPart ?? '', textFormat);
       worksheet.writeWithFormat(row, 12, repair.repairResult ?? '', textFormat);
       worksheet.writeWithFormat(row, 13, repair.failureFactor ?? '', textFormat);
       worksheet.writeWithFormat(row, 14, repair.actions ?? '', textFormat);
-      worksheet.writeWithFormat(row, 15, '', imageFormat);
+      worksheet.writeWithFormat(row, 15, '', imageCellFormat);
     });
 
     const batchSize = 5;
@@ -97,8 +97,24 @@ export class RepairExcelExportService {
       images.forEach((imagePair, batchIndex) => {
         const repair = batch[batchIndex];
         const row = start + batchIndex + 1;
-        this.embedImage(xlsx, worksheet, row, 10, imagePair.failPicture, imageFormat, `Fail picture reporte ${repair.id}`);
-        this.embedImage(xlsx, worksheet, row, 15, imagePair.evidencePicture, imageFormat, `Evidence reporte ${repair.id}`);
+        this.insertAnchoredImage(
+          xlsx,
+          worksheet,
+          row,
+          10,
+          imagePair.failPicture,
+          imageCellFormat,
+          `Fail picture reporte ${repair.id}`,
+        );
+        this.insertAnchoredImage(
+          xlsx,
+          worksheet,
+          row,
+          15,
+          imagePair.evidencePicture,
+          imageCellFormat,
+          `Evidence reporte ${repair.id}`,
+        );
       });
     }
 
@@ -124,7 +140,7 @@ export class RepairExcelExportService {
     return this.writerPromise;
   }
 
-  private embedImage(
+  private insertAnchoredImage(
     xlsx: BrowserXlsxWriterModule,
     worksheet: import('wasm-xlsxwriter/web').Worksheet,
     row: number,
@@ -139,8 +155,10 @@ export class RepairExcelExportService {
     }
 
     try {
-      const image = new xlsx.Image(bytes).setAltText(altText);
-      worksheet.embedImageWithFormat(row, column, image, format);
+      const image = new xlsx.Image(bytes);
+      image.setAltText(altText);
+      image.setObjectMovement(xlsx.ObjectMovement.MoveAndSizeWithCellsAfter);
+      worksheet.insertImageFitToCellCentered(row, column, image);
     } catch {
       worksheet.writeWithFormat(row, column, 'Imagen no compatible', format);
     }
