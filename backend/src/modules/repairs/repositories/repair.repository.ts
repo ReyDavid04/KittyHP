@@ -5,6 +5,18 @@ import { CreateRepairDto } from '../dto/create-repair.dto';
 import { UpdateRepairDto } from '../dto/update-repair.dto';
 import { RepairEntity } from '../entities/repair.entity';
 
+type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_part' | 'failure_factor';
+type CatalogReferenceRow = { id: string | number; value: string };
+type CatalogReference = { id: string; value: string };
+
+const CATALOG_LABELS: Record<RepairCatalogType, string> = {
+  family: 'Family',
+  top_issue: 'Top Issue',
+  category: 'Category',
+  major_part: 'Major Part',
+  failure_factor: 'Failure Factor',
+};
+
 function calculateFrPercentage(failureQty: number, buildQty: number): string {
   if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || failureQty <= 0 || buildQty <= 0) {
     throw new BadRequestException('Failure qty y Build qty deben ser mayores que cero.');
@@ -49,31 +61,53 @@ export class RepairRepository implements OnModuleInit {
     await this.ensureCreatedByUserIdColumn();
   }
 
-  create(data: CreateRepairDto, createdByUserId: number): Promise<RepairEntity> {
+  async create(data: CreateRepairDto, createdByUserId: number): Promise<RepairEntity> {
     const frPercentage = calculateFrPercentage(data.failureQty, data.buildQty);
     const returns = calculateReturnQuantities(data.failureQty, data.returnYesQty);
     const returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+    const [family, topIssue, category, majorPart, failureFactor] = await Promise.all([
+      this.resolveCatalogReference('family', data.family, true),
+      this.resolveCatalogReference('top_issue', data.topIssue, true),
+      this.resolveCatalogReference('category', data.category, true),
+      this.resolveCatalogReference('major_part', data.majorPart, false),
+      this.resolveCatalogReference('failure_factor', data.failureFactor, false),
+    ]);
 
     const entity = this.repository.create({
       recordDate: data.recordDate,
-      family: data.family,
-      topIssue: data.topIssue,
+      family: family!.value,
+      familyCatalogItemId: family!.id,
+      topIssue: topIssue!.value,
+      topIssueCatalogItemId: topIssue!.id,
       failureQty: data.failureQty,
       buildQty: data.buildQty,
       frPercentage,
-      category: data.category,
+      category: category!.value,
+      categoryCatalogItemId: category!.id,
       returnStatus,
       returnYesQty: returns.returnYesQty,
       returnNoQty: returns.returnNoQty,
       failPicture: data.failPicture ?? null,
-      majorPart: data.majorPart ?? null,
+      majorPart: majorPart?.value ?? null,
+      majorPartCatalogItemId: majorPart?.id ?? null,
       repairResult: data.repairResult ?? null,
-      failureFactor: data.failureFactor ?? null,
+      failureFactor: failureFactor?.value ?? null,
+      failureFactorCatalogItemId: failureFactor?.id ?? null,
       actions: data.actions ?? null,
       evidencePicture: data.evidencePicture ?? null,
       createdByUserId,
       sourcePayload: {
         ...(data as unknown as Record<string, unknown>),
+        family: family!.value,
+        familyCatalogItemId: family!.id,
+        topIssue: topIssue!.value,
+        topIssueCatalogItemId: topIssue!.id,
+        category: category!.value,
+        categoryCatalogItemId: category!.id,
+        majorPart: majorPart?.value ?? null,
+        majorPartCatalogItemId: majorPart?.id ?? null,
+        failureFactor: failureFactor?.value ?? null,
+        failureFactorCatalogItemId: failureFactor?.id ?? null,
         frPercentage: Number(frPercentage),
         returnYesQty: returns.returnYesQty,
         returnNoQty: returns.returnNoQty,
@@ -96,12 +130,28 @@ export class RepairRepository implements OnModuleInit {
     }
 
     if (data.recordDate !== undefined) entity.recordDate = data.recordDate;
-    if (data.family !== undefined) entity.family = data.family;
-    if (data.topIssue !== undefined) entity.topIssue = data.topIssue;
+
+    if (data.family !== undefined) {
+      const reference = await this.resolveCatalogReference('family', data.family, true);
+      entity.family = reference!.value;
+      entity.familyCatalogItemId = reference!.id;
+    }
+
+    if (data.topIssue !== undefined) {
+      const reference = await this.resolveCatalogReference('top_issue', data.topIssue, true);
+      entity.topIssue = reference!.value;
+      entity.topIssueCatalogItemId = reference!.id;
+    }
+
     if (data.failureQty !== undefined) entity.failureQty = data.failureQty;
     if (data.buildQty !== undefined) entity.buildQty = data.buildQty;
     entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
-    if (data.category !== undefined) entity.category = data.category;
+
+    if (data.category !== undefined) {
+      const reference = await this.resolveCatalogReference('category', data.category, true);
+      entity.category = reference!.value;
+      entity.categoryCatalogItemId = reference!.id;
+    }
 
     const returns = calculateReturnQuantities(
       entity.failureQty,
@@ -112,15 +162,37 @@ export class RepairRepository implements OnModuleInit {
     entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
 
     if (data.failPicture !== undefined) entity.failPicture = data.failPicture ?? null;
-    if (data.majorPart !== undefined) entity.majorPart = data.majorPart ?? null;
+
+    if (data.majorPart !== undefined) {
+      const reference = await this.resolveCatalogReference('major_part', data.majorPart, false);
+      entity.majorPart = reference?.value ?? null;
+      entity.majorPartCatalogItemId = reference?.id ?? null;
+    }
+
     if (data.repairResult !== undefined) entity.repairResult = data.repairResult ?? null;
-    if (data.failureFactor !== undefined) entity.failureFactor = data.failureFactor ?? null;
+
+    if (data.failureFactor !== undefined) {
+      const reference = await this.resolveCatalogReference('failure_factor', data.failureFactor, false);
+      entity.failureFactor = reference?.value ?? null;
+      entity.failureFactorCatalogItemId = reference?.id ?? null;
+    }
+
     if (data.actions !== undefined) entity.actions = data.actions ?? null;
     if (data.evidencePicture !== undefined) entity.evidencePicture = data.evidencePicture ?? null;
 
     entity.sourcePayload = {
       ...(entity.sourcePayload ?? {}),
       ...data,
+      family: entity.family,
+      familyCatalogItemId: entity.familyCatalogItemId,
+      topIssue: entity.topIssue,
+      topIssueCatalogItemId: entity.topIssueCatalogItemId,
+      category: entity.category,
+      categoryCatalogItemId: entity.categoryCatalogItemId,
+      majorPart: entity.majorPart,
+      majorPartCatalogItemId: entity.majorPartCatalogItemId,
+      failureFactor: entity.failureFactor,
+      failureFactorCatalogItemId: entity.failureFactorCatalogItemId,
       frPercentage: Number(entity.frPercentage),
       returnYesQty: entity.returnYesQty,
       returnNoQty: entity.returnNoQty,
@@ -137,6 +209,42 @@ export class RepairRepository implements OnModuleInit {
 
   findAll(): Promise<RepairEntity[]> {
     return this.repository.find({ order: { recordDate: 'DESC', id: 'DESC' } });
+  }
+
+  private async resolveCatalogReference(
+    type: RepairCatalogType,
+    value: string | null | undefined,
+    required: boolean,
+  ): Promise<CatalogReference | null> {
+    const normalizedValue = String(value ?? '').trim();
+
+    if (!normalizedValue) {
+      if (required) {
+        throw new BadRequestException(`${CATALOG_LABELS[type]} es obligatorio.`);
+      }
+      return null;
+    }
+
+    const rows = await this.dataSource.query<CatalogReferenceRow[]>(
+      `SELECT id, value
+       FROM repair_catalog_items
+       WHERE catalog_type = ?
+         AND is_active = 1
+         AND LOWER(TRIM(value)) = LOWER(?)
+       LIMIT 1`,
+      [type, normalizedValue],
+    );
+
+    if (!rows.length) {
+      throw new BadRequestException(
+        `${CATALOG_LABELS[type]} "${normalizedValue}" no existe o está inactivo en el catálogo.`,
+      );
+    }
+
+    return {
+      id: String(rows[0].id),
+      value: rows[0].value,
+    };
   }
 
   private async ensureCreatedByUserIdColumn(): Promise<void> {
