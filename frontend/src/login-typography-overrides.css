@@ -17,9 +17,7 @@
 }
 
 .login-page .login-brand span {
-  color: #919aa8 !important;
-  font-size: 0.62rem !important;
-  font-weight: 400 !important;
+  display: none !important;
 }
 
 .login-page .login-heading {
