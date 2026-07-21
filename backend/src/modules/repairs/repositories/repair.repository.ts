@@ -1,6 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateRepairDto } from '../dto/create-repair.dto';
 import { UpdateRepairDto } from '../dto/update-repair.dto';
 import { RepairEntity } from '../entities/repair.entity';
@@ -38,11 +38,16 @@ function calculateReturnQuantities(failureQty: number, returnYesQty: number): { 
 }
 
 @Injectable()
-export class RepairRepository {
+export class RepairRepository implements OnModuleInit {
   constructor(
     @InjectRepository(RepairEntity)
     private readonly repository: Repository<RepairEntity>,
+    private readonly dataSource: DataSource,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.ensureCreatedByUserIdColumn();
+  }
 
   create(data: CreateRepairDto, createdByUserId: number): Promise<RepairEntity> {
     const frPercentage = calculateFrPercentage(data.failureQty, data.buildQty);
@@ -132,5 +137,36 @@ export class RepairRepository {
 
   findAll(): Promise<RepairEntity[]> {
     return this.repository.find({ order: { recordDate: 'DESC', id: 'DESC' } });
+  }
+
+  private async ensureCreatedByUserIdColumn(): Promise<void> {
+    const columns = await this.dataSource.query<Array<{ total: number | string }>>(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.COLUMNS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'repairs'
+         AND COLUMN_NAME = 'created_by_user_id'`,
+    );
+
+    if (Number(columns[0]?.total ?? 0) === 0) {
+      await this.dataSource.query(
+        `ALTER TABLE repairs
+         ADD COLUMN created_by_user_id INT UNSIGNED NULL AFTER evidence_picture`,
+      );
+    }
+
+    const indexes = await this.dataSource.query<Array<{ total: number | string }>>(
+      `SELECT COUNT(*) AS total
+       FROM information_schema.STATISTICS
+       WHERE TABLE_SCHEMA = DATABASE()
+         AND TABLE_NAME = 'repairs'
+         AND INDEX_NAME = 'idx_repairs_created_by_user_id'`,
+    );
+
+    if (Number(indexes[0]?.total ?? 0) === 0) {
+      await this.dataSource.query(
+        'ALTER TABLE repairs ADD INDEX idx_repairs_created_by_user_id (created_by_user_id)',
+      );
+    }
   }
 }
