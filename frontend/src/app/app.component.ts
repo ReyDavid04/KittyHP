@@ -17,6 +17,7 @@ import { AuthService } from './core/services/auth.service';
 
         <nav class="main-nav" aria-label="Navegación principal">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Reportes</a>
+          <a routerLink="/production-defects" routerLinkActive="active">Defect Rate</a>
 
           <details
             *ngIf="authService.isAdmin()"
