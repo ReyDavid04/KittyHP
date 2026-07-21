@@ -120,7 +120,8 @@ export class RepairsPageComponent {
       await this.repairExcelExport.export(repairs);
     } catch (error) {
       console.error('No fue posible generar el archivo Excel.', error);
-      window.alert('No fue posible generar el archivo Excel con las imágenes.');
+      const detail = this.errorMessage(error);
+      window.alert(`No fue posible generar el archivo Excel con las imágenes.\n\nDetalle: ${detail}`);
     } finally {
       this.isExportingExcel = false;
     }
@@ -158,6 +159,12 @@ export class RepairsPageComponent {
   clearFilters(): void { this.filters = this.createEmptyFilters(); this.clearDateRange(); }
   goToPage(page: number): void { this.currentPage = Math.min(Math.max(page, 1), this.totalPages); }
   setPageSize(value: string): void { this.pageSize = Number(value); this.currentPage = 1; }
+
+  private errorMessage(error: unknown): string {
+    if (error instanceof Error && error.message.trim()) return error.message;
+    if (typeof error === 'string' && error.trim()) return error;
+    return 'Error desconocido durante la generación del archivo.';
+  }
 
   private sortRepairs(repairs: RepairReport[]): RepairReport[] {
     const { key, direction } = this.sort;
