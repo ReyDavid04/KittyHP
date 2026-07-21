@@ -11,8 +11,14 @@ export class RepairEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   family!: string | null;
 
+  @Column({ name: 'family_catalog_item_id', type: 'bigint', unsigned: true, nullable: true })
+  familyCatalogItemId!: string | null;
+
   @Column({ name: 'top_issue', type: 'varchar', length: 255 })
   topIssue!: string;
+
+  @Column({ name: 'top_issue_catalog_item_id', type: 'bigint', unsigned: true, nullable: true })
+  topIssueCatalogItemId!: string | null;
 
   @Column({ name: 'failure_qty', type: 'int', unsigned: true, default: 0 })
   failureQty!: number;
@@ -25,6 +31,9 @@ export class RepairEntity {
 
   @Column({ type: 'varchar', length: 120 })
   category!: string;
+
+  @Column({ name: 'category_catalog_item_id', type: 'bigint', unsigned: true, nullable: true })
+  categoryCatalogItemId!: string | null;
 
   @Column({ name: 'return_status', type: 'varchar', length: 50, nullable: true })
   returnStatus!: string | null;
@@ -41,11 +50,17 @@ export class RepairEntity {
   @Column({ name: 'major_part', type: 'varchar', length: 255, nullable: true })
   majorPart!: string | null;
 
+  @Column({ name: 'major_part_catalog_item_id', type: 'bigint', unsigned: true, nullable: true })
+  majorPartCatalogItemId!: string | null;
+
   @Column({ name: 'repair_result', type: 'varchar', length: 255, nullable: true })
   repairResult!: string | null;
 
   @Column({ name: 'failure_factor', type: 'varchar', length: 255, nullable: true })
   failureFactor!: string | null;
+
+  @Column({ name: 'failure_factor_catalog_item_id', type: 'bigint', unsigned: true, nullable: true })
+  failureFactorCatalogItemId!: string | null;
 
   @Column({ type: 'text', nullable: true })
   actions!: string | null;
