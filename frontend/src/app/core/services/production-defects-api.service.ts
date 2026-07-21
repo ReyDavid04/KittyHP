@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, forkJoin, map, of } from 'rxjs';
 
 export interface ProductionDefectCell {
   inputQuantity: number;
@@ -53,6 +53,11 @@ export class ProductionDefectsApiService {
     return this.httpClient
       .get<ProductionWeekResponse>(`${this.baseUrl}/week`, { params })
       .pipe(map((response) => this.normalize(response)));
+  }
+
+  getWeeks(starts: string[]): Observable<ProductionWeek[]> {
+    if (!starts.length) return of([]);
+    return forkJoin(starts.map((start) => this.getWeek(start)));
   }
 
   saveWeek(payload: SaveProductionWeekPayload): Observable<ProductionWeek> {
