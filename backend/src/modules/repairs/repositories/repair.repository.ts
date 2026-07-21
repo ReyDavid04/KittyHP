@@ -44,7 +44,7 @@ export class RepairRepository {
     private readonly repository: Repository<RepairEntity>,
   ) {}
 
-  create(data: CreateRepairDto): Promise<RepairEntity> {
+  create(data: CreateRepairDto, createdByUserId: number): Promise<RepairEntity> {
     const frPercentage = calculateFrPercentage(data.failureQty, data.buildQty);
     const returns = calculateReturnQuantities(data.failureQty, data.returnYesQty);
     const returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
@@ -66,11 +66,13 @@ export class RepairRepository {
       failureFactor: data.failureFactor ?? null,
       actions: data.actions ?? null,
       evidencePicture: data.evidencePicture ?? null,
+      createdByUserId,
       sourcePayload: {
         ...(data as unknown as Record<string, unknown>),
         frPercentage: Number(frPercentage),
         returnYesQty: returns.returnYesQty,
         returnNoQty: returns.returnNoQty,
+        createdByUserId,
       },
     });
 
@@ -117,6 +119,7 @@ export class RepairRepository {
       frPercentage: Number(entity.frPercentage),
       returnYesQty: entity.returnYesQty,
       returnNoQty: entity.returnNoQty,
+      createdByUserId: entity.createdByUserId,
     };
 
     return this.repository.save(entity);
