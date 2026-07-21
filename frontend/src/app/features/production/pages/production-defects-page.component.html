@@ -1,30 +1,89 @@
-<section class="production-page" style="padding:0; background:#fff;">
-  <header class="page-header" style="display:flex; align-items:center; justify-content:space-between; gap:18px; min-height:58px; margin-bottom:0; padding:9px 22px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,#fff 0%,#fbfcfe 100%);">
-    <div class="title-block" style="display:flex; align-items:baseline; gap:10px; min-width:0;">
-      <h1 style="margin:0; color:var(--text); font-size:clamp(1.15rem,1.6vw,1.4rem); font-weight:800; line-height:1.1; letter-spacing:-0.025em; white-space:nowrap;">Overall FPF Trend</h1>
-      <p style="overflow:hidden; max-width:none; margin:0; color:var(--muted); font-size:0.7rem; line-height:1.35; text-overflow:ellipsis; white-space:nowrap;">Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
+<section class="production-page">
+  <header class="page-header">
+    <div class="title-block">
+      <h1>Overall FPF Trend</h1>
+      <p>Captura Input Quantity y Defect Quantity por día. IDS Overall y Defect Rate se calculan automáticamente.</p>
     </div>
 
-    <div class="week-toolbar" style="align-items:center; gap:6px;">
-      <button type="button" class="icon-button" style="width:34px; height:34px;" (click)="changeWeek(-1)" [disabled]="isLoading || isSaving" aria-label="Semana anterior">‹</button>
-      <label class="week-picker" style="display:flex; align-items:center; gap:6px;">
-        <span>Semana</span>
-        <input type="date" style="height:34px;" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
-      </label>
-      <button type="button" class="icon-button" style="width:34px; height:34px;" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
-      <button type="button" class="secondary-button" style="height:34px;" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
-      <button type="button" class="save-button" style="height:34px;" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
-        {{ isSaving ? 'Guardando...' : 'Guardar semana' }}
-      </button>
-    </div>
+    <ng-container [ngSwitch]="viewMode">
+      <div *ngSwitchCase="'single'" class="week-toolbar">
+        <button type="button" class="icon-button" (click)="changeWeek(-1)" [disabled]="isLoading || isSaving" aria-label="Semana anterior">‹</button>
+        <label class="week-picker inline-picker">
+          <span>Semana</span>
+          <input type="date" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading || isSaving">
+        </label>
+        <button type="button" class="icon-button" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente">›</button>
+        <button type="button" class="secondary-button" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
+        <button type="button" class="save-button" (click)="saveWeek()" [disabled]="!week || isLoading || isSaving || !isDirty">
+          {{ isSaving ? 'Guardando...' : 'Guardar semana' }}
+        </button>
+      </div>
+
+      <div *ngSwitchCase="'recent'" class="week-toolbar">
+        <button type="button" class="icon-button" (click)="changeWeek(-1)" [disabled]="isLoading" aria-label="Retroceder periodo">‹</button>
+        <label class="week-picker inline-picker">
+          <span>Hasta</span>
+          <input type="date" [value]="selectedDate" (change)="selectWeek($any($event.target).value)" [disabled]="isLoading">
+        </label>
+        <button type="button" class="icon-button" (click)="changeWeek(1)" [disabled]="isLoading" aria-label="Avanzar periodo">›</button>
+        <label class="week-picker inline-picker">
+          <span>Últimas</span>
+          <select [value]="recentWeekCount" (change)="selectRecentWeekCount($any($event.target).value)" [disabled]="isLoading">
+            <option *ngFor="let count of recentWeekOptions" [value]="count">{{ count }} semanas</option>
+          </select>
+        </label>
+        <button type="button" class="secondary-button" (click)="goToCurrentWeek()" [disabled]="isLoading">Periodo actual</button>
+      </div>
+
+      <div *ngSwitchCase="'compare'" class="week-toolbar">
+        <label class="week-picker inline-picker">
+          <span>Semana</span>
+          <input type="date" [value]="comparisonDate" (change)="setComparisonDate($any($event.target).value)" [disabled]="isLoading">
+        </label>
+        <button type="button" class="save-button" (click)="addComparisonWeek()" [disabled]="isLoading || selectedComparisonStarts.length >= maxComparisonWeeks">
+          + Agregar semana
+        </button>
+      </div>
+    </ng-container>
   </header>
 
-  <div class="production-content" style="padding:8px 18px 18px;">
+  <div class="production-content">
+    <div class="view-mode-toolbar">
+      <div class="view-tabs" role="tablist" aria-label="Modo de consulta">
+        <button type="button" [class.active]="viewMode === 'single'" (click)="setViewMode('single')">Semana individual</button>
+        <button type="button" [class.active]="viewMode === 'recent'" (click)="setViewMode('recent')">Últimas semanas</button>
+        <button type="button" [class.active]="viewMode === 'compare'" (click)="setViewMode('compare')">Comparar semanas</button>
+      </div>
+
+      <span class="view-hint" *ngIf="viewMode === 'single'">Vista editable por día</span>
+      <span class="view-hint" *ngIf="viewMode === 'recent'">{{ recentWeekCount }} semanas consecutivas hasta {{ selectedDate }}</span>
+      <span class="view-hint" *ngIf="viewMode === 'compare'">Selecciona hasta {{ maxComparisonWeeks }} semanas</span>
+    </div>
+
+    <div class="comparison-selection" *ngIf="viewMode === 'compare'">
+      <span class="selection-label">Semanas seleccionadas</span>
+      <div class="week-chips" *ngIf="selectedComparisonStarts.length; else noComparisonWeeks">
+        <button
+          type="button"
+          class="week-chip"
+          *ngFor="let start of selectedComparisonStarts; trackBy: trackByComparisonStart"
+          (click)="removeComparisonWeek(start)"
+          [disabled]="isLoading"
+          [attr.aria-label]="'Quitar ' + comparisonLabel(start)"
+          title="Quitar semana"
+        >
+          <span>{{ comparisonLabel(start) }}</span>
+          <strong aria-hidden="true">×</strong>
+        </button>
+      </div>
+      <ng-template #noComparisonWeeks><span class="empty-selection">Agrega al menos una semana para iniciar la comparación.</span></ng-template>
+    </div>
+
     <div class="message success" *ngIf="successMessage">{{ successMessage }}</div>
     <div class="message error" *ngIf="errorMessage">{{ errorMessage }}</div>
     <div class="loading-state" *ngIf="isLoading">Cargando información semanal...</div>
 
-    <div class="table-shell" *ngIf="week && !isLoading">
+    <div class="table-shell" *ngIf="viewMode === 'single' && week && !isLoading">
       <table class="production-table">
         <thead>
           <tr>
@@ -99,6 +158,65 @@
           </ng-container>
         </tbody>
       </table>
+    </div>
+
+    <div class="table-shell" *ngIf="viewMode !== 'single' && trendWeeks.length && !isLoading">
+      <table class="production-table trend-table" [style.min-width.px]="288 + (trendWeeks.length * 104)">
+        <thead>
+          <tr>
+            <th class="series-column">Production Series</th>
+            <th class="metric-column">Input / Failure</th>
+            <th *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="trend-week-column">
+              <strong>{{ weekName(trendWeek) }}</strong>
+              <small>{{ formatTrendWeekRange(trendWeek) }}</small>
+            </th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr class="overall-row overall-start">
+            <th rowspan="3" class="series-name overall-name">IDS Overall</th>
+            <td class="metric-name">Input Quantity</td>
+            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">{{ weekOverallInputTotal(trendWeek) | number }}</td>
+          </tr>
+          <tr class="overall-row">
+            <td class="metric-name">Defect Quantity</td>
+            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">{{ weekOverallDefectTotal(trendWeek) | number }}</td>
+          </tr>
+          <tr class="overall-row overall-end">
+            <td class="metric-name">Defect Rate</td>
+            <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="rate-cell">
+              {{ defectRate(weekOverallDefectTotal(trendWeek), weekOverallInputTotal(trendWeek)) }}
+            </td>
+          </tr>
+
+          <ng-container *ngFor="let productionSeries of trendSeries; trackBy: trackBySeries; let seriesIndex = index">
+            <tr class="series-row series-start" [class.alt-series]="seriesIndex % 2 === 1">
+              <th rowspan="3" class="series-name">{{ productionSeries.name }}</th>
+              <td class="metric-name">Input Quantity</td>
+              <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">
+                {{ weekSeriesInputTotal(trendWeek, productionSeries.id) | number }}
+              </td>
+            </tr>
+            <tr class="series-row" [class.alt-series]="seriesIndex % 2 === 1">
+              <td class="metric-name">Defect Quantity</td>
+              <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="calculated-cell">
+                {{ weekSeriesDefectTotal(trendWeek, productionSeries.id) | number }}
+              </td>
+            </tr>
+            <tr class="series-row series-end" [class.alt-series]="seriesIndex % 2 === 1">
+              <td class="metric-name">Defect Rate</td>
+              <td *ngFor="let trendWeek of trendWeeks; trackBy: trackByWeek" class="rate-cell">
+                {{ defectRate(weekSeriesDefectTotal(trendWeek, productionSeries.id), weekSeriesInputTotal(trendWeek, productionSeries.id)) }}
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="empty-trend" *ngIf="viewMode === 'compare' && !selectedComparisonStarts.length && !isLoading">
+      Selecciona las semanas que deseas comparar.
     </div>
   </div>
 </section>
