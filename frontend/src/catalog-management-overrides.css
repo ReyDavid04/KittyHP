@@ -136,6 +136,26 @@
   display: none !important;
 }
 
+/* Login: use a single centered form and remove the decorative blue panel. */
+.login-page {
+  grid-template-columns: minmax(0, 620px) !important;
+  justify-content: center !important;
+  min-height: 100dvh !important;
+  background: #edf3f9 !important;
+}
+
+.login-page .login-visual {
+  display: none !important;
+}
+
+.login-page .login-panel {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 100dvh !important;
+  padding: clamp(88px, 8vw, 110px) clamp(32px, 6vw, 76px) 48px !important;
+  box-shadow: 0 0 48px rgba(18, 35, 55, 0.08) !important;
+}
+
 @media (max-width: 720px) {
   .catalog-page .panel-heading {
     align-items: center !important;
@@ -153,5 +173,14 @@
 
   .settings-dropdown {
     width: min(232px, calc(100vw - 24px)) !important;
+  }
+
+  .login-page {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .login-page .login-panel {
+    padding: 88px 24px 36px !important;
+    box-shadow: none !important;
   }
 }
