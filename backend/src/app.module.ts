@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { validateEnvironment } from './config/environment.validation';
+import { ProductionModule } from './modules/production/production.module';
 import { RepairEntity } from './modules/repairs/entities/repair.entity';
 import { RepairsModule } from './modules/repairs/repairs.module';
 
@@ -27,6 +28,7 @@ import { RepairsModule } from './modules/repairs/repairs.module';
       }),
     }),
     RepairsModule,
+    ProductionModule,
   ],
 })
 export class AppModule {}
