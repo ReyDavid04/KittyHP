@@ -18,8 +18,8 @@ export class UpdateUserDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['admin', 'user'])
-  role?: 'admin' | 'user';
+  @IsIn(['admin', 'user', 'viewer'])
+  role?: 'admin' | 'user' | 'viewer';
 
   @IsOptional()
   @IsBoolean()

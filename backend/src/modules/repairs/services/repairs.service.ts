@@ -6,6 +6,9 @@ import { UpdateRepairCatalogItemDto } from '../dto/update-repair-catalog-item.dt
 import { UpdateRepairDto } from '../dto/update-repair.dto';
 import { RepairRepository } from '../repositories/repair.repository';
 import { CreateRepairUseCase } from '../use-cases/create-repair.use-case';
+import * as XLSX from 'xlsx';
+import { unlink } from 'node:fs/promises';
+import { basename, resolve } from 'node:path';
 
 export type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_part' | 'failure_factor';
 
@@ -106,6 +109,7 @@ export class RepairsService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.ensureRepairFamilyColumn();
+    await this.dataSource.query('ALTER TABLE repairs MODIFY fail_picture TEXT NULL, MODIFY evidence_picture TEXT NULL');
     await this.ensureCatalogTable();
     await this.seedCatalogsFromRepairsIfEmpty();
     await this.ensureMissingHistoricalCatalogItems();
@@ -300,12 +304,253 @@ export class RepairsService implements OnModuleInit {
     return this.repairRepository.findById(id);
   }
 
+  async confirmImport(records: CreateRepairDto[], userId: number) {
+    const saved = [];
+    for (const record of records) {
+      await this.ensureImportedCatalogValue('family', record.family);
+      await this.ensureImportedCatalogValue('top_issue', record.topIssue);
+      await this.ensureImportedCatalogValue('category', record.category);
+      await this.ensureImportedCatalogValue('major_part', record.majorPart);
+      saved.push(await this.create(record, userId));
+    }
+    return { created: saved.length, records: saved };
+  }
+
+  async importWorkbook(buffer: Buffer, createdByUserId: number, preview = false, exclusions: Record<string, string[]> = {}) {
+    const workbook = XLSX.read(buffer, { type: 'buffer', cellDates: true });
+    const rawFailRows = this.sheetRows(workbook, 'Station-50_Fail');
+    const inputRows = this.sheetRows(workbook, 'Station-50_Input');
+    if (!workbook.Sheets['Station-50_Fail'] || !workbook.Sheets['Station-50_Input']) {
+      throw new BadRequestException(`El archivo debe contener las pestañas Station-50_Fail y Station-50_Input. Detectadas: ${workbook.SheetNames.join(', ') || 'ninguna'}.`);
+    }
+    if (!rawFailRows.length) throw new BadRequestException('No se encontraron registros en Station-50_Fail.');
+    const excluded = (key: string) => new Set((exclusions[key] ?? []).map((value) => value.trim().toUpperCase()));
+    const excludedCause = excluded('cause');
+    const excludedMajorPart = excluded('majorPart');
+    const excludedShiftFail = excluded('shiftFail');
+    const excludedRepeat = excluded('repeat');
+    const value = (row: Record<string, unknown>, keys: string[], fallback = '') => this.text(row, keys).trim().toUpperCase() || fallback;
+    const failRows = rawFailRows.filter((row) => !excludedCause.has(value(row, ['Cause', 'CAUSE', 'H'])) && !excludedMajorPart.has(value(row, ['MajorPart', 'MAJOR_PART', 'M'])) && !excludedShiftFail.has(value(row, ['Shift Fail', 'SHIFT_FAIL', 'ShiftFail', 'Z'])) && !excludedRepeat.has(value(row, ['Repeat', 'REPEAT', 'Repair Count', 'REPAIR_COUNT', 'AA'], '0')));
+
+    const buildByFamily = new Map<string, number>();
+    const defectTotalByFamily = new Map<string, number>();
+    failRows.forEach((row) => {
+      const family = this.normalizeImportedFamily(this.text(row, ['Family', 'FAMILY']));
+      defectTotalByFamily.set(family, (defectTotalByFamily.get(family) ?? 0) + 1);
+    });
+    inputRows.forEach((row) => {
+      const family = this.normalizeImportedFamily(this.text(row, ['Family', 'FAMILY']));
+      buildByFamily.set(family, (buildByFamily.get(family) ?? 0) + 1);
+    });
+    const issueCounts = new Map<string, Map<string, number>>();
+    failRows.forEach((row) => {
+      const family = this.normalizeImportedFamily(this.text(row, ['Family', 'FAMILY']));
+      const issue = this.text(row, ['Top Issue', 'TopIssue', 'Issue', 'FailureDescription', 'FAILURE_DESCRIPTION', 'Failure Description', 'FAILURE DESCRIPTION', 'Failure_Description', 'Description', 'Problem']);
+      if (!issue || issue === 'N/A') return;
+      const counts = issueCounts.get(family) ?? new Map<string, number>();
+      counts.set(issue, (counts.get(issue) ?? 0) + 1);
+      issueCounts.set(family, counts);
+    });
+    const topIssuesByFamily = new Map<string, Set<string>>();
+    issueCounts.forEach((counts, family) => {
+      const target = (defectTotalByFamily.get(family) ?? 0) * 0.6;
+      let accumulated = 0;
+      const selected = new Set<string>();
+      [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([issue, count]) => {
+        if (accumulated < target) { selected.add(issue); accumulated += count; }
+      });
+      topIssuesByFamily.set(family, selected);
+    });
+    const grouped = new Map<string, CreateRepairDto>();
+    failRows.forEach((row) => {
+      const recordDate = this.date(row);
+      const familyValue = this.text(row, ['Family', 'FAMILY']) || 'N/A';
+      const normalizedFamily = this.normalizeImportedFamily(familyValue);
+      const topIssueValue = this.text(row, ['Top Issue', 'TopIssue', 'Issue', 'FailureDescription', 'FAILURE_DESCRIPTION', 'Failure Description', 'FAILURE DESCRIPTION', 'Failure_Description', 'Description', 'Problem']) || 'N/A';
+      if (topIssueValue === 'N/A') return;
+      if (!topIssuesByFamily.get(normalizedFamily)?.has(topIssueValue)) return;
+      const categoryValue = this.normalizeImportedCategory(this.text(row, ['Category', 'CATEGORY', 'Cause', 'CAUSE']));
+      const family = familyValue === 'N/A' ? undefined : familyValue;
+      const topIssue = topIssueValue === 'N/A' ? undefined : topIssueValue;
+      const category = categoryValue === 'N/A' ? undefined : categoryValue;
+      const majorPart = this.text(row, ['MajorPart']) || undefined;
+      const key = [recordDate, normalizedFamily, topIssue ?? 'N/A', category ?? 'N/A'].join('|').toLowerCase();
+      const current = grouped.get(key);
+      if (current) current.failureQty = (current.failureQty ?? 0) + 1;
+      else grouped.set(key, { recordDate, family: normalizedFamily, topIssue, category, majorPart, failureQty: 1, buildQty: buildByFamily.get(normalizedFamily) ?? inputRows.length, returnYesQty: 0 });
+    });
+    if (preview) return { preview: true, records: [...grouped.values()], total: grouped.size, exclusionOptions: this.importExclusionOptions(rawFailRows) };
+    for (const payload of grouped.values()) {
+      await this.ensureImportedCatalogValue('family', payload.family);
+      await this.ensureImportedCatalogValue('top_issue', payload.topIssue);
+      await this.ensureImportedCatalogValue('category', payload.category);
+      await this.ensureImportedCatalogValue('major_part', payload.majorPart);
+    }
+    const created = [];
+    for (const payload of grouped.values()) {
+      const existing = await this.dataSource.query<Array<{ id: string }>>(
+        `SELECT id FROM repairs WHERE record_date = ? AND LOWER(TRIM(family)) = LOWER(TRIM(?))
+         AND LOWER(TRIM(top_issue)) = LOWER(TRIM(?)) AND LOWER(TRIM(category)) = LOWER(TRIM(?)) LIMIT 1`,
+        [payload.recordDate, payload.family, payload.topIssue ?? '', payload.category ?? ''],
+      );
+      if (existing[0]?.id) {
+        const updated = await this.repairRepository.update(existing[0].id, {
+          failureQty: payload.failureQty,
+          buildQty: payload.buildQty,
+          majorPart: payload.majorPart,
+        });
+        if (updated) created.push(updated);
+      } else {
+        created.push(await this.create(payload, createdByUserId));
+      }
+    }
+    // Imported rows start without a return classification; leave both fields empty
+    // until a user explicitly records the return quantities.
+    if (created.length) {
+      await this.dataSource.query(
+        `UPDATE repairs SET return_yes_qty = 0, return_no_qty = 0, return_status = NULL WHERE id IN (${created.map(() => '?').join(',')})`,
+        created.map((repair) => repair.id),
+      );
+    }
+    await this.importProductionSnapshot(inputRows, failRows, createdByUserId);
+    return { created: created.length, records: created };
+  }
+
+  private importExclusionOptions(rows: Record<string, unknown>[]) {
+    const collect = (keys: string[], fallback = '') => [...new Set(rows.map((row) => this.text(row, keys).trim() || fallback).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    return { cause: collect(['Cause', 'CAUSE', 'H'], 'N/A'), majorPart: collect(['MajorPart', 'MAJOR_PART', 'M'], 'N/A'), shiftFail: collect(['Shift Fail', 'SHIFT_FAIL', 'ShiftFail', 'Z'], 'N/A'), repeat: collect(['Repeat', 'REPEAT', 'Repair Count', 'REPAIR_COUNT', 'AA'], '0') };
+  }
+
+  private async importProductionSnapshot(inputRows: Record<string, unknown>[], failRows: Record<string, unknown>[], userId: number): Promise<void> {
+    const today = new Date().toISOString().slice(0, 10);
+    const inputByFamily = new Map<string, number>();
+    const defectByFamily = new Map<string, number>();
+    const allowedTrendFamilies = new Set(['BANFF_V72 1.0', 'BANFF_X72 1.0', 'G12 800', 'GEMTREE', 'MERINO', 'OBAN30']);
+    const trendFamily = (value: string) => {
+      const raw = value.trim().toUpperCase();
+      if (raw.startsWith('MACHU') || raw.startsWith('LAPAZ')) return 'G12 800';
+      if (raw.startsWith('GEMTREE')) return 'GEMTREE';
+      if (raw.startsWith('MERINO')) return 'MERINO';
+      if (raw.startsWith('LAMPAS')) return 'LAMPAS';
+      if (raw.startsWith('HELM')) return 'HELM';
+      if (raw.startsWith('WAFFLE')) return 'WAFFLE';
+      return value.trim() || 'N/A';
+    };
+    inputRows.forEach((row) => { const family = trendFamily(this.text(row, ['Family', 'FAMILY'])); inputByFamily.set(family, (inputByFamily.get(family) ?? 0) + 1); });
+    failRows.forEach((row) => { const family = trendFamily(this.text(row, ['Family', 'FAMILY'])); defectByFamily.set(family, (defectByFamily.get(family) ?? 0) + 1); });
+    for (const [name, input] of inputByFamily) {
+      if (!allowedTrendFamilies.has(name)) continue;
+      const defects = defectByFamily.get(name) ?? 0;
+      await this.dataSource.query(
+        `INSERT INTO production_series (name, is_active, sort_order) VALUES (?, 1, 99) ON DUPLICATE KEY UPDATE is_active = 1`, [name],
+      );
+      await this.dataSource.query(
+        `INSERT INTO production_defect_entries (production_series_id, record_date, input_quantity, defect_quantity, created_by_user_id, updated_by_user_id)
+         SELECT id, ?, ?, ?, ?, ? FROM production_series WHERE name = ?
+         ON DUPLICATE KEY UPDATE input_quantity = VALUES(input_quantity), defect_quantity = VALUES(defect_quantity), updated_by_user_id = VALUES(updated_by_user_id)`,
+        [today, input, defects, userId, userId, name],
+      );
+    }
+  }
+
+  private async ensureImportedCatalogValue(type: RepairCatalogType, value?: string): Promise<void> {
+    const normalized = String(value ?? '').trim();
+    if (!normalized || normalized === 'N/A') return;
+    await this.ensureCatalogTable();
+    await this.dataSource.query(
+      `INSERT IGNORE INTO repair_catalog_items (catalog_type, value, is_active, sort_order)
+       SELECT ?, ?, 1, COALESCE(MAX(sort_order), 0) + 1
+       FROM repair_catalog_items
+       WHERE catalog_type = ?
+       AND NOT EXISTS (
+         SELECT 1 FROM repair_catalog_items existing
+         WHERE existing.catalog_type = ? AND LOWER(TRIM(existing.value)) = LOWER(TRIM(?))
+       )`,
+      [type, normalized, type, type, normalized],
+    );
+  }
+
+  private sheetRows(workbook: XLSX.WorkBook, name: string): Record<string, unknown>[] {
+    const sheet = workbook.Sheets[name];
+    return sheet ? XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: '' }) : [];
+  }
+
+  private text(row: Record<string, unknown>, keys: string[]): string {
+    const key = keys.find((candidate) => row[candidate] !== undefined);
+    return String(key ? row[key] ?? '' : '').trim();
+  }
+
+  private normalizeImportedFamily(value: string): string {
+    const family = value.trim().toUpperCase();
+    if (!family) return 'N/A';
+    if (family.startsWith('MACHU') || family.startsWith('LAPAZ')) return 'G12 800';
+    if (family.startsWith('MERINO')) return 'MERINO';
+    if (family.startsWith('GEMTREE')) return 'GEMTREE';
+    if (family.startsWith('CHIRON')) return 'CHIRON';
+    return family.split(/\s+/)[0];
+  }
+
+  private normalizeImportedCategory(value: string): string {
+    const category = value.trim().toUpperCase();
+    if (category === 'BM' || category === 'MB' || category.includes('MOTHERBOARD')) return 'Motherboard';
+    if (category === 'DB' || category.includes('DAUGHTER')) return 'Daughter board';
+    if (category === 'BP' || category.includes('MATERIAL')) return 'Material';
+    if (category === 'WW' || category === 'NN' || category.includes('WW/NN')) return 'WW/NN';
+    if (category === 'PA' || category.includes('ASSEMBLY')) return 'Poor Assembly';
+    if (category === 'CM' || category.includes('COSMETIC')) return 'Cosmetic';
+    return value.trim() || 'N/A';
+  }
+
+  private date(row: Record<string, unknown>): string {
+    const value = row.Date ?? row.DATE ?? row.RecordDate ?? new Date();
+    if (typeof value === 'number') {
+      const serialDate = new Date(Date.UTC(1899, 11, 30 + value));
+      return serialDate.toISOString().slice(0, 10);
+    }
+    const date = value instanceof Date ? value : new Date(String(value));
+    return Number.isNaN(date.getTime()) ? new Date().toISOString().slice(0, 10) : date.toISOString().slice(0, 10);
+  }
+
+  setReview(id: string, review: boolean) {
+    return this.repairRepository.setReview(id, review);
+  }
+
   update(id: string, updateRepairDto: UpdateRepairDto) {
     return this.repairRepository.update(id, updateRepairDto);
   }
 
-  delete(id: string) {
-    return this.repairRepository.delete(id);
+  async delete(id: string): Promise<boolean> {
+    const repair = await this.repairRepository.findById(id);
+    if (!repair) return false;
+
+    const pathsToDelete = [...this.imagePaths(repair.failPicture), ...this.imagePaths(repair.evidencePicture)];
+    const otherRows = await this.dataSource.query<Array<{ fail_picture: string | null; evidence_picture: string | null }>>(
+      'SELECT fail_picture, evidence_picture FROM repairs WHERE id <> ?',
+      [id],
+    );
+    const pathsStillUsed = new Set(otherRows.flatMap((row) => [
+      ...this.imagePaths(row.fail_picture),
+      ...this.imagePaths(row.evidence_picture),
+    ]));
+
+    const deleted = await this.repairRepository.delete(id);
+    if (!deleted) return false;
+
+    await Promise.all(pathsToDelete
+      .filter((imagePath) => !pathsStillUsed.has(imagePath))
+      .map((imagePath) => unlink(resolve(process.cwd(), imagePath.replace(/^\/+/, ''))).catch((error: NodeJS.ErrnoException) => {
+        if (error.code !== 'ENOENT') throw error;
+      })));
+    return true;
+  }
+
+  private imagePaths(value: string | null | undefined): string[] {
+    if (!value) return [];
+    let paths: unknown = value;
+    try { paths = JSON.parse(value); } catch { /* legacy single path */ }
+    const candidates = Array.isArray(paths) ? paths : [paths];
+    return candidates.filter((item): item is string => typeof item === 'string' && item.startsWith('/uploads/'))
+      .map((item) => `/uploads/${basename(item)}`);
   }
 
   private async ensureRepairFamilyColumn(): Promise<void> {

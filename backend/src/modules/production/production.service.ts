@@ -36,13 +36,12 @@ export interface ProductionWeekResponse {
 }
 
 const DEFAULT_PRODUCTION_SERIES = [
+  'BANFF_V72 1.0',
+  'BANFF_X72 1.0',
   'G12 800',
-  'Chiron',
-  'Gemtree 16',
-  'Gemtree 18',
+  'GEMTREE',
   'MERINO',
-  'LAMPAS',
-  'CASHMERE',
+  'OBAN30',
 ];
 
 @Injectable()
@@ -215,12 +214,44 @@ export class ProductionService implements OnModuleInit {
   }
 
   private async seedProductionSeries(): Promise<void> {
+    await this.dataSource.query(`UPDATE production_series SET is_active = 0 WHERE name NOT IN (${DEFAULT_PRODUCTION_SERIES.map(() => '?').join(',')})`, DEFAULT_PRODUCTION_SERIES);
+    await this.dataSource.query(`UPDATE production_series SET name = 'CHIRON' WHERE LOWER(name) = 'chiron'`);
+    await this.dataSource.query(`UPDATE production_series SET is_active = 0 WHERE LOWER(name) IN ('gemtree 16', 'gemtree 18') OR (UPPER(name) LIKE 'LAMPAS%' AND UPPER(name) <> 'LAMPAS')`);
     for (let index = 0; index < DEFAULT_PRODUCTION_SERIES.length; index += 1) {
       await this.dataSource.query(
         `INSERT INTO production_series (name, is_active, sort_order)
          VALUES (?, 1, ?)
          ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order)`,
         [DEFAULT_PRODUCTION_SERIES[index], index + 1],
+      );
+    }
+    // Consolidate historical variants into their canonical family series.
+    const prefixes: Array<[string, string[]]> = [
+      ['G12 800', ['MACHU%', 'LAPAZ%']],
+      ['GEMTREE', ['GEMTREE%']],
+      ['CHIRON', ['CHIRON%']],
+      ['MERINO', ['MERINO%']],
+      ['LAMPAS', ['LAMPAS%']],
+      ['CASHMERE', ['CASHMERE%']],
+      ['HELM', ['HELM%']],
+      ['WAFFLE', ['WAFFLE%']],
+    ];
+    for (const [canonical, patterns] of prefixes) {
+      const conditions = patterns.map(() => 'UPPER(source.name) LIKE ?').join(' OR ');
+      await this.dataSource.query(
+        `INSERT INTO production_defect_entries (production_series_id, record_date, input_quantity, defect_quantity)
+         SELECT target.id, entries.record_date, SUM(entries.input_quantity), SUM(entries.defect_quantity)
+         FROM production_defect_entries entries
+         JOIN production_series source ON source.id = entries.production_series_id
+         JOIN production_series target ON target.name = ?
+         WHERE (${conditions}) AND UPPER(source.name) <> UPPER(?)
+         GROUP BY target.id, entries.record_date
+         ON DUPLICATE KEY UPDATE input_quantity = VALUES(input_quantity), defect_quantity = VALUES(defect_quantity)`,
+        [canonical, ...patterns, canonical],
+      );
+      await this.dataSource.query(
+        `UPDATE production_series SET is_active = 0 WHERE UPPER(name) <> UPPER(?) AND (${conditions.replaceAll('source.name', 'name')})`,
+        [canonical, ...patterns],
       );
     }
   }

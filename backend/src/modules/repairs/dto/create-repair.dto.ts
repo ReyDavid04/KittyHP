@@ -3,42 +3,42 @@ import { IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLen
 
 export class CreateRepairDto {
   @IsDateString()
-  recordDate!: string;
+  @IsOptional()
+  recordDate?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
-  family!: string;
+  family?: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(255)
-  topIssue!: string;
+  topIssue?: string;
 
   @IsInt()
   @Type(() => Number)
-  @Min(1)
-  failureQty!: number;
+  @IsOptional()
+  failureQty?: number;
 
   @IsInt()
   @Type(() => Number)
-  @Min(1)
-  buildQty!: number;
+  @IsOptional()
+  buildQty?: number;
 
   @IsNumber()
   @Type(() => Number)
-  @Min(0.01)
   @IsOptional()
   frPercentage?: number;
 
   @IsString()
-  @IsNotEmpty()
-  category!: string;
+  @IsOptional()
+  category?: string;
 
   @IsInt()
   @Type(() => Number)
-  @Min(0)
-  returnYesQty!: number;
+  @IsOptional()
+  returnYesQty?: number;
 
   @IsString()
   @IsOptional()

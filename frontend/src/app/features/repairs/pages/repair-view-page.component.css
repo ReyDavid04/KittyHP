@@ -1,0 +1,88 @@
+:host {
+  @apply block bg-surface;
+}
+
+.view-page {
+  @apply bg-surface;
+}
+
+.report-content {
+  @apply grid gap-5 px-6 py-5 max-md:px-4 max-md:py-4;
+}
+
+.summary-grid {
+  @apply grid grid-cols-6 gap-3 max-xl:grid-cols-3 max-md:grid-cols-1;
+}
+
+.detail-card {
+  @apply col-span-1 grid min-h-[5.125rem] content-center gap-2 bg-transparent max-md:col-auto;
+}
+
+.detail-card.ui-card,
+.text-card.ui-card,
+.image-card.ui-card {
+  @apply rounded-lg border border-line bg-transparent shadow-none;
+}
+
+.detail-card.wide {
+  @apply col-span-2 max-md:col-auto;
+}
+
+.detail-label,
+.section-label {
+  @apply text-caption font-semibold uppercase tracking-[0.055em] text-ink-muted;
+}
+
+.detail-value {
+  @apply break-words text-base font-normal text-ink-secondary;
+}
+
+.number-card .detail-value {
+  @apply text-lg font-medium text-brand-800;
+  font-variant-numeric: tabular-nums;
+}
+
+.text-grid,
+.image-grid {
+  @apply grid grid-cols-2 gap-3 max-md:grid-cols-1;
+}
+
+.text-card,
+.image-card {
+  @apply grid content-start gap-3;
+}
+
+.image-gallery { @apply grid grid-cols-3 gap-3; }
+.image-gallery-single { @apply grid-cols-1; }
+.image-gallery-double { @apply grid-cols-2; }
+.image-gallery a { @apply min-w-0; }
+
+.text-card p {
+  @apply m-0 min-h-20 whitespace-pre-wrap text-base leading-6 text-ink-secondary;
+}
+
+.image-card a {
+  @apply relative grid min-h-72 place-items-center overflow-hidden rounded-md bg-surface-subtle no-underline max-md:min-h-56;
+}
+
+.image-card img {
+  @apply block h-72 w-full object-contain transition-transform duration-150 group-hover:scale-[1.02] max-md:h-56;
+}
+
+.zoom-hint {
+  @apply absolute bottom-3 right-3 rounded-md bg-brand-950/80 px-2.5 py-2 text-caption font-medium text-white opacity-0 transition-opacity duration-150;
+}
+
+.image-card a:hover .zoom-hint,
+.image-card a:focus-visible .zoom-hint {
+  @apply opacity-100;
+}
+
+.image-card a:hover img,
+.image-card a:focus-visible img {
+  @apply scale-[1.02];
+}
+
+.no-image {
+  @apply grid min-h-52 place-items-center px-6 py-8 text-center text-sm text-ink-muted min-h-72 bg-surface-subtle max-md:min-h-56;
+}

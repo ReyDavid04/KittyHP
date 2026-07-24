@@ -5,6 +5,9 @@ export class RepairEntity {
   @PrimaryGeneratedColumn({ type: 'bigint', unsigned: true })
   id!: string;
 
+  @Column({ type: 'boolean', default: false })
+  review!: boolean;
+
   @Column({ name: 'record_date', type: 'date' })
   recordDate!: string;
 
@@ -44,7 +47,7 @@ export class RepairEntity {
   @Column({ name: 'return_no_qty', type: 'int', unsigned: true, default: 0 })
   returnNoQty!: number;
 
-  @Column({ name: 'fail_picture', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'fail_picture', type: 'text', nullable: true })
   failPicture!: string | null;
 
   @Column({ name: 'major_part', type: 'varchar', length: 255, nullable: true })
@@ -65,7 +68,7 @@ export class RepairEntity {
   @Column({ type: 'text', nullable: true })
   actions!: string | null;
 
-  @Column({ name: 'evidence_picture', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'evidence_picture', type: 'text', nullable: true })
   evidencePicture!: string | null;
 
   @Column({ name: 'created_by_user_id', type: 'int', unsigned: true, nullable: true })

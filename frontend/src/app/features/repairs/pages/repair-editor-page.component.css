@@ -1,0 +1,34 @@
+.editor-page {
+  @apply bg-surface;
+}
+
+.editor-workspace {
+  @apply m-0 min-h-[calc(100dvh-3.25rem)] w-full max-w-none overflow-hidden p-0 max-md:min-h-0;
+}
+
+.loading-card {
+  @apply m-5 grid min-h-80 gap-3 border-0 bg-transparent text-sm text-ink-muted shadow-none max-md:m-4;
+}
+
+.loading-line {
+  @apply h-3.5 w-full animate-shimmer rounded-md bg-shimmer bg-[length:200%_100%];
+}
+
+.loading-line.title {
+  @apply h-5 w-[38%];
+}
+
+.loading-line.short {
+  @apply w-[62%];
+}
+
+.loading-card span {
+  @apply mt-auto;
+}
+
+@media (max-width: 720px) {
+  .back-button span {
+    @apply hidden;
+  }
+
+}

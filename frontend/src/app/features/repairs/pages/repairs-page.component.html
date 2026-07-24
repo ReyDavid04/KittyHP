@@ -1,14 +1,12 @@
-<section class="page" style="min-height: calc(100dvh - 50px);">
+<section class="page">
   <section
-    class="workspace"
-    style="display: flex; flex-direction: column; min-height: calc(100dvh - 50px); background: #fff;"
+    class="workspace ui-page"
   >
-    <div class="workspace-header" style="justify-content: flex-start; flex: 0 0 auto;">
-      <div class="toolbar" style="justify-content: flex-start; width: 100%; max-width: none; flex-wrap: wrap;">
+    <div class="workspace-header">
+      <div class="toolbar">
         <label
           class="search-field"
           for="globalSearch"
-          style="flex: 0 1 520px; max-width: 520px;"
         >
           <span class="search-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
@@ -16,6 +14,7 @@
             </svg>
           </span>
           <input
+            class="ui-control ui-search-input"
             id="globalSearch"
             type="search"
             [value]="searchTerm"
@@ -25,36 +24,35 @@
           <button
             *ngIf="searchTerm"
             type="button"
-            class="clear-search"
+            class="ui-input-action ui-search-clear"
             aria-label="Limpiar búsqueda"
             (click)="setSearch('')"
-          >×</button>
+          ><app-ui-icon name="close"></app-ui-icon></button>
         </label>
 
         <div
           class="date-range-filter"
-          style="display: flex; align-items: center; gap: 6px; flex: 0 0 auto; flex-wrap: wrap;"
           aria-label="Filtro por rango de fechas"
         >
-          <label style="display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.72rem;">
+          <label class="date-field">
             <span>Desde</span>
             <input
               type="date"
               [value]="dateFrom"
               [attr.max]="dateTo || null"
               (change)="setDateFrom($any($event.target).value)"
-              style="height: 38px; padding: 0 9px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface-subtle);"
+              class="date-input ui-control"
             >
           </label>
 
-          <label style="display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.72rem;">
+          <label class="date-field">
             <span>Hasta</span>
             <input
               type="date"
               [value]="dateTo"
               [attr.min]="dateFrom || null"
               (change)="setDateTo($any($event.target).value)"
-              style="height: 38px; padding: 0 9px; border: 1px solid var(--border); border-radius: 9px; color: var(--text); background: var(--surface-subtle);"
+              class="date-input ui-control"
             >
           </label>
 
@@ -64,46 +62,63 @@
             aria-label="Limpiar rango de fechas"
             title="Limpiar rango de fechas"
             (click)="clearDateRange()"
-            style="display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); background: #fff; cursor: pointer;"
-          >×</button>
+            class="ui-icon-button"
+          ><app-ui-icon name="close"></app-ui-icon></button>
         </div>
 
-        <button *ngIf="activeFilterCount" type="button" class="secondary-button" (click)="clearFilters()">
+          <button *ngIf="activeFilterCount" type="button" class="ui-button ui-button-secondary" (click)="clearFilters()">
           Limpiar filtros
-          <span>{{ activeFilterCount }}</span>
+          <app-ui-badge tone="info">{{ activeFilterCount }}</app-ui-badge>
         </button>
 
-        <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+        <div class="toolbar-actions">
+          <input #excelImport type="file" accept=".xlsx,.xls" class="sr-only" (change)="importExcel($event)">
+          <button *ngIf="authService.currentUser()?.role !== 'viewer'" type="button" class="ui-button ui-button-secondary" (click)="excelImport.click()" [disabled]="isImporting">
+            <app-ui-icon name="download"></app-ui-icon>
+            {{ isImporting ? 'Importando...' : 'Importar Excel' }}
+          </button>
           <button
+            *ngIf="authService.currentUser()?.role !== 'viewer'"
             type="button"
-            class="secondary-button"
-            style="font-weight: 400;"
+            class="ui-button ui-button-secondary"
             [disabled]="!filteredRepairs.length || isExportingExcel"
             (click)="exportToExcel()"
             aria-label="Descargar tabla en Excel"
             title="Descargar tabla en Excel con imágenes dentro de las celdas"
           >
-            <svg style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8;" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"></path>
-            </svg>
+            <app-ui-icon name="download"></app-ui-icon>
             {{ isExportingExcel ? 'Generando Excel...' : 'Descargar Excel' }}
           </button>
 
           <button
             type="button"
-            class="create-button"
-            style="font-weight: 400;"
+            class="ui-button ui-button-primary"
             (click)="openNewRepair()"
           >
-            <span class="button-icon" aria-hidden="true">+</span>
+            <app-ui-icon name="add"></app-ui-icon>
             Crear reporte
           </button>
         </div>
       </div>
     </div>
 
+    <div *ngIf="importError" class="import-error-alert import-toast" role="alert">
+      <span>{{ importError }}</span>
+      <button type="button" class="ui-icon-button" aria-label="Cerrar alerta" (click)="dismissImportError()">×</button>
+    </div>
+
+    <section *ngIf="importPreview && showImportExclusions" class="import-exclusion-panel">
+      <div class="import-exclusion-heading"><strong>Exclusiones opcionales</strong><span>Los valores seleccionados quedarán fuera del análisis.</span></div>
+      <div class="import-exclusion-groups">
+        <fieldset *ngFor="let group of [{key:'cause',label:'Causa (H)'},{key:'majorPart',label:'MajorPart (M)'},{key:'shiftFail',label:'Shift Fail (Z)'},{key:'repeat',label:'Repeat (AA)'}]">
+          <legend>{{ group.label }}</legend>
+          <label *ngFor="let value of previewExclusionOptions[group.key]"><input type="checkbox" [checked]="previewExclusions[group.key].includes(value)" (change)="togglePreviewExclusion(group.key, value, $any($event.target).checked)"> {{ value }}</label>
+        </fieldset>
+      </div>
+    </section>
+
     <app-repair-list
-      style="display: block; flex: 1 1 auto; min-height: 0;"
+      class="repair-list-host"
       [repairs]="pagedRepairs"
       [filters]="filters"
       [availableValues]="availableValues"
@@ -114,11 +129,11 @@
       (remove)="removeRepair($event)"
     ></app-repair-list>
 
-    <footer class="pagination" style="flex: 0 0 auto;" *ngIf="filteredRepairs.length">
+    <footer class="pagination" *ngIf="filteredRepairs.length">
       <div class="pagination-meta">
         <div class="page-size">
           <span>Filas por página</span>
-          <select [value]="pageSize" (change)="setPageSize($any($event.target).value)">
+          <select class="ui-control" [value]="pageSize" (change)="setPageSize($any($event.target).value)">
             <option [value]="8">8</option>
             <option [value]="12">12</option>
             <option [value]="20">20</option>
@@ -128,27 +143,36 @@
       </div>
 
       <div class="pager-wrap">
-        <div class="pager" aria-label="Paginación">
-          <button type="button" aria-label="Primera página" [disabled]="currentPage === 1" (click)="goToPage(1)">«</button>
-          <button type="button" aria-label="Página anterior" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">‹</button>
+        <nav class="pager" aria-label="Paginación">
+          <button class="ui-icon-button" type="button" aria-label="Primera página" [disabled]="currentPage === 1" (click)="goToPage(1)"><app-ui-icon name="first-page"></app-ui-icon></button>
+          <button class="ui-icon-button" type="button" aria-label="Página anterior" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)"><app-ui-icon name="chevron-left"></app-ui-icon></button>
           <button
             *ngFor="let pageNumber of pageButtons"
             type="button"
-            class="page-button"
+            class="ui-icon-button"
             [class.active]="pageNumber === currentPage"
             [attr.aria-current]="pageNumber === currentPage ? 'page' : null"
             (click)="goToPage(pageNumber)"
           >{{ pageNumber }}</button>
-          <button type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">›</button>
-          <button type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)">»</button>
-        </div>
+          <button class="ui-icon-button" type="button" aria-label="Página siguiente" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)"><app-ui-icon name="chevron-right"></app-ui-icon></button>
+          <button class="ui-icon-button" type="button" aria-label="Última página" [disabled]="currentPage === totalPages" (click)="goToPage(totalPages)"><app-ui-icon name="last-page"></app-ui-icon></button>
+        </nav>
       </div>
 
       <div class="pagination-total">
         <span class="total-records">
-          <strong>{{ repairs.length | number }}</strong> registros
+          <strong>{{ filteredRepairs.length | number }}</strong> registros
         </span>
       </div>
     </footer>
   </section>
 </section>
+
+<div *ngIf="importPreview" class="import-preview-backdrop" role="dialog" aria-modal="true" aria-labelledby="importPreviewTitle">
+  <section class="import-preview-modal ui-card">
+    <div class="import-preview-modal-tools"><button type="button" class="ui-button ui-button-secondary" (click)="toggleImportExclusions()" [attr.aria-expanded]="showImportExclusions">{{ showImportExclusions ? 'Ocultar exclusiones' : 'Exclusiones' }}</button><label class="preview-family-filter">Familia<select class="ui-control" [(ngModel)]="previewFamilyFilter" (ngModelChange)="applyPreviewFamilyFilter()"><option value="">Todas</option><option *ngFor="let family of previewFamilyOptions" [value]="family">{{ family }}</option></select></label></div>
+    <header class="import-preview-header"><div><h2 id="importPreviewTitle">Vista previa de importación</h2><p>{{ importPreview.length }} registros se crearán o actualizarán.</p></div><div class="import-preview-header-actions"><button type="button" class="ui-button ui-button-secondary" (click)="resetImportPreview()">Restablecer todo</button><button type="button" class="ui-icon-button" (click)="cancelImportPreview()" aria-label="Cerrar">×</button></div></header>
+    <div class="import-preview-table-wrap"><table class="import-preview-table"><thead><tr><th>Fecha</th><th>Familia</th><th>Top Issue</th><th>Failure Qty</th><th>Build Qty</th><th>Categoría</th><th>Major Part</th><th></th></tr></thead><tbody><tr *ngFor="let record of importPreview; let rowIndex = index"><td><input class="import-preview-input" type="date" [(ngModel)]="record.recordDate"></td><td><select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona Family" class="import-preview-input ui-control" [(ngModel)]="record.family"><option *ngFor="let option of previewCatalogs.families" [value]="option">{{ option }}</option></select></td><td><select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona el top issue" class="import-preview-input ui-control" [(ngModel)]="record.topIssue"><option *ngFor="let option of previewCatalogs.topIssues" [value]="option">{{ option }}</option></select></td><td><input class="import-preview-input numeric" type="number" min="1" [(ngModel)]="record.failureQty"></td><td><input class="import-preview-input numeric" type="number" min="1" [(ngModel)]="record.buildQty"></td><td><select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona la categoría" class="import-preview-input ui-control" [(ngModel)]="record.category"><option *ngFor="let option of previewCatalogs.categories" [value]="option">{{ option }}</option></select></td><td><select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona la parte principal" class="import-preview-input ui-control" [(ngModel)]="record.majorPart"><option value="">—</option><option *ngFor="let option of previewCatalogs.majorParts" [value]="option">{{ option }}</option></select></td><td class="preview-row-actions"><button type="button" class="ui-icon-button" (click)="resetPreviewRecord(rowIndex)" aria-label="Restablecer registro">↺</button><button type="button" class="ui-icon-button ui-icon-button-danger" (click)="removePreviewRecord(rowIndex)" aria-label="Eliminar registro">×</button></td></tr></tbody></table></div>
+    <footer class="import-preview-actions"><button type="button" class="ui-button ui-button-secondary" (click)="cancelImportPreview()">Cancelar</button><button type="button" class="ui-button ui-button-primary" [disabled]="isImporting" (click)="confirmImport()">{{ isImporting ? 'Importando...' : 'Confirmar importación' }}</button></footer>
+  </section>
+</div>

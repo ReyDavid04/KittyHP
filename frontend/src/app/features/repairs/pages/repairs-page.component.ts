@@ -1,8 +1,11 @@
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { RepairReport } from '../../../core/models/repair-report.model';
+import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { UiBadgeComponent, UiIconComponent } from '../../../shared/ui';
 import {
   FILTER_BLANK_VALUE,
   RepairColumnFilters,
@@ -12,15 +15,17 @@ import {
   RepairSort,
 } from '../components/repair-list.component';
 import { RepairExcelExportService } from '../services/repair-excel-export.service';
+import { CatalogAutocompleteDirective } from '../components/catalog-autocomplete.directive';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RepairListComponent],
+  imports: [CommonModule, FormsModule, CatalogAutocompleteDirective, RepairListComponent, UiBadgeComponent, UiIconComponent],
   templateUrl: './repairs-page.component.html',
   styleUrl: './repairs-page.component.css',
 })
 export class RepairsPageComponent {
   readonly repairReportsApi = inject(RepairReportsApiService);
+  readonly authService = inject(AuthService);
   readonly router = inject(Router);
   private readonly repairExcelExport = inject(RepairExcelExportService);
 
@@ -31,11 +36,26 @@ export class RepairsPageComponent {
   currentPage = 1;
   pageSize = 8;
   isExportingExcel = false;
+  isImporting = false;
+  importError = '';
+  private importErrorTimer?: ReturnType<typeof setTimeout>;
+  importPreview: RepairUpsertPayload[] | null = null;
+  originalImportPreview: RepairUpsertPayload[] = [];
+  private importPreviewOriginalByRecord = new Map<RepairUpsertPayload, RepairUpsertPayload>();
+  importPreviewFile: File | null = null;
+  previewCatalogs = { families: [] as string[], topIssues: [] as string[], categories: [] as string[], majorParts: [] as string[] };
+  previewExclusionOptions: Record<string, string[]> = { cause: [], majorPart: [], shiftFail: [], repeat: [] };
+  previewExclusions: Record<string, string[]> = { cause: [], majorPart: [], shiftFail: [], repeat: [] };
+  showImportExclusions = false;
+  previewFamilyFilter = '';
+  previewFamilyOptions: string[] = [];
+  private previewAllRecords: RepairUpsertPayload[] = [];
   sort: RepairSort = { key: null, direction: null };
   filters: RepairColumnFilters = this.createEmptyFilters();
   availableValues: RepairColumnValues = this.createEmptyFilters();
 
   constructor() {
+    this.restoreViewState();
     this.loadRepairs();
   }
 
@@ -110,6 +130,78 @@ export class RepairsPageComponent {
   }
 
   openNewRepair(): void { void this.router.navigate(['/repairs/new']); }
+
+  importExcel(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.dismissImportError();
+    this.isImporting = true;
+    this.repairReportsApi.importWorkbook(file, true).subscribe({
+      next: (result) => { this.isImporting = false; input.value = ''; this.importPreviewFile = file; this.setImportPreviewRecords(result.records ?? []); this.previewExclusionOptions = result.exclusionOptions ?? this.previewExclusionOptions; this.repairReportsApi.getCatalogs().subscribe((catalogs) => { this.previewCatalogs = catalogs; }); },
+      error: (error: unknown) => { this.isImporting = false; input.value = ''; this.importError = this.readImportError(error); },
+    });
+  }
+  togglePreviewExclusion(key: string, value: string, checked: boolean): void {
+    const values = new Set(this.previewExclusions[key] ?? []);
+    checked ? values.add(value) : values.delete(value);
+    this.previewExclusions = { ...this.previewExclusions, [key]: [...values] };
+    if (!this.importPreviewFile || this.isImporting) return;
+    this.isImporting = true;
+    this.repairReportsApi.importWorkbook(this.importPreviewFile, true, this.previewExclusions).subscribe({
+      next: (result) => { this.isImporting = false; this.setImportPreviewRecords(result.records ?? []); this.previewExclusionOptions = result.exclusionOptions ?? this.previewExclusionOptions; },
+      error: (error: unknown) => { this.isImporting = false; this.importError = this.readImportError(error); },
+    });
+  }
+  confirmImport(): void {
+    if (!this.importPreview?.length || this.isImporting) return;
+    this.isImporting = true;
+    this.repairReportsApi.confirmImport(this.importPreview).subscribe({
+      next: () => { this.isImporting = false; this.cancelImportPreview(); this.loadRepairs(); },
+      error: (error: unknown) => { this.isImporting = false; this.importError = this.readImportError(error); },
+    });
+  }
+
+  cancelImportPreview(): void { this.importPreview = null; this.importPreviewFile = null; this.originalImportPreview = []; this.importPreviewOriginalByRecord.clear(); this.previewExclusions = { cause: [], majorPart: [], shiftFail: [], repeat: [] }; this.previewExclusionOptions = { cause: [], majorPart: [], shiftFail: [], repeat: [] }; this.showImportExclusions = false; }
+  toggleImportExclusions(): void { this.showImportExclusions = !this.showImportExclusions; }
+  applyPreviewFamilyFilter(): void { this.importPreview = this.previewFamilyFilter ? this.previewAllRecords.filter((record) => record.family === this.previewFamilyFilter) : structuredClone(this.previewAllRecords); }
+  dismissImportError(): void {
+    this.importError = '';
+    if (this.importErrorTimer) {
+      clearTimeout(this.importErrorTimer);
+      this.importErrorTimer = undefined;
+    }
+  }
+
+  private readImportError(error: unknown): string {
+    const response = error as { error?: { message?: string | string[] }; message?: string };
+    const message = response?.error?.message ?? response?.message;
+    const text = Array.isArray(message)
+      ? message.join(' ')
+      : message || 'No se pudo importar el archivo. Verifica que sea un Excel válido y que contenga las pestañas requeridas.';
+    this.importErrorTimer = setTimeout(() => this.dismissImportError(), 6000);
+    return text;
+  }
+  removePreviewRecord(index: number): void { this.importPreview?.splice(index, 1); }
+  resetPreviewRecord(index: number): void {
+    const record = this.importPreview?.[index];
+    const original = record && this.importPreviewOriginalByRecord.get(record);
+    if (!this.importPreview || !original) return;
+    const restored = structuredClone(original);
+    this.importPreview[index] = restored;
+    this.importPreviewOriginalByRecord.set(restored, structuredClone(original));
+  }
+  resetImportPreview(): void { this.setImportPreviewRecords(this.originalImportPreview); }
+
+  private setImportPreviewRecords(records: RepairUpsertPayload[]): void {
+    this.previewAllRecords = structuredClone(records);
+    this.previewFamilyFilter = '';
+    this.previewFamilyOptions = [...new Set(records.map((record) => record.family).filter((family): family is string => Boolean(family)))].sort();
+    this.originalImportPreview = structuredClone(records);
+    this.importPreview = structuredClone(records);
+    this.importPreviewOriginalByRecord.clear();
+    this.importPreview.forEach((record, index) => this.importPreviewOriginalByRecord.set(record, structuredClone(this.originalImportPreview[index])));
+  }
   openEditRepair(repair: RepairReport): void { void this.router.navigate(['/repairs', repair.id, 'edit']); }
 
   async exportToExcel(): Promise<void> {
@@ -140,26 +232,45 @@ export class RepairsPageComponent {
     this.repairReportsApi.delete(id).subscribe(() => this.loadRepairs());
   }
 
-  setSearch(value: string): void { this.searchTerm = value; this.currentPage = 1; }
+  setSearch(value: string): void { this.searchTerm = value; this.currentPage = 1; this.persistViewState(); }
 
   setDateFrom(value: string): void {
     this.dateFrom = value;
     if (this.dateTo && value && this.dateTo < value) this.dateTo = value;
     this.currentPage = 1;
+    this.persistViewState();
   }
 
   setDateTo(value: string): void {
     this.dateTo = value;
     if (this.dateFrom && value && this.dateFrom > value) this.dateFrom = value;
     this.currentPage = 1;
+    this.persistViewState();
   }
 
-  clearDateRange(): void { this.dateFrom = ''; this.dateTo = ''; this.currentPage = 1; }
-  updateFilter(key: RepairColumnKey, values: string[]): void { this.filters = { ...this.filters, [key]: values }; this.currentPage = 1; }
-  updateSort(sort: RepairSort): void { this.sort = sort; this.currentPage = 1; }
+  clearDateRange(): void { this.dateFrom = ''; this.dateTo = ''; this.currentPage = 1; this.persistViewState(); }
+  updateFilter(key: RepairColumnKey, values: string[]): void { this.filters = { ...this.filters, [key]: values }; this.currentPage = 1; this.persistViewState(); }
+  updateSort(sort: RepairSort): void { this.sort = sort; this.currentPage = 1; this.persistViewState(); }
   clearFilters(): void { this.filters = this.createEmptyFilters(); this.clearDateRange(); }
   goToPage(page: number): void { this.currentPage = Math.min(Math.max(page, 1), this.totalPages); }
-  setPageSize(value: string): void { this.pageSize = Number(value); this.currentPage = 1; }
+  setPageSize(value: string): void { this.pageSize = Number(value); this.currentPage = 1; this.persistViewState(); }
+
+  private persistViewState(): void {
+    localStorage.setItem('kittyhp.repairs.view-state', JSON.stringify({ searchTerm: this.searchTerm, dateFrom: this.dateFrom, dateTo: this.dateTo, pageSize: this.pageSize, sort: this.sort, filters: this.filters }));
+  }
+
+  private restoreViewState(): void {
+    try {
+      const saved = JSON.parse(localStorage.getItem('kittyhp.repairs.view-state') ?? 'null');
+      if (!saved) return;
+      this.searchTerm = saved.searchTerm ?? '';
+      this.dateFrom = saved.dateFrom ?? '';
+      this.dateTo = saved.dateTo ?? '';
+      this.pageSize = Number(saved.pageSize) || 8;
+      this.sort = saved.sort ?? this.sort;
+      this.filters = { ...this.createEmptyFilters(), ...(saved.filters ?? {}) };
+    } catch { /* ignore invalid persisted state */ }
+  }
 
   private errorMessage(error: unknown): string {
     if (error instanceof Error && error.message.trim()) return error.message;

@@ -18,8 +18,12 @@ const CATALOG_LABELS: Record<RepairCatalogType, string> = {
 };
 
 function calculateFrPercentage(failureQty: number, buildQty: number): string {
-  if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || failureQty <= 0 || buildQty <= 0) {
-    throw new BadRequestException('Failure qty y Build qty deben ser mayores que cero.');
+  if (!Number.isFinite(failureQty) || !Number.isFinite(buildQty) || failureQty < 0 || buildQty < 0) {
+    throw new BadRequestException('Failure qty y Build qty deben ser números válidos.');
+  }
+
+  if (buildQty === 0) {
+    return '0.00';
   }
 
   const frPercentage = Number(((failureQty / buildQty) * 100).toFixed(2));
@@ -31,8 +35,8 @@ function calculateFrPercentage(failureQty: number, buildQty: number): string {
 }
 
 function calculateReturnQuantities(failureQty: number, returnYesQty: number): { returnYesQty: number; returnNoQty: number } {
-  if (!Number.isInteger(failureQty) || failureQty <= 0) {
-    throw new BadRequestException('Failure qty debe ser un número entero mayor que cero.');
+  if (!Number.isInteger(failureQty) || failureQty < 0) {
+    throw new BadRequestException('Failure qty debe ser un número entero válido.');
   }
 
   if (!Number.isInteger(returnYesQty) || returnYesQty < 0) {
@@ -64,31 +68,48 @@ export class RepairRepository implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.ensureCreatedByUserIdColumn();
+    await this.ensureReviewColumn();
+  }
+
+  async setReview(id: string, review: boolean): Promise<RepairEntity | null> {
+    await this.ensureReviewColumn();
+    await this.repository.update(id, { review });
+    return this.repository.findOne({ where: { id } });
+  }
+
+  private async ensureReviewColumn(): Promise<void> {
+    const columns = await this.dataSource.query<{ Field: string }[]>('SHOW COLUMNS FROM repairs LIKE \'review\'');
+    if (!columns.length) {
+      await this.dataSource.query('ALTER TABLE repairs ADD COLUMN review BOOLEAN NOT NULL DEFAULT FALSE AFTER id');
+    }
   }
 
   async create(data: CreateRepairDto, createdByUserId: number): Promise<RepairEntity> {
-    const frPercentage = calculateFrPercentage(data.failureQty, data.buildQty);
-    const returns = calculateReturnQuantities(data.failureQty, data.returnYesQty);
+    const failureQty = data.failureQty ?? 0;
+    const buildQty = data.buildQty ?? 0;
+    const returnYesQty = data.returnYesQty ?? 0;
+    const frPercentage = calculateFrPercentage(failureQty, buildQty);
+    const returns = calculateReturnQuantities(failureQty, returnYesQty);
     const returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
     const [family, topIssue, category, majorPart, failureFactor] = await Promise.all([
-      this.resolveCatalogReference('family', data.family, true),
-      this.resolveCatalogReference('top_issue', data.topIssue, true),
-      this.resolveCatalogReference('category', data.category, true),
+      this.resolveCatalogReference('family', data.family, false),
+      this.resolveCatalogReference('top_issue', data.topIssue, false),
+      this.resolveCatalogReference('category', data.category, false),
       this.resolveCatalogReference('major_part', data.majorPart, false),
       this.resolveCatalogReference('failure_factor', data.failureFactor, false),
     ]);
 
     const entity = this.repository.create({
-      recordDate: data.recordDate,
-      family: family!.value,
-      familyCatalogItemId: family!.id,
-      topIssue: topIssue!.value,
-      topIssueCatalogItemId: topIssue!.id,
-      failureQty: data.failureQty,
-      buildQty: data.buildQty,
+      recordDate: data.recordDate ?? new Date().toISOString().slice(0, 10),
+      family: family?.value ?? 'N/A',
+      familyCatalogItemId: family?.id ?? null,
+      topIssue: topIssue?.value ?? 'N/A',
+      topIssueCatalogItemId: topIssue?.id ?? null,
+      failureQty,
+      buildQty,
       frPercentage,
-      category: category!.value,
-      categoryCatalogItemId: category!.id,
+      category: category?.value ?? 'N/A',
+      categoryCatalogItemId: category?.id ?? null,
       returnStatus,
       returnYesQty: returns.returnYesQty,
       returnNoQty: returns.returnNoQty,
@@ -103,12 +124,12 @@ export class RepairRepository implements OnModuleInit {
       createdByUserId,
       sourcePayload: {
         ...(data as unknown as Record<string, unknown>),
-        family: family!.value,
-        familyCatalogItemId: family!.id,
-        topIssue: topIssue!.value,
-        topIssueCatalogItemId: topIssue!.id,
-        category: category!.value,
-        categoryCatalogItemId: category!.id,
+        family: family?.value ?? 'N/A',
+        familyCatalogItemId: family?.id ?? null,
+        topIssue: topIssue?.value ?? 'N/A',
+        topIssueCatalogItemId: topIssue?.id ?? null,
+        category: category?.value ?? 'N/A',
+        categoryCatalogItemId: category?.id ?? null,
         majorPart: majorPart?.value ?? null,
         majorPartCatalogItemId: majorPart?.id ?? null,
         failureFactor: failureFactor?.value ?? null,
@@ -150,7 +171,8 @@ export class RepairRepository implements OnModuleInit {
 
     if (data.failureQty !== undefined) entity.failureQty = data.failureQty;
     if (data.buildQty !== undefined) entity.buildQty = data.buildQty;
-    entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
+    const hasValidQuantities = entity.failureQty > 0 && entity.buildQty > 0;
+    if (hasValidQuantities) entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
 
     if (data.category !== undefined && !catalogValuesEqual(entity.category, data.category)) {
       const reference = await this.resolveCatalogReference('category', data.category, true);
@@ -158,13 +180,12 @@ export class RepairRepository implements OnModuleInit {
       entity.categoryCatalogItemId = reference!.id;
     }
 
-    const returns = calculateReturnQuantities(
-      entity.failureQty,
-      data.returnYesQty ?? entity.returnYesQty,
-    );
-    entity.returnYesQty = returns.returnYesQty;
-    entity.returnNoQty = returns.returnNoQty;
-    entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+    if (hasValidQuantities) {
+      const returns = calculateReturnQuantities(entity.failureQty, data.returnYesQty ?? entity.returnYesQty);
+      entity.returnYesQty = returns.returnYesQty;
+      entity.returnNoQty = returns.returnNoQty;
+      entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+    }
 
     if (data.failPicture !== undefined) entity.failPicture = data.failPicture ?? null;
 

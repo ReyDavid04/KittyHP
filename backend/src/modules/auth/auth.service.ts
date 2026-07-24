@@ -13,7 +13,7 @@ import { DataSource } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'user' | 'viewer';
 
 export interface AuthenticatedUser {
   id: number;
@@ -132,7 +132,7 @@ export class AuthService implements OnModuleInit {
       if (
         !payload.sub ||
         !payload.email ||
-        !['admin', 'user'].includes(payload.role) ||
+        !['admin', 'user', 'viewer'].includes(payload.role) ||
         !payload.exp ||
         payload.exp <= Date.now()
       ) {

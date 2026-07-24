@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { UiIconComponent, UiStateComponent } from '../../../shared/ui';
 import { RepairReport } from '../../../core/models/repair-report.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
 
 export const FILTER_BLANK_VALUE = '__BLANK__';
 
@@ -61,12 +63,14 @@ interface RepairColumnDefinition {
 @Component({
   selector: 'app-repair-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, UiIconComponent, UiStateComponent],
   templateUrl: './repair-list.component.html',
-  styleUrls: ['./repair-list.component.css', './repair-list-thumbnail.css'],
+  styleUrl: './repair-list.component.css',
 })
 export class RepairListComponent {
+  private readonly imagePositions = new Map<string, number>();
   readonly authService = inject(AuthService);
+  private readonly repairReportsApi = inject(RepairReportsApiService);
 
   @Input() repairs: RepairReport[] | null = [];
   @Input() filters: RepairColumnFilters = this.emptyFilters();
@@ -77,6 +81,18 @@ export class RepairListComponent {
   @Output() remove = new EventEmitter<string>();
   @Output() filterChange = new EventEmitter<{ key: RepairColumnKey; values: string[] }>();
   @Output() sortChange = new EventEmitter<RepairSort>();
+
+  isRowHighlighted(id: string): boolean {
+    return Boolean(this.repairs?.find((repair) => repair.id === id)?.review);
+  }
+
+  toggleRowHighlight(id: string): void {
+    const repair = this.repairs?.find((item) => item.id === id);
+    if (!repair) return;
+    this.repairReportsApi.setReview(id, !repair.review).subscribe((updated) => {
+      repair.review = updated.review;
+    });
+  }
 
   readonly columns: RepairColumnDefinition[] = [
     { key: 'id', label: 'ID', numeric: true },
@@ -179,7 +195,26 @@ export class RepairListComponent {
   }
 
   returnSummary(repair: RepairReport): string {
+    if (Number(repair.returnYesQty ?? 0) === 0 && Number(repair.returnNoQty ?? 0) === 0) return '—';
     return `Yes: ${Number(repair.returnYesQty ?? 0)} · No: ${Number(repair.returnNoQty ?? 0)}`;
+  }
+
+  imagePosition(repair: RepairReport, field: 'failPicture' | 'evidencePicture'): number {
+    return this.imagePositions.get(`${repair.id}:${field}`) ?? 0;
+  }
+
+  currentImage(repair: RepairReport, field: 'failPicture' | 'evidencePicture'): string {
+    const images = field === 'failPicture' ? repair.failPictures ?? [] : repair.evidencePictures ?? [];
+    return images[this.imagePosition(repair, field)] ?? '';
+  }
+
+  shiftImage(event: Event, repair: RepairReport, field: 'failPicture' | 'evidencePicture', direction: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const images = field === 'failPicture' ? repair.failPictures ?? [] : repair.evidencePictures ?? [];
+    if (!images.length) return;
+    const key = `${repair.id}:${field}`;
+    this.imagePositions.set(key, (this.imagePosition(repair, field) + direction + images.length) % images.length);
   }
 
   private isFilterable(key: RepairColumnKey): boolean { return this.columns.find((column) => column.key === key)?.filterable !== false; }

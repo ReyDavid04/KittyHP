@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard, RequestWithAuth } from '../auth/auth.guard';
+import { EditorGuard } from '../auth/editor.guard';
 import { SaveProductionWeekDto } from './dto/save-production-week.dto';
 import { ProductionService } from './production.service';
 
@@ -14,6 +15,7 @@ export class ProductionController {
   }
 
   @Put('week')
+  @UseGuards(EditorGuard)
   saveWeek(
     @Body() dto: SaveProductionWeekDto,
     @Req() request: RequestWithAuth,

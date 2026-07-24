@@ -1,0 +1,152 @@
+:host,
+.app-shell {
+  @apply block min-h-[100dvh];
+}
+
+.app-header {
+  @apply grid grid-cols-[minmax(10rem,auto)_1fr_auto] gap-5;
+}
+
+.brand {
+  @apply inline-flex w-max items-center gap-2 text-ink no-underline;
+}
+
+.brand-icon {
+  @apply block size-[1.875rem] flex-none;
+}
+
+.brand strong {
+  @apply text-base font-semibold tracking-[-0.01em];
+}
+
+.main-nav {
+  @apply flex h-navbar items-stretch gap-6;
+}
+
+.main-nav > a,
+.settings-menu summary {
+  @apply relative inline-flex items-center px-1 text-sm font-medium text-ink-muted no-underline;
+}
+
+.main-nav > a::after,
+.settings-menu summary::after {
+  @apply absolute inset-x-0 bottom-0 h-0.5 origin-center scale-x-50 rounded-t-sm bg-brand-800 opacity-0 transition duration-150;
+  content: '';
+}
+
+.main-nav > a:hover,
+.main-nav > a.active,
+.settings-menu[open] summary,
+.settings-menu summary:hover,
+.settings-menu.active summary {
+  @apply text-brand-800;
+}
+
+.main-nav > a.active::after,
+.settings-menu.active summary::after {
+  @apply scale-x-100 opacity-100;
+}
+
+.settings-menu {
+  @apply relative flex items-stretch;
+}
+
+.settings-menu summary {
+  @apply h-navbar cursor-pointer select-none gap-2 list-none;
+}
+
+.settings-menu summary::-webkit-details-marker {
+  @apply hidden;
+}
+
+.settings-menu summary > svg:first-child,
+.menu-icon,
+.user-chip svg,
+.logout-button svg {
+  @apply size-4 flex-none fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75];
+}
+
+.settings-menu .chevron {
+  @apply size-3.5 fill-none stroke-current transition-transform duration-150 [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75];
+}
+
+.settings-menu[open] .chevron {
+  @apply rotate-180;
+}
+
+.settings-dropdown {
+  @apply absolute left-[-0.75rem] top-11 z-[80] grid w-60 rounded-lg border border-line bg-surface p-2 shadow-md;
+}
+
+.dropdown-title {
+  @apply px-2.5 pb-2 pt-1 text-overline font-semibold uppercase tracking-[0.09em] text-ink-muted;
+}
+
+.settings-dropdown a {
+  @apply relative my-0.5 flex min-h-[2.375rem] items-center gap-2 rounded-md border border-transparent bg-transparent px-3 py-2 text-ink-secondary no-underline transition-colors duration-150 hover:border-brand-600/10 hover:bg-brand-50 hover:text-brand-800;
+}
+
+.settings-dropdown a.active {
+  @apply border-brand-600/10 bg-brand-100 pl-4 text-brand-800;
+}
+
+.settings-dropdown a.active::before {
+  @apply absolute bottom-2 left-1.5 top-2 w-[3px] rounded-full bg-brand-800;
+  content: '';
+}
+
+.settings-dropdown strong {
+  @apply text-sm font-medium leading-tight;
+}
+
+.menu-divider {
+  @apply mx-1 my-1.5 h-px bg-surface-muted;
+}
+
+.session-area {
+  @apply flex items-center gap-2;
+}
+
+.user-chip {
+  @apply inline-flex min-h-8 max-w-60 items-center gap-1.5 rounded-md border border-line bg-surface-subtle px-2.5 py-1 text-caption font-medium text-ink-secondary;
+}
+
+.user-chip > span {
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
+.app-content {
+  @apply m-0 w-full max-w-none p-0;
+}
+
+@media (max-width: 720px) {
+  .app-header {
+    @apply flex h-auto min-h-navbar flex-wrap justify-between gap-x-3 gap-y-0 py-2;
+  }
+
+  .main-nav {
+    @apply order-3 h-auto w-full flex-wrap gap-x-5 gap-y-0 border-t border-line;
+  }
+
+  .user-chip,
+  .logout-button span {
+    @apply hidden;
+  }
+
+  .main-nav > a,
+  .settings-menu summary {
+    @apply min-h-10 whitespace-nowrap;
+  }
+
+  .session-area {
+    @apply ml-auto;
+  }
+
+  .settings-dropdown {
+    @apply left-auto right-0 w-[min(15rem,calc(100vw-1.5rem))];
+  }
+
+  .logout-button {
+    @apply w-10 p-0;
+  }
+}

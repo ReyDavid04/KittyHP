@@ -8,18 +8,21 @@ import {
   ProductionWeek,
 } from '../../../core/services/production-defects-api.service';
 import { ProductionDefectsExcelExportService } from '../services/production-defects-excel-export.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { UiAlertComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
 
 type QuantityField = 'inputQuantity' | 'defectQuantity';
 type ProductionViewMode = 'single' | 'recent' | 'compare';
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UiAlertComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent],
   templateUrl: './production-defects-page.component.html',
   styleUrl: './production-defects-page.component.css',
 })
 export class ProductionDefectsPageComponent {
   private readonly productionApi = inject(ProductionDefectsApiService);
+  readonly authService = inject(AuthService);
   private readonly excelExport = inject(ProductionDefectsExcelExportService);
 
   readonly recentWeekOptions = [4, 8, 12, 16];

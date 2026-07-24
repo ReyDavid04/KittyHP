@@ -4,6 +4,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AuthService, UserRole } from '../../../core/services/auth.service';
+import { UiAlertComponent, UiBadgeComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
 import {
   CreateUserPayload,
   ManagedUser,
@@ -13,95 +14,93 @@ import {
 
 @Component({
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, UiAlertComponent, UiBadgeComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent],
   template: `
-    <section class="users-page">
-      <header class="page-heading">
-        <div>
-          <h1>Usuarios</h1>
-          <span>Administra los correos que pueden ingresar al sistema.</span>
-        </div>
-        <button type="button" class="primary-button" (click)="startCreate()" *ngIf="!showForm">
-          <span aria-hidden="true">＋</span> Agregar usuario
+    <section class="users-page ui-page">
+      <app-ui-page-header title="Usuarios" description="Administra los correos que pueden ingresar al sistema.">
+        <button type="button" class="ui-button ui-button-primary" (click)="startCreate()" *ngIf="!showForm">
+          <app-ui-icon name="add"></app-ui-icon> Agregar usuario
         </button>
-      </header>
+      </app-ui-page-header>
 
-      <main class="users-content">
-        <form class="user-form" [formGroup]="form" (ngSubmit)="saveUser()" *ngIf="showForm" novalidate>
+      <div class="users-content" [attr.aria-busy]="isLoading">
+        <form class="user-form ui-card" [formGroup]="form" (ngSubmit)="saveUser()" *ngIf="showForm" novalidate>
           <div class="form-heading">
             <div>
               <strong>{{ editingUserId ? 'Editar usuario' : 'Nuevo usuario' }}</strong>
               <span>{{ editingUserId ? 'La contraseña solo cambiará si capturas una nueva.' : 'Captura el correo y la contraseña.' }}</span>
             </div>
-            <button type="button" class="close-form" (click)="cancelForm()" aria-label="Cerrar formulario">×</button>
+            <button type="button" class="ui-icon-button" (click)="cancelForm()" aria-label="Cerrar formulario"><app-ui-icon name="close"></app-ui-icon></button>
           </div>
 
           <div class="form-grid">
-            <label class="email-field">
+            <label class="email-field ui-field">
               <span>Correo</span>
-              <div class="email-input" [class.invalid]="isInvalid('email')">
-                <input type="text" formControlName="email" autocomplete="off" placeholder="Ramos.Rey">
+              <div class="email-input ui-control" [class.invalid]="isInvalid('email')">
+                <input class="ui-control" type="text" formControlName="email" autocomplete="off" placeholder="Ramos.Rey" [attr.aria-invalid]="isInvalid('email')">
                 <span>&#64;inventec.com</span>
               </div>
             </label>
 
-            <label>
+            <label class="ui-field">
               <span>{{ editingUserId ? 'Nueva contraseña' : 'Contraseña' }}</span>
-              <input type="password" formControlName="password" autocomplete="new-password" [placeholder]="editingUserId ? 'Dejar vacío para conservar' : 'Mínimo 8 caracteres'" [class.invalid]="isInvalid('password')">
+              <input class="ui-control" type="password" formControlName="password" autocomplete="new-password" [placeholder]="editingUserId ? 'Dejar vacío para conservar' : 'Mínimo 8 caracteres'" [class.invalid]="isInvalid('password')" [attr.aria-invalid]="isInvalid('password')">
             </label>
 
-            <label>
+            <label class="ui-field">
               <span>Confirmar contraseña</span>
-              <input type="password" formControlName="confirmPassword" autocomplete="new-password" [placeholder]="editingUserId ? 'Repite la nueva contraseña' : 'Repite la contraseña'" [class.invalid]="isInvalid('confirmPassword') || passwordsDoNotMatch">
+              <input class="ui-control" type="password" formControlName="confirmPassword" autocomplete="new-password" [placeholder]="editingUserId ? 'Repite la nueva contraseña' : 'Repite la contraseña'" [class.invalid]="isInvalid('confirmPassword') || passwordsDoNotMatch" [attr.aria-invalid]="isInvalid('confirmPassword') || passwordsDoNotMatch">
             </label>
 
-            <label>
+            <label class="ui-field">
               <span>Rol</span>
-              <select formControlName="role">
+              <select class="ui-control" formControlName="role">
                 <option value="user">Usuario</option>
                 <option value="admin">Administrador</option>
+                <option value="viewer">Viewer</option>
               </select>
             </label>
 
-            <label class="status-field">
+            <label class="ui-field">
               <span>Estado</span>
-              <button type="button" class="status-toggle" [class.active]="form.controls.isActive.value" (click)="toggleStatus()">
+              <button type="button" class="status-toggle ui-control" [class.active]="form.controls.isActive.value" [attr.aria-pressed]="form.controls.isActive.value" (click)="toggleStatus()">
                 <span class="toggle-track"><i></i></span>
                 {{ form.controls.isActive.value ? 'Activo' : 'Inactivo' }}
               </button>
             </label>
           </div>
 
-          <div class="form-message error" *ngIf="formError">{{ formError }}</div>
+          <app-ui-alert *ngIf="formError" tone="danger">{{ formError }}</app-ui-alert>
 
           <div class="form-actions">
-            <button type="button" class="secondary-button" (click)="cancelForm()">Cancelar</button>
-            <button type="submit" class="primary-button" [disabled]="isSaving">
+            <button type="button" class="ui-button ui-button-secondary" (click)="cancelForm()">Cancelar</button>
+            <button type="submit" class="ui-button ui-button-primary" [disabled]="isSaving">
               {{ isSaving ? 'Guardando...' : (editingUserId ? 'Guardar cambios' : 'Crear usuario') }}
             </button>
           </div>
         </form>
 
         <div class="toolbar">
-          <div class="search-box">
+          <div class="search-box ui-control">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
             <input type="search" [value]="searchTerm" (input)="searchTerm = $any($event.target).value" placeholder="Buscar correo...">
           </div>
           <span class="record-count">{{ filteredUsers.length }} {{ filteredUsers.length === 1 ? 'registro' : 'registros' }}</span>
         </div>
 
-        <div class="page-message error" *ngIf="pageError">{{ pageError }}</div>
-        <div class="loading-state" *ngIf="isLoading">Cargando usuarios...</div>
+        <app-ui-alert *ngIf="pageError" tone="danger">{{ pageError }}</app-ui-alert>
+        <app-ui-state *ngIf="isLoading" kind="loading" message="Cargando usuarios..."></app-ui-state>
 
-        <div class="users-table-wrap" *ngIf="!isLoading">
+        <div class="ui-table-shell" *ngIf="!isLoading">
           <table class="users-table">
+            <caption class="sr-only">Listado de usuarios del sistema</caption>
             <thead>
               <tr>
-                <th>Correo</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Actualizado</th>
-                <th class="actions-column">Opciones</th>
+                <th scope="col">Correo</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Actualizado</th>
+                <th scope="col" class="actions-column">Opciones</th>
               </tr>
             </thead>
             <tbody>
@@ -112,109 +111,28 @@ import {
                     <div><strong>{{ user.email }}</strong><small *ngIf="isCurrentUser(user)">Tu cuenta</small></div>
                   </div>
                 </td>
-                <td><span class="role-badge" [class.admin]="user.role === 'admin'">{{ user.role === 'admin' ? 'Administrador' : 'Usuario' }}</span></td>
-                <td><span class="status-badge" [class.inactive]="!user.isActive"><i></i>{{ user.isActive ? 'Activo' : 'Inactivo' }}</span></td>
+                <td><app-ui-badge [tone]="user.role === 'admin' ? 'info' : 'neutral'">{{ user.role === 'admin' ? 'Administrador' : user.role === 'viewer' ? 'Viewer' : 'Usuario' }}</app-ui-badge></td>
+                <td><app-ui-badge [tone]="user.isActive ? 'success' : 'danger'" [dot]="true">{{ user.isActive ? 'Activo' : 'Inactivo' }}</app-ui-badge></td>
                 <td>{{ user.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td class="row-actions">
-                  <button type="button" class="icon-button edit" (click)="startEdit(user)" aria-label="Editar usuario" title="Editar">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1 10.7-10.7-3.2-3.2L5 15.8 4 20Z"></path><path d="m14.7 6.1 3.2 3.2"></path></svg>
+                  <button type="button" class="ui-icon-button ui-icon-button-brand" (click)="startEdit(user)" aria-label="Editar usuario" title="Editar">
+                    <app-ui-icon name="edit"></app-ui-icon>
                   </button>
-                  <button type="button" class="icon-button delete" (click)="deleteUser(user)" [disabled]="isCurrentUser(user)" aria-label="Eliminar usuario" title="Eliminar">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5"></path></svg>
+                  <button type="button" class="ui-icon-button ui-icon-button-danger" (click)="deleteUser(user)" [disabled]="isCurrentUser(user)" aria-label="Eliminar usuario" title="Eliminar">
+                    <app-ui-icon name="delete"></app-ui-icon>
                   </button>
                 </td>
               </tr>
               <tr *ngIf="filteredUsers.length === 0">
-                <td colspan="5" class="empty-state">No se encontraron usuarios.</td>
+                <td colspan="5"><app-ui-state size="sm" title="No se encontraron usuarios."></app-ui-state></td>
               </tr>
             </tbody>
           </table>
         </div>
-      </main>
+      </div>
     </section>
   `,
-  styles: [`
-    :host, .users-page { display: block; min-height: calc(100dvh - 50px); background: #fff; }
-    .page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 58px; padding: 9px 22px; border-bottom: 1px solid var(--border); background: linear-gradient(180deg,#fff 0%,#fbfcfe 100%); }
-    .page-heading > div { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-    h1 { margin: 0; color: var(--text); font-size: clamp(1.15rem,1.6vw,1.4rem); font-weight: 800; line-height: 1.1; letter-spacing: -.025em; }
-    .page-heading > div > span { overflow: hidden; color: var(--muted); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
-    .users-content { display: grid; gap: 16px; padding: 20px 22px 28px; }
-    .primary-button, .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px; padding: 7px 13px; border-radius: 9px; font-size: .73rem; font-weight: 750; cursor: pointer; transition: 150ms ease; }
-    .primary-button { border: 1px solid var(--primary); color: #fff; background: var(--primary); box-shadow: 0 7px 16px rgba(22,76,140,.16); }
-    .primary-button:hover:not(:disabled) { background: var(--primary-strong); transform: translateY(-1px); }
-    .primary-button:disabled { opacity: .6; cursor: wait; }
-    .secondary-button { border: 1px solid var(--border); color: #526176; background: #fff; }
-    .secondary-button:hover { border-color: #c9d4e1; background: #f8fafc; }
-    .user-form { display: grid; gap: 16px; padding: 18px; border: 1px solid #dce4ee; border-radius: 11px; background: #fbfcfe; }
-    .form-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-    .form-heading > div { display: grid; gap: 4px; }
-    .form-heading strong { color: var(--text); font-size: .9rem; }
-    .form-heading span { color: var(--muted); font-size: .69rem; }
-    .close-form { width: 30px; height: 30px; border: 0; color: #718096; font-size: 1.25rem; background: transparent; cursor: pointer; }
-    .form-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
-    label { display: grid; align-content: start; gap: 7px; color: #455267; font-size: .7rem; font-weight: 750; }
-    input, select { width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px; outline: 0; color: var(--text); font-size: .78rem; font-weight: 450; background: #fff; transition: 150ms ease; }
-    input:focus, select:focus { border-color: rgba(47,126,199,.7); box-shadow: 0 0 0 3px rgba(47,126,199,.1); }
-    input.invalid, .email-input.invalid { border-color: rgba(180,35,58,.68); background: #fffafb; box-shadow: 0 0 0 3px rgba(180,35,58,.07); }
-    .email-field { grid-column: span 2; }
-    .email-input { display: flex; align-items: center; height: 42px; padding-right: 12px; border: 1px solid var(--border); border-radius: 9px; background: #fff; transition: 150ms ease; }
-    .email-input:focus-within { border-color: rgba(47,126,199,.7); box-shadow: 0 0 0 3px rgba(47,126,199,.1); }
-    .email-input input { min-width: 0; height: 40px; border: 0; box-shadow: none; background: transparent; }
-    .email-input > span { flex: 0 0 auto; color: #66758a; font-size: .76rem; font-weight: 600; }
-    .status-toggle { display: flex; align-items: center; gap: 9px; width: 100%; height: 42px; padding: 0 12px; border: 1px solid var(--border); border-radius: 9px; color: #68778b; font-size: .76rem; font-weight: 650; background: #fff; cursor: pointer; }
-    .toggle-track { position: relative; width: 32px; height: 18px; border-radius: 999px; background: #c7d0dc; transition: 150ms ease; }
-    .toggle-track i { position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: 150ms ease; }
-    .status-toggle.active { color: #17623b; }
-    .status-toggle.active .toggle-track { background: #23945b; }
-    .status-toggle.active .toggle-track i { transform: translateX(14px); }
-    .form-actions { display: flex; justify-content: flex-end; gap: 9px; }
-    .form-message, .page-message { padding: 10px 12px; border-radius: 8px; font-size: .72rem; }
-    .error { border: 1px solid rgba(180,35,58,.18); color: #a71d39; background: #fff6f7; }
-    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-    .search-box { display: flex; align-items: center; gap: 9px; width: min(460px,100%); height: 40px; padding: 0 12px; border: 1px solid #dce4ee; border-radius: 10px; background: #fbfcfe; }
-    .search-box:focus-within { border-color: rgba(47,126,199,.5); background: #fff; box-shadow: 0 0 0 3px rgba(47,126,199,.08); }
-    .search-box svg { width: 17px; flex: 0 0 17px; fill: none; stroke: #718096; stroke-linecap: round; stroke-width: 1.7; }
-    .search-box input { height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-    .record-count { color: #65748a; font-size: .7rem; font-weight: 700; white-space: nowrap; }
-    .users-table-wrap { overflow: auto; border: 1px solid #dce4ee; border-radius: 10px; }
-    .users-table { width: 100%; min-width: 720px; border-collapse: collapse; }
-    th { padding: 11px 14px; border-bottom: 1px solid #dce4ee; color: #65748a; font-size: .65rem; font-weight: 800; text-align: left; text-transform: uppercase; letter-spacing: .055em; background: #f8fafc; }
-    td { padding: 12px 14px; border-bottom: 1px solid #edf1f5; color: #344054; font-size: .75rem; vertical-align: middle; }
-    tbody tr:last-child td { border-bottom: 0; }
-    tbody tr:hover { background: #fbfdff; }
-    .user-email { display: flex; align-items: center; gap: 10px; }
-    .avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; color: var(--primary); font-size: .65rem; font-weight: 800; background: var(--primary-soft); }
-    .user-email > div { display: grid; gap: 2px; }
-    .user-email strong { color: var(--text); font-size: .75rem; font-weight: 650; }
-    .user-email small { color: var(--primary); font-size: .6rem; font-weight: 700; }
-    .role-badge, .status-badge { display: inline-flex; align-items: center; gap: 6px; min-height: 25px; padding: 4px 8px; border-radius: 7px; color: #526176; font-size: .65rem; font-weight: 700; background: #f0f3f7; }
-    .role-badge.admin { color: #174c8c; background: #eaf2fb; }
-    .status-badge { color: #17623b; background: #ebf8f1; }
-    .status-badge i { width: 6px; height: 6px; border-radius: 50%; background: #23945b; }
-    .status-badge.inactive { color: #7a4650; background: #f8eef0; }
-    .status-badge.inactive i { background: #b4475d; }
-    .actions-column { text-align: right; }
-    .row-actions { display: flex; justify-content: flex-end; gap: 7px; }
-    .icon-button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid #dce4ee; border-radius: 8px; background: #fff; cursor: pointer; transition: 150ms ease; }
-    .icon-button svg { width: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-    .icon-button.edit { color: var(--primary); }
-    .icon-button.edit:hover { border-color: rgba(47,126,199,.3); background: var(--primary-soft); }
-    .icon-button.delete { color: #b4233a; }
-    .icon-button.delete:hover:not(:disabled) { border-color: rgba(180,35,58,.25); background: #fff6f7; }
-    .icon-button:disabled { color: #aeb8c5; background: #f5f7f9; cursor: not-allowed; }
-    .empty-state, .loading-state { padding: 34px; color: var(--muted); font-size: .75rem; text-align: center; }
-    @media (max-width: 900px) { .form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
-    @media (max-width: 640px) {
-      .page-heading { padding: 9px 12px; }
-      .page-heading > div > span { display: none; }
-      .users-content { padding: 14px 12px 22px; }
-      .form-grid { grid-template-columns: 1fr; }
-      .email-field { grid-column: auto; }
-      .toolbar { align-items: stretch; flex-direction: column; }
-      .search-box { width: 100%; }
-    }
-  `],
+  styleUrl: './user-management-page.component.css',
 })
 export class UserManagementPageComponent {
   private readonly userApi = inject(UserManagementApiService);

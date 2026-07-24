@@ -3,6 +3,8 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairCatalogs, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
+import { UiIconComponent } from '../../../shared/ui';
+import { CatalogAutocompleteDirective } from './catalog-autocomplete.directive';
 
 const EMPTY_CATALOGS: RepairCatalogs = {
   families: [],
@@ -33,65 +35,73 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
 @Component({
   selector: 'app-repair-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, CatalogAutocompleteDirective, UiIconComponent],
+  host: { class: 'block' },
   template: `
     <form class="form-shell" [formGroup]="form" (ngSubmit)="submit()">
+      <div *ngIf="catalogError" class="form-error-alert" role="alert">{{ catalogError }}</div>
       <div class="form-body">
         <div class="form-grid">
-          <label class="field grid-date">
+          <label class="field grid-date ui-field">
             <span>Date <b>*</b></span>
-            <input type="date" formControlName="recordDate" [class.invalid]="isInvalid('recordDate')">
+            <input class="ui-control" type="date" formControlName="recordDate" [class.invalid]="isInvalid('recordDate')" [attr.aria-invalid]="isInvalid('recordDate')">
           </label>
 
-          <label class="field grid-family">
+          <label class="field grid-family ui-field">
             <span>Family <b>*</b></span>
-            <select formControlName="family" [class.invalid]="isInvalid('family')">
+            <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona Family" class="ui-control" formControlName="family" [class.invalid]="isInvalid('family')" [attr.aria-invalid]="isInvalid('family')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona Family' }}</option>
               <option *ngFor="let option of familyOptions" [value]="option">{{ option }}</option>
             </select>
           </label>
 
-          <label class="field grid-top-issue">
+          <label class="field grid-top-issue ui-field">
             <span>Top issue <b>*</b></span>
-            <select formControlName="topIssue" [class.invalid]="isInvalid('topIssue')">
+            <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona el top issue" class="ui-control" formControlName="topIssue" [class.invalid]="isInvalid('topIssue')" [attr.aria-invalid]="isInvalid('topIssue')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona el top issue' }}</option>
               <option *ngFor="let option of topIssueOptions" [value]="option">{{ option }}</option>
             </select>
           </label>
 
-          <label class="field grid-failure-qty">
+          <label class="field grid-failure-qty ui-field">
             <span>Failure qty <b>*</b></span>
             <input
+              class="ui-control"
               type="number"
               min="1"
               step="1"
               formControlName="failureQty"
               placeholder="Captura la cantidad"
               [class.invalid]="isInvalid('failureQty') || isReturnQuantityInvalid"
+              [attr.aria-invalid]="isInvalid('failureQty') || isReturnQuantityInvalid"
             >
           </label>
 
-          <label class="field grid-build-qty">
+          <label class="field grid-build-qty ui-field">
             <span>Build qty <b>*</b></span>
             <input
+              class="ui-control"
               type="number"
               min="1"
               step="1"
               formControlName="buildQty"
               placeholder="Captura la cantidad"
               [class.invalid]="isInvalid('buildQty')"
+              [attr.aria-invalid]="isInvalid('buildQty')"
             >
           </label>
 
-          <label class="field grid-fr">
+          <label class="field grid-fr ui-field">
             <span>F/R <b>*</b></span>
             <div class="suffix-input">
               <input
+                class="ui-control"
                 type="text"
                 formControlName="frPercentage"
                 readonly
                 placeholder="Automático"
                 [class.invalid]="isInvalid('frPercentage')"
+                [attr.aria-invalid]="isInvalid('frPercentage')"
                 aria-label="F/R calculado automáticamente"
                 title="Calculado automáticamente: Failure qty / Build qty"
               >
@@ -100,30 +110,33 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             <small *ngIf="isInvalid('frPercentage')">El F/R debe ser mayor a 0.00%.</small>
           </label>
 
-          <label class="field grid-category">
+          <label class="field grid-category ui-field">
             <span>Category <b>*</b></span>
-            <select formControlName="category" [class.invalid]="isInvalid('category')">
+            <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona la categoría" class="ui-control" formControlName="category" [class.invalid]="isInvalid('category')" [attr.aria-invalid]="isInvalid('category')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la categoría' }}</option>
               <option *ngFor="let option of categoryOptions" [value]="option">{{ option }}</option>
             </select>
           </label>
 
           <div class="return-group grid-return">
-            <label class="field">
+            <label class="field ui-field">
               <span>Return Yes <b>*</b></span>
               <input
+                class="ui-control"
                 type="number"
                 min="0"
                 step="1"
                 formControlName="returnYesQty"
                 placeholder="Cantidad Yes"
                 [class.invalid]="isReturnQuantityInvalid"
+                [attr.aria-invalid]="isReturnQuantityInvalid"
               >
             </label>
 
-            <label class="field">
+            <label class="field ui-field">
               <span>Return No</span>
               <input
+                class="ui-control"
                 type="text"
                 formControlName="returnNoQty"
                 readonly
@@ -135,26 +148,26 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             <small *ngIf="isReturnQuantityInvalid">Return Yes no puede ser mayor que Failure qty.</small>
           </div>
 
-          <label class="field grid-major-part">
+          <label class="field grid-major-part ui-field">
             <span>Major part <b>*</b></span>
-            <select formControlName="majorPart" [class.invalid]="isInvalid('majorPart')">
+            <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona la parte principal" class="ui-control" formControlName="majorPart" [class.invalid]="isInvalid('majorPart')" [attr.aria-invalid]="isInvalid('majorPart')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la parte principal' }}</option>
               <option *ngFor="let option of majorPartOptions" [value]="option">{{ option }}</option>
             </select>
           </label>
 
-          <label class="field grid-failure-factor">
+          <label class="field grid-failure-factor ui-field">
             <span>Failure factor <b>*</b></span>
-            <select formControlName="failureFactor" [class.invalid]="isInvalid('failureFactor')">
+            <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona el factor de falla" class="ui-control" formControlName="failureFactor" [class.invalid]="isInvalid('failureFactor')" [attr.aria-invalid]="isInvalid('failureFactor')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona el factor de falla' }}</option>
               <option *ngFor="let option of failureFactorOptions" [value]="option">{{ option }}</option>
             </select>
           </label>
 
-          <label class="upload-zone grid-fail-picture" [class.has-file]="failPicturePreviewUrl" [class.invalid]="isInvalid('failPicture')">
-            <input type="file" accept="image/*" (change)="onFileSelected($event, 'failPicture')">
-            <ng-container *ngIf="failPicturePreviewUrl as preview; else failPictureEmpty">
-              <span class="image-preview"><img [src]="preview" alt="Vista previa de la imagen de falla"><span class="image-change">Cambiar imagen</span></span>
+          <label class="upload-zone grid-fail-picture" [class.has-file]="failPicturePreviewUrls.length" [class.invalid]="isInvalid('failPicture')">
+            <input type="file" accept="image/*" multiple (change)="onFileSelected($event, 'failPicture')" [attr.aria-invalid]="isInvalid('failPicture')">
+            <ng-container *ngIf="failPicturePreviewUrls.length; else failPictureEmpty">
+              <span class="image-preview image-preview-shell"><span #failGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'failPicture')"><img *ngFor="let preview of failPicturePreviewUrls" [src]="preview" alt="Vista previa de la imagen de falla"></span><span class="gallery-position">{{ failPictureIndex + 1 }} / {{ failPicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'failPicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, failGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, failGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ failPictureCount }}/10)</span></span>
               <span class="upload-content"><strong>Fail picture <b>*</b></strong></span>
             </ng-container>
             <ng-template #failPictureEmpty>
@@ -163,20 +176,20 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             </ng-template>
           </label>
 
-          <label class="field grid-repair-result">
+          <label class="field grid-repair-result ui-field">
             <span>Repair result <b>*</b></span>
-            <textarea rows="4" formControlName="repairResult" placeholder="Resultado de la reparación" [class.invalid]="isInvalid('repairResult')"></textarea>
+            <textarea class="ui-control" rows="4" formControlName="repairResult" placeholder="Resultado de la reparación" [class.invalid]="isInvalid('repairResult')" [attr.aria-invalid]="isInvalid('repairResult')"></textarea>
           </label>
 
-          <label class="field grid-actions">
+          <label class="field grid-actions ui-field">
             <span>Actions <b>*</b></span>
-            <textarea rows="4" formControlName="actions" placeholder="Detalla las acciones realizadas" [class.invalid]="isInvalid('actions')"></textarea>
+            <textarea class="ui-control" rows="4" formControlName="actions" placeholder="Detalla las acciones realizadas" [class.invalid]="isInvalid('actions')" [attr.aria-invalid]="isInvalid('actions')"></textarea>
           </label>
 
-          <label class="upload-zone grid-evidence" [class.has-file]="evidencePicturePreviewUrl" [class.invalid]="isInvalid('evidencePicture')">
-            <input type="file" accept="image/*" (change)="onFileSelected($event, 'evidencePicture')">
-            <ng-container *ngIf="evidencePicturePreviewUrl as preview; else evidencePictureEmpty">
-              <span class="image-preview evidence-preview"><img [src]="preview" alt="Vista previa de la evidencia final"><span class="image-change">Cambiar imagen</span></span>
+          <label class="upload-zone grid-evidence" [class.has-file]="evidencePicturePreviewUrls.length" [class.invalid]="isInvalid('evidencePicture')">
+            <input type="file" accept="image/*" multiple (change)="onFileSelected($event, 'evidencePicture')" [attr.aria-invalid]="isInvalid('evidencePicture')">
+            <ng-container *ngIf="evidencePicturePreviewUrls.length; else evidencePictureEmpty">
+              <span class="image-preview image-preview-shell"><span #evidenceGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'evidencePicture')"><img *ngFor="let preview of evidencePicturePreviewUrls" [src]="preview" alt="Vista previa de la evidencia final"></span><span class="gallery-position">{{ evidencePictureIndex + 1 }} / {{ evidencePicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'evidencePicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, evidenceGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, evidenceGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ evidencePictureCount }}/10)</span></span>
               <span class="upload-content"><strong>Evidence <b>*</b></strong></span>
             </ng-container>
             <ng-template #evidencePictureEmpty>
@@ -187,109 +200,45 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
         </div>
       </div>
 
-      <footer class="form-actions">
-        <div class="action-buttons">
-          <button type="submit" class="save-button" [disabled]="catalogsLoading">
-            <span aria-hidden="true">✓</span>{{ repair ? 'Guardar cambios' : 'Guardar reporte' }}
-          </button>
-        </div>
-      </footer>
     </form>
   `,
-  styles: [`
-    .form-shell { overflow: visible; background: transparent; }
-    .form-body { padding: 32px 36px 38px; }
-    .form-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 22px; align-items: start; }
-    .grid-date, .grid-family, .grid-failure-qty, .grid-build-qty, .grid-fr { grid-column: span 2; }
-    .grid-top-issue { grid-column: span 4; }
-    .grid-category, .grid-return, .grid-major-part, .grid-failure-factor { grid-column: span 3; }
-    .grid-fail-picture { grid-column: 1 / -1; }
-    .grid-repair-result, .grid-actions, .grid-evidence { grid-column: span 4; }
-    .return-group { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; min-width: 0; }
-    .return-group > small { grid-column: 1 / -1; margin-top: -2px; color: var(--danger); font-size: .66rem; font-weight: 600; }
-    .field { display: grid; align-content: start; gap: 8px; min-width: 0; color: #455267; font-size: .76rem; font-weight: 700; }
-    .field > span:first-child { min-height: 18px; }
-    .field b, .upload-content b { color: var(--danger); font-weight: 700; }
-    .field small { margin-top: -2px; color: var(--danger); font-size: .66rem; font-weight: 600; }
-    .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: .82rem; font-weight: 450; background: var(--surface-subtle); transition: 150ms ease; }
-    .field input, .field select { height: 46px; padding: 0 14px; }
-    .field input[readonly] { color: var(--primary); font-weight: 750; background: #f4f8fc; cursor: default; }
-    .field select { cursor: pointer; }
-    .field textarea { min-height: 148px; padding: 13px 14px; line-height: 1.5; resize: vertical; }
-    .field input::placeholder, .field textarea::placeholder { color: #98a3b2; }
-    .field input:focus, .field select:focus, .field textarea:focus { border-color: rgba(47,126,199,.7); background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(47,126,199,.1); }
-    .field input.invalid, .field select.invalid, .field textarea.invalid, .upload-zone.invalid { border-color: rgba(180,35,58,.65); background: #fffafb; }
-    :host ::ng-deep .catalog-autocomplete:has(+ select.invalid) .catalog-search-input {
-      border-color: rgba(180,35,58,.72) !important;
-      background: #fffafb !important;
-      box-shadow: 0 0 0 3px rgba(180,35,58,.08) !important;
-    }
-    .suffix-input { position: relative; display: flex; align-items: center; }
-    .suffix-input input { padding-right: 38px; }
-    .suffix-input input[readonly] { color: var(--primary); font-weight: 750; background: #f4f8fc; cursor: default; }
-    .suffix-input > span { position: absolute; right: 14px; color: var(--primary); font-weight: 800; }
-    .upload-zone { position: relative; display: flex; align-items: center; gap: 20px; min-height: 148px; padding: 18px; overflow: hidden; border: 1px dashed var(--border-strong); border-radius: 12px; color: var(--text); background: var(--surface-subtle); cursor: pointer; transition: 150ms ease; }
-    .upload-zone:hover { border-color: var(--accent); background: #f5f9fe; box-shadow: 0 0 0 3px rgba(47,126,199,.07); }
-    .upload-zone.has-file { border-style: solid; border-color: rgba(47,126,199,.24); background: #fff; }
-    .upload-zone > input { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
-    .upload-icon { display: grid; flex: 0 0 auto; place-items: center; width: 46px; height: 46px; border-radius: 12px; color: var(--primary); background: var(--primary-soft); }
-    .upload-icon svg { width: 21px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
-    .image-preview { position: relative; display: block; flex: 0 0 210px; width: 210px; height: 118px; overflow: hidden; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-muted); }
-    .grid-evidence .image-preview { flex-basis: 150px; width: 150px; height: 110px; }
-    .image-preview img { display: block; width: 100%; height: 100%; object-fit: contain; }
-    .image-change { position: absolute; right: 0; bottom: 0; left: 0; padding: 7px 10px; color: #fff; font-size: .68rem; font-weight: 750; text-align: center; background: rgba(18,35,55,.76); opacity: 0; transition: opacity 150ms ease; }
-    .upload-zone:hover .image-change { opacity: 1; }
-    .upload-content { display: grid; min-width: 0; gap: 5px; color: var(--muted); font-size: .73rem; line-height: 1.4; }
-    .upload-content strong { color: var(--text); font-size: .84rem; }
-    .form-actions { position: sticky; bottom: 0; z-index: 10; display: flex; justify-content: flex-end; padding: 18px 36px; border-top: 1px solid var(--border); background: rgba(248,250,252,.97); backdrop-filter: blur(14px); }
-    .action-buttons { display: flex; justify-content: flex-end; width: 100%; }
-    .save-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 15px; border: 1px solid var(--primary); border-radius: 10px; color: #fff; font-size: .78rem; font-weight: 750; background: var(--primary); box-shadow: 0 7px 16px rgba(22,76,140,.18); cursor: pointer; }
-    .save-button:disabled { border-color: #aeb8c5; background: #aeb8c5; box-shadow: none; cursor: not-allowed; }
-    @media (max-width: 1180px) {
-      .form-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-      .grid-date, .grid-family, .grid-failure-qty, .grid-build-qty, .grid-fr, .grid-category, .grid-return, .grid-major-part, .grid-failure-factor { grid-column: span 2; }
-      .grid-top-issue { grid-column: span 4; }
-      .grid-fail-picture, .grid-repair-result, .grid-actions, .grid-evidence { grid-column: 1 / -1; }
-    }
-    @media (max-width: 720px) {
-      .form-body { padding: 22px 18px 28px; }
-      .form-grid { grid-template-columns: 1fr; gap: 16px; }
-      .grid-date, .grid-family, .grid-top-issue, .grid-failure-qty, .grid-build-qty, .grid-fr, .grid-category, .grid-return, .grid-major-part, .grid-failure-factor, .grid-fail-picture, .grid-repair-result, .grid-actions, .grid-evidence { grid-column: auto; }
-      .return-group { grid-template-columns: 1fr; }
-      .upload-zone { align-items: stretch; flex-direction: column; min-height: 0; padding: 14px; }
-      .image-preview, .grid-evidence .image-preview { flex-basis: auto; width: 100%; height: 210px; }
-      .form-actions { padding: 14px 18px; }
-    }
-  `],
+  styleUrl: './repair-form.component.css',
 })
 export class RepairFormComponent implements OnChanges {
   @Input() repair: RepairReport | null = null;
   @Output() save = new EventEmitter<RepairUpsertPayload>();
   @Output() cancel = new EventEmitter<void>();
 
-  failPictureFile: File | null = null;
-  evidencePictureFile: File | null = null;
+  failPictureFiles: File[] = [];
+  evidencePictureFiles: File[] = [];
   failPicturePreview = '';
   evidencePicturePreview = '';
+  failPicturePreviews: string[] = [];
+  evidencePicturePreviews: string[] = [];
+  existingFailPictures: string[] = [];
+  existingEvidencePictures: string[] = [];
+  failPictureIndex = 0;
+  evidencePictureIndex = 0;
   catalogs: RepairCatalogs = { ...EMPTY_CATALOGS };
   catalogsLoading = true;
+  catalogError = '';
 
   readonly form = new FormBuilder().nonNullable.group({
-    recordDate: ['', Validators.required],
-    family: ['', Validators.required],
-    topIssue: ['', Validators.required],
-    category: ['', Validators.required],
-    failureQty: ['', [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
-    buildQty: ['', [Validators.required, Validators.min(1), Validators.pattern(/^\d+$/)]],
-    frPercentage: ['', [Validators.required, Validators.min(0.01)]],
-    returnYesQty: ['', [Validators.required, Validators.min(0), Validators.pattern(/^\d+$/)]],
-    returnNoQty: ['', [Validators.required, Validators.min(0)]],
-    majorPart: ['', Validators.required],
-    repairResult: ['', Validators.required],
-    failureFactor: ['', Validators.required],
-    failPicture: ['', Validators.required],
-    evidencePicture: ['', Validators.required],
-    actions: ['', Validators.required],
+    recordDate: [''],
+    family: [''],
+    topIssue: [''],
+    category: [''],
+    failureQty: [''],
+    buildQty: [''],
+    frPercentage: [''],
+    returnYesQty: [''],
+    returnNoQty: [''],
+    majorPart: [''],
+    repairResult: [''],
+    failureFactor: [''],
+    failPicture: [''],
+    evidencePicture: [''],
+    actions: [''],
   }, { validators: returnQuantitiesValidator });
 
   constructor(private readonly repairReportsApi: RepairReportsApiService) {
@@ -309,6 +258,10 @@ export class RepairFormComponent implements OnChanges {
   get failureFactorOptions(): string[] { return this.withCurrentValue(this.catalogs.failureFactors, this.form.controls.failureFactor.value); }
   get failPicturePreviewUrl(): string { return this.failPicturePreview || this.repair?.failPicture || ''; }
   get evidencePicturePreviewUrl(): string { return this.evidencePicturePreview || this.repair?.evidencePicture || ''; }
+  get failPicturePreviewUrls(): string[] { return [...this.existingFailPictures, ...this.failPicturePreviews]; }
+  get evidencePicturePreviewUrls(): string[] { return [...this.existingEvidencePictures, ...this.evidencePicturePreviews]; }
+  get failPictureCount(): number { return Math.min(10, this.existingFailPictures.length + this.failPictureFiles.length); }
+  get evidencePictureCount(): number { return Math.min(10, this.existingEvidencePictures.length + this.evidencePictureFiles.length); }
 
   get isReturnQuantityInvalid(): boolean {
     const touched = this.form.controls.returnYesQty.touched || this.form.controls.failureQty.touched;
@@ -323,12 +276,18 @@ export class RepairFormComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['repair']) return;
 
-    this.failPictureFile = null;
-    this.evidencePictureFile = null;
+    this.failPictureFiles = [];
+    this.evidencePictureFiles = [];
     this.failPicturePreview = '';
     this.evidencePicturePreview = '';
+    this.failPicturePreviews = [];
+    this.evidencePicturePreviews = [];
+    this.failPictureIndex = 0;
+    this.evidencePictureIndex = 0;
+    this.existingFailPictures = [...(this.repair?.failPictures ?? (this.repair?.failPicture ? [this.repair.failPicture] : []))];
+    this.existingEvidencePictures = [...(this.repair?.evidencePictures ?? (this.repair?.evidencePicture ? [this.repair.evidencePicture] : []))];
     this.form.reset({
-      recordDate: this.repair?.recordDate ?? '',
+      recordDate: this.repair?.recordDate ?? this.defaultRecordDate(),
       family: this.repair?.family ?? '',
       topIssue: this.repair?.topIssue ?? '',
       failureQty: this.repair ? String(this.repair.failureQty) : '',
@@ -353,16 +312,17 @@ export class RepairFormComponent implements OnChanges {
 
   onFileSelected(event: Event, field: 'failPicture' | 'evidencePicture'): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
+    const files = Array.from(input.files ?? []);
+    const file = files[0] ?? null;
     const existingValue = field === 'failPicture' ? this.repair?.failPicture ?? '' : this.repair?.evidencePicture ?? '';
 
     if (field === 'failPicture') {
-      this.failPictureFile = file;
-      this.form.controls.failPicture.setValue(file?.name ?? existingValue);
+      this.failPictureFiles = [...this.failPictureFiles, ...files].slice(0, 10);
+      this.form.controls.failPicture.setValue(this.failPictureFiles.map((item) => item.name).join(', ') || existingValue);
       this.form.controls.failPicture.markAsTouched();
     } else {
-      this.evidencePictureFile = file;
-      this.form.controls.evidencePicture.setValue(file?.name ?? existingValue);
+      this.evidencePictureFiles = [...this.evidencePictureFiles, ...files].slice(0, 10);
+      this.form.controls.evidencePicture.setValue(this.evidencePictureFiles.map((item) => item.name).join(', ') || existingValue);
       this.form.controls.evidencePicture.markAsTouched();
     }
 
@@ -371,21 +331,22 @@ export class RepairFormComponent implements OnChanges {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => this.setPreview(field, typeof reader.result === 'string' ? reader.result : '');
-    reader.onerror = () => this.setPreview(field, '');
-    reader.readAsDataURL(file);
+    files.forEach((selectedFile) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const preview = typeof reader.result === 'string' ? reader.result : '';
+        if (!preview) return;
+        if (field === 'failPicture') this.failPicturePreviews = [...this.failPicturePreviews, preview];
+        else this.evidencePicturePreviews = [...this.evidencePicturePreviews, preview];
+      };
+      reader.readAsDataURL(selectedFile);
+    });
   }
 
   submit(): void {
-    if (this.form.invalid || this.catalogsLoading) {
-      this.form.markAllAsTouched();
-      return;
-    }
-
     const value = this.form.getRawValue();
-    const failureQty = Number(value.failureQty);
-    const buildQty = Number(value.buildQty);
+    const failureQty = Number(value.failureQty || this.repair?.failureQty || 0);
+    const buildQty = Number(value.buildQty || this.repair?.buildQty || 0);
     const frPercentage = Number(this.calculateFrPercentage(failureQty, buildQty));
 
     this.save.emit({
@@ -393,19 +354,48 @@ export class RepairFormComponent implements OnChanges {
       family: value.family,
       topIssue: value.topIssue,
       category: value.category,
-      failureQty,
-      buildQty,
-      frPercentage,
+      failureQty: this.repair && this.repair.failureQty < 1 ? undefined : failureQty,
+      buildQty: this.repair && this.repair.buildQty < 1 ? undefined : buildQty,
+      frPercentage: this.repair && this.repair.frPercentage < 0.01 ? undefined : frPercentage,
       returnYesQty: Number(value.returnYesQty),
-      failPicture: this.repair?.failPicture ?? null,
+      failPicture: JSON.stringify(this.existingFailPictures),
       majorPart: value.majorPart,
       repairResult: value.repairResult,
       failureFactor: value.failureFactor,
       actions: value.actions,
-      evidencePicture: this.repair?.evidencePicture ?? null,
-      failPictureFile: this.failPictureFile,
-      evidencePictureFile: this.evidencePictureFile,
+      evidencePicture: JSON.stringify(this.existingEvidencePictures),
+      failPictureFiles: this.failPictureFiles,
+      evidencePictureFiles: this.evidencePictureFiles,
     });
+  }
+
+  scrollGallery(event: Event, gallery: HTMLElement, direction: number): void {
+    event.preventDefault();
+    event.stopPropagation();
+    gallery.scrollBy({ left: direction * gallery.clientWidth, behavior: 'smooth' });
+  }
+
+  updateGalleryIndex(event: Event, field: 'failPicture' | 'evidencePicture'): void {
+    const gallery = event.currentTarget as HTMLElement;
+    const index = gallery.clientWidth ? Math.round(gallery.scrollLeft / gallery.clientWidth) : 0;
+    if (field === 'failPicture') this.failPictureIndex = index;
+    else this.evidencePictureIndex = index;
+  }
+
+  removeImage(event: Event, field: 'failPicture' | 'evidencePicture'): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const index = field === 'failPicture' ? this.failPictureIndex : this.evidencePictureIndex;
+    const existing = field === 'failPicture' ? this.existingFailPictures : this.existingEvidencePictures;
+    if (index < existing.length) existing.splice(index, 1);
+    else {
+      const pendingIndex = index - existing.length;
+      if (field === 'failPicture') { this.failPictureFiles.splice(pendingIndex, 1); this.failPicturePreviews.splice(pendingIndex, 1); }
+      else { this.evidencePictureFiles.splice(pendingIndex, 1); this.evidencePicturePreviews.splice(pendingIndex, 1); }
+    }
+    const length = field === 'failPicture' ? this.failPicturePreviewUrls.length : this.evidencePicturePreviewUrls.length;
+    if (field === 'failPicture') this.failPictureIndex = Math.max(0, Math.min(index, length - 1));
+    else this.evidencePictureIndex = Math.max(0, Math.min(index, length - 1));
   }
 
   private updateFrPercentage(): void {
@@ -448,10 +438,18 @@ export class RepairFormComponent implements OnChanges {
     return frPercentage > 0 ? frPercentage.toFixed(2) : '';
   }
 
+  private defaultRecordDate(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   private loadCatalogs(): void {
     this.repairReportsApi.getCatalogs().subscribe({
       next: (catalogs) => { this.catalogs = catalogs; this.catalogsLoading = false; },
-      error: () => { this.catalogs = { ...EMPTY_CATALOGS }; this.catalogsLoading = false; },
+      error: () => { this.catalogs = { ...EMPTY_CATALOGS }; this.catalogsLoading = false; this.catalogError = 'No fue posible cargar los catálogos. Verifica la conexión e inténtalo de nuevo.'; },
     });
   }
 

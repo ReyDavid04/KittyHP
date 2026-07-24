@@ -1,7 +1,10 @@
 import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class UpdateRepairDto {
+  @IsOptional()
+  @IsBoolean()
+  review?: boolean;
   @IsDateString()
   @IsOptional()
   recordDate?: string;

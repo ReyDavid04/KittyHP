@@ -1,0 +1,254 @@
+.form-shell {
+  @apply overflow-visible bg-transparent;
+}
+
+.form-body {
+  @apply px-6 py-6 max-md:px-4 max-md:py-5;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(15, minmax(0, 1fr));
+  @apply items-start gap-5;
+}
+
+.grid-date { grid-column: 1 / span 2; grid-row: 1; }
+.grid-family { grid-column: 3 / span 3; grid-row: 1; }
+.grid-top-issue { grid-column: 6 / span 3; grid-row: 1; }
+.grid-failure-qty { grid-column: 9 / span 2; grid-row: 1; }
+.grid-build-qty { grid-column: 1 / span 2; grid-row: 2; }
+.grid-fr { grid-column: 3 / span 2; grid-row: 2; }
+.grid-category { grid-column: 5 / span 3; grid-row: 2; }
+.grid-return { grid-column: 8 / span 3; grid-row: 2; }
+.grid-fail-picture { grid-column: 11 / 16; grid-row: 1 / span 2; }
+.grid-major-part { grid-column: 1 / span 5; grid-row: 3; }
+.grid-failure-factor { grid-column: 6 / span 5; grid-row: 3; }
+.grid-repair-result { grid-column: 1 / span 5; grid-row: 4; }
+.grid-actions { grid-column: 6 / span 5; grid-row: 4; }
+.grid-evidence { grid-column: 11 / 16; grid-row: 3 / span 2; }
+
+.return-group {
+  @apply grid min-w-0 grid-cols-2 gap-2.5;
+}
+
+.return-group > small {
+  @apply col-span-full -mt-0.5 text-caption font-medium text-danger;
+}
+
+.field {
+  @apply min-w-0;
+}
+
+.field > span:first-child {
+  @apply min-h-[1.125rem];
+}
+
+.field b,
+.upload-content b {
+  @apply font-medium text-danger;
+}
+
+.field small {
+  @apply -mt-0.5 text-caption font-medium text-danger;
+}
+
+.field textarea {
+  @apply h-auto min-h-32 py-2.5 leading-5;
+  resize: vertical;
+}
+
+.field input[readonly] {
+  @apply cursor-default bg-surface-subtle font-medium text-ink-secondary;
+}
+
+.field select {
+  @apply cursor-pointer;
+}
+
+.upload-zone.invalid {
+  @apply border-danger bg-danger-soft/40;
+}
+
+.suffix-input {
+  @apply relative flex items-center;
+}
+
+.suffix-input input {
+  @apply pr-9;
+}
+
+.suffix-input > span {
+  @apply absolute right-3 font-semibold text-brand-800;
+}
+
+.upload-zone {
+  @apply relative flex h-[15.5rem] w-full cursor-pointer flex-col items-stretch justify-start gap-2 overflow-hidden rounded-lg border border-dashed border-line-strong bg-surface-subtle p-3 text-ink transition-colors duration-150 hover:border-brand-600 hover:bg-brand-50 hover:ring-2 hover:ring-brand-600/10;
+}
+
+.upload-zone:focus-within {
+  @apply border-brand-600 bg-brand-50 ring-2 ring-brand-600/30 ring-offset-2 ring-offset-surface;
+}
+
+.upload-zone.has-file {
+  @apply border-solid border-brand-600/25 bg-surface;
+}
+
+.upload-zone > input {
+  @apply absolute inset-0 z-20 size-full cursor-pointer opacity-0;
+}
+
+.upload-icon {
+  @apply grid size-10 flex-none place-items-center self-center rounded-lg bg-brand-100 text-brand-800;
+}
+
+.upload-icon svg {
+  @apply size-5 fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75];
+}
+
+.image-preview {
+  @apply relative order-2 block h-[12.25rem] w-full flex-none overflow-hidden bg-transparent;
+}
+
+.image-preview img {
+  @apply block size-full object-contain;
+}
+
+.image-preview-gallery {
+  @apply flex size-full snap-x snap-mandatory flex-row gap-2 overflow-x-auto overflow-y-hidden p-1;
+  scrollbar-width: none;
+}
+
+.image-preview-gallery::-webkit-scrollbar { display: none; }
+
+.image-preview-gallery img {
+  @apply h-full w-full flex-none snap-center rounded-md border border-line bg-surface-subtle object-contain;
+}
+
+.gallery-arrow {
+  @apply absolute top-1/2 z-30 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-line bg-surface/95 text-2xl font-semibold text-ink shadow-sm transition hover:border-brand-600 hover:text-brand-600;
+}
+
+.gallery-arrow-left { @apply left-3; }
+.gallery-arrow-right { @apply right-3; }
+
+.gallery-position {
+  @apply absolute right-3 top-3 z-30 rounded-full bg-ink/75 px-3 py-1 text-xs font-semibold text-white shadow-sm;
+}
+
+.gallery-delete {
+  @apply absolute left-3 top-3 z-30 flex size-8 items-center justify-center rounded-full border border-danger/30 bg-surface/95 text-xl font-semibold text-danger shadow-sm transition hover:bg-danger-soft;
+}
+
+.image-change {
+  @apply absolute inset-x-0 bottom-0 bg-brand-950/80 px-2.5 py-2 text-center text-caption font-medium text-white opacity-0 transition-opacity duration-150;
+}
+
+.upload-zone:hover .image-change {
+  @apply opacity-100;
+}
+
+.upload-content {
+  @apply order-1 grid min-w-0 gap-1 text-center text-caption text-ink-muted;
+}
+
+.upload-content strong {
+  @apply text-base font-medium text-ink;
+}
+
+.upload-zone.has-file .upload-content > span {
+  @apply hidden;
+}
+
+.form-actions {
+  @apply sticky bottom-0 z-10 flex justify-end border-t border-line bg-surface-subtle/95 px-6 py-4 shadow-top backdrop-blur-md max-md:px-4;
+}
+
+.action-buttons {
+  @apply flex w-full justify-end;
+}
+
+@media (max-width: 1180px) {
+  .form-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .grid-date,
+  .grid-family,
+  .grid-failure-qty,
+  .grid-build-qty,
+  .grid-fr,
+  .grid-category,
+  .grid-return,
+  .grid-major-part,
+  .grid-failure-factor {
+    grid-column: span 2;
+    grid-row: auto;
+  }
+
+  .grid-top-issue {
+    grid-column: span 4;
+    grid-row: auto;
+  }
+
+  .grid-fail-picture,
+  .grid-repair-result,
+  .grid-actions,
+  .grid-evidence {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .upload-zone {
+    @apply h-auto min-h-36 flex-row items-center;
+  }
+
+  .image-preview {
+    @apply order-none h-[7.375rem] w-[13.125rem];
+  }
+
+  .upload-content {
+    @apply order-none text-left;
+  }
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    @apply gap-4;
+  }
+
+  .grid-date,
+  .grid-family,
+  .grid-top-issue,
+  .grid-failure-qty,
+  .grid-build-qty,
+  .grid-fr,
+  .grid-category,
+  .grid-return,
+  .grid-major-part,
+  .grid-failure-factor,
+  .grid-fail-picture,
+  .grid-repair-result,
+  .grid-actions,
+  .grid-evidence {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .return-group {
+    @apply grid-cols-1;
+  }
+
+  .upload-zone {
+    @apply flex-col items-stretch;
+  }
+
+  .image-preview {
+    @apply h-52 w-full;
+  }
+
+  .upload-content {
+    @apply text-center;
+  }
+}
+.form-error-alert { @apply mb-4 rounded-lg border border-danger-border bg-danger-soft px-4 py-3 text-sm font-medium text-danger; }

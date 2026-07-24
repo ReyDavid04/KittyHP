@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { BadRequestException, Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Query, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { extname } from 'node:path';
-import { AdminGuard } from '../../auth/admin.guard';
+import { EditorGuard } from '../../auth/editor.guard';
 import { AuthGuard, RequestWithAuth } from '../../auth/auth.guard';
 import { CreateRepairCatalogItemDto } from '../dto/create-repair-catalog-item.dto';
 import { CreateRepairDto } from '../dto/create-repair.dto';
@@ -18,6 +18,12 @@ function toUploadedPath(file?: { filename?: string }): string | undefined {
   return file ? `/uploads/${file.filename}` : undefined;
 }
 
+function mergeUploadedPaths(existing: string | null | undefined, files: UploadFile[] | undefined): string | undefined {
+  const previous = existing ? (() => { try { const parsed = JSON.parse(existing); return Array.isArray(parsed) ? parsed : [existing]; } catch { return [existing]; } })() : [];
+  const uploaded = (files ?? []).map(toUploadedPath).filter((path): path is string => Boolean(path));
+  return existing !== undefined || uploaded.length ? JSON.stringify([...previous, ...uploaded]) : undefined;
+}
+
 type UploadFile = { filename: string; originalname: string };
 type UploadFields = { failPicture?: UploadFile[]; evidencePicture?: UploadFile[] };
 
@@ -27,11 +33,12 @@ export class RepairsController {
   constructor(private readonly repairsService: RepairsService) {}
 
   @Post()
+  @UseGuards(EditorGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
-        { name: 'failPicture', maxCount: 1 },
-        { name: 'evidencePicture', maxCount: 1 },
+        { name: 'failPicture', maxCount: 10 },
+        { name: 'evidencePicture', maxCount: 10 },
       ],
       {
         storage: require('multer').diskStorage({
@@ -47,8 +54,8 @@ export class RepairsController {
     @UploadedFiles() files: UploadFields,
     @Req() request: RequestWithAuth,
   ) {
-    createRepairDto.failPicture = toUploadedPath(files.failPicture?.[0]) ?? createRepairDto.failPicture ?? undefined;
-    createRepairDto.evidencePicture = toUploadedPath(files.evidencePicture?.[0]) ?? createRepairDto.evidencePicture ?? undefined;
+    createRepairDto.failPicture = mergeUploadedPaths(createRepairDto.failPicture, files.failPicture);
+    createRepairDto.evidencePicture = mergeUploadedPaths(createRepairDto.evidencePicture, files.evidencePicture);
     return this.repairsService.create(createRepairDto, request.user!.id);
   }
 
@@ -68,7 +75,7 @@ export class RepairsController {
   }
 
   @Post('catalog-items/:type')
-  @UseGuards(AdminGuard)
+  @UseGuards(EditorGuard)
   createCatalogItem(
     @Param('type') type: string,
     @Body() createCatalogItemDto: CreateRepairCatalogItemDto,
@@ -77,7 +84,7 @@ export class RepairsController {
   }
 
   @Patch('catalog-items/:type/:catalogItemId')
-  @UseGuards(AdminGuard)
+  @UseGuards(EditorGuard)
   updateCatalogItem(
     @Param('type') type: string,
     @Param('catalogItemId') catalogItemId: string,
@@ -87,7 +94,7 @@ export class RepairsController {
   }
 
   @Delete('catalog-items/:type/:catalogItemId')
-  @UseGuards(AdminGuard)
+  @UseGuards(EditorGuard)
   deleteCatalogItem(
     @Param('type') type: string,
     @Param('catalogItemId') catalogItemId: string,
@@ -107,12 +114,12 @@ export class RepairsController {
   }
 
   @Patch(':id')
-  @UseGuards(AdminGuard)
+  @UseGuards(EditorGuard)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
-        { name: 'failPicture', maxCount: 1 },
-        { name: 'evidencePicture', maxCount: 1 },
+        { name: 'failPicture', maxCount: 10 },
+        { name: 'evidencePicture', maxCount: 10 },
       ],
       {
         storage: require('multer').diskStorage({
@@ -128,8 +135,8 @@ export class RepairsController {
     @Body() updateRepairDto: UpdateRepairDto,
     @UploadedFiles() files: UploadFields,
   ) {
-    updateRepairDto.failPicture = toUploadedPath(files.failPicture?.[0]) ?? updateRepairDto.failPicture;
-    updateRepairDto.evidencePicture = toUploadedPath(files.evidencePicture?.[0]) ?? updateRepairDto.evidencePicture;
+    updateRepairDto.failPicture = mergeUploadedPaths(updateRepairDto.failPicture, files.failPicture);
+    updateRepairDto.evidencePicture = mergeUploadedPaths(updateRepairDto.evidencePicture, files.evidencePicture);
 
     const repair = await this.repairsService.update(id, updateRepairDto);
 
@@ -140,8 +147,33 @@ export class RepairsController {
     return repair;
   }
 
+  @Post('import')
+  @UseGuards(EditorGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  importWorkbook(@UploadedFile() file: { buffer: Buffer } | undefined, @Query('preview') preview: string, @Query('exclusions') exclusions: string, @Req() request: RequestWithAuth) {
+    if (!file) throw new NotFoundException('Selecciona un archivo Excel.');
+    let parsedExclusions: Record<string, string[]> = {};
+    if (exclusions) {
+      try { parsedExclusions = JSON.parse(exclusions); } catch { throw new BadRequestException('Las exclusiones de importación no son válidas.'); }
+    }
+    return this.repairsService.importWorkbook(file.buffer, request.user!.id, preview === 'true', parsedExclusions);
+  }
+
+  @Post('import/confirm')
+  @UseGuards(EditorGuard)
+  confirmImport(@Body() records: CreateRepairDto[], @Req() request: RequestWithAuth) {
+    return this.repairsService.confirmImport(records, request.user!.id);
+  }
+
+  @Patch(':id/review')
+  async setReview(@Param('id') id: string, @Body('review') review: boolean) {
+    const repair = await this.repairsService.setReview(id, review);
+    if (!repair) throw new NotFoundException(`Repair ${id} not found`);
+    return repair;
+  }
+
   @Delete(':id')
-  @UseGuards(AdminGuard)
+  @UseGuards(EditorGuard)
   async remove(@Param('id') id: string) {
     const deleted = await this.repairsService.delete(id);
 

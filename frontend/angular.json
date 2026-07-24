@@ -24,11 +24,7 @@
                 "output": "assets/"
               }
             ],
-            "styles": [
-              "src/styles.css",
-              "src/catalog-management-overrides.css",
-              "src/login-typography-overrides.css"
-            ],
+            "styles": ["src/styles.css"],
             "scripts": []
           }
         },

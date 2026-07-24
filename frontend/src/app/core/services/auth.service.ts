@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'user' | 'viewer';
 
 export interface AuthUser {
   id: number;
@@ -116,7 +116,7 @@ export class AuthService {
       const raw = localStorage.getItem(this.storageKey);
       if (!raw) return null;
       const session = JSON.parse(raw) as StoredSession;
-      const validRole = session.role === 'admin' || session.role === 'user';
+      const validRole = session.role === 'admin' || session.role === 'user' || session.role === 'viewer';
 
       if (
         !session.token ||

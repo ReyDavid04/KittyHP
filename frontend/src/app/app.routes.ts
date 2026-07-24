@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
+import { editorGuard } from './core/guards/editor.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { LoginPageComponent } from './features/auth/pages/login-page.component';
 import { UserManagementPageComponent } from './features/auth/pages/user-management-page.component';
@@ -15,11 +16,11 @@ export const appRoutes: Routes = [
   { path: 'forgot-password', component: LoginPageComponent, data: { mode: 'forgot' } },
   { path: '', component: RepairsPageComponent, canActivate: [authGuard] },
   { path: 'production-defects', component: ProductionDefectsPageComponent, canActivate: [authGuard] },
-  { path: 'repairs/new', component: RepairEditorPageComponent, canActivate: [authGuard] },
+  { path: 'repairs/new', component: RepairEditorPageComponent, canActivate: [authGuard, editorGuard] },
   { path: 'repairs/:id/view', component: RepairViewPageComponent, canActivate: [authGuard] },
-  { path: 'repairs/:id/edit', component: RepairEditorPageComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'repairs/:id/edit', component: RepairEditorPageComponent, canActivate: [authGuard, editorGuard] },
   { path: 'settings/users', component: UserManagementPageComponent, canActivate: [authGuard, adminGuard] },
-  { path: 'settings/catalogs/:type', component: CatalogManagementPageComponent, canActivate: [authGuard, adminGuard] },
+  { path: 'settings/catalogs/:type', component: CatalogManagementPageComponent, canActivate: [authGuard, editorGuard] },
   { path: 'settings', redirectTo: 'settings/catalogs/top_issue', pathMatch: 'full' },
   { path: '**', redirectTo: '' },
 ];

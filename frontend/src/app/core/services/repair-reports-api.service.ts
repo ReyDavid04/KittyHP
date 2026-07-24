@@ -7,6 +7,7 @@ type RepairReportResponse = Omit<RepairReport, 'frPercentage' | 'returnYesQty' |
   frPercentage: string | number;
   returnYesQty: string | number;
   returnNoQty: string | number;
+  review: boolean | number;
 };
 
 export type RepairCatalogType = 'family' | 'top_issue' | 'category' | 'major_part' | 'failure_factor';
@@ -81,12 +82,38 @@ export class RepairReportsApiService {
     return this.httpClient.delete<{ deleted: true }>(`${this.baseUrl}/${id}`);
   }
 
+  importWorkbook(file: File, preview = false, exclusions: Record<string, string[]> = {}): Observable<{ created?: number; preview?: boolean; records?: RepairUpsertPayload[]; total?: number; exclusionOptions?: Record<string, string[]> }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const encoded = encodeURIComponent(JSON.stringify(exclusions));
+    return this.httpClient.post<{ created?: number; preview?: boolean; records?: RepairUpsertPayload[]; total?: number; exclusionOptions?: Record<string, string[]> }>(`${this.baseUrl}/import?preview=${preview}&exclusions=${encoded}`, formData);
+  }
+
+  confirmImport(records: RepairUpsertPayload[]): Observable<{ created: number }> {
+    return this.httpClient.post<{ created: number }>(`${this.baseUrl}/import/confirm`, records);
+  }
+
+  setReview(id: string, review: boolean): Observable<RepairReport> {
+    return this.httpClient.patch<RepairReportResponse>(`${this.baseUrl}/${id}/review`, { review }).pipe(map((repair) => this.normalize(repair)));
+  }
+
   private normalize(repair: RepairReportResponse): RepairReport {
+    const paths = (value: string | null | undefined): string[] => {
+      if (!value) return [];
+      try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [value]; } catch { return [value]; }
+    };
+    const failPictures = paths(repair.failPicture);
+    const evidencePictures = paths(repair.evidencePicture);
     return {
       ...repair,
+      failPicture: failPictures[0] ?? null,
+      evidencePicture: evidencePictures[0] ?? null,
+      failPictures,
+      evidencePictures,
       frPercentage: Number(repair.frPercentage),
       returnYesQty: Number(repair.returnYesQty),
       returnNoQty: Number(repair.returnNoQty),
+      review: Boolean(repair.review),
     };
   }
 
@@ -108,13 +135,8 @@ export class RepairReportsApiService {
     this.appendText(formData, 'failPicture', payload.failPicture);
     this.appendText(formData, 'evidencePicture', payload.evidencePicture);
 
-    if (payload.failPictureFile) {
-      formData.append('failPicture', payload.failPictureFile);
-    }
-
-    if (payload.evidencePictureFile) {
-      formData.append('evidencePicture', payload.evidencePictureFile);
-    }
+    for (const file of payload.failPictureFiles ?? []) formData.append('failPicture', file);
+    for (const file of payload.evidencePictureFiles ?? []) formData.append('evidencePicture', file);
 
     return formData;
   }
