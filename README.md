@@ -138,6 +138,8 @@ npm audit
 
 ## Despliegue offline
 
+Consulta el [manual sencillo de despliegue](MANUAL_DESPLIEGUE.md) para el procedimiento completo.
+
 Genera ambos paquetes:
 
 ```powershell
