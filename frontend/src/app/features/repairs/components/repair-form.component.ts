@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
-import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
+import { RepairDetail, RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairCatalogs, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
 import { UiIconComponent } from '../../../shared/ui';
 import { CatalogAutocompleteDirective } from './catalog-autocomplete.directive';
@@ -198,6 +198,25 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             </ng-template>
           </label>
         </div>
+
+        <section class="details-section" aria-labelledby="repairDetailsTitle">
+          <div class="details-section-heading">
+            <h2 id="repairDetailsTitle">Detalles</h2>
+            <div class="details-section-actions"><span>Información de origen del registro</span><button type="button" class="ui-button ui-button-secondary details-toggle" (click)="showDetails = !showDetails" [attr.aria-expanded]="showDetails">{{ showDetails ? 'Ocultar' : 'Mostrar' }}</button></div>
+          </div>
+          <div class="details-table-wrap" *ngIf="showDetails">
+            <table class="details-table">
+              <thead><tr><th>CUSTSN</th><th>Family</th><th>Remark</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let detail of details; let detailIndex = index">
+                  <td><input class="ui-control" [value]="detail.custsn" (input)="updateDetail(detailIndex, 'custsn', $any($event.target).value)" placeholder="CUSTSN"></td>
+                  <td><input class="ui-control" [value]="detail.family" (input)="updateDetail(detailIndex, 'family', $any($event.target).value)" placeholder="Family completa"></td>
+                  <td><input class="ui-control" [value]="detail.remark" (input)="updateDetail(detailIndex, 'remark', $any($event.target).value)" placeholder="Remark"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
     </form>
@@ -219,6 +238,8 @@ export class RepairFormComponent implements OnChanges {
   existingEvidencePictures: string[] = [];
   failPictureIndex = 0;
   evidencePictureIndex = 0;
+  details: RepairDetail[] = [{ custsn: '', family: '', remark: '' }];
+  showDetails = true;
   catalogs: RepairCatalogs = { ...EMPTY_CATALOGS };
   catalogsLoading = true;
   catalogError = '';
@@ -286,6 +307,9 @@ export class RepairFormComponent implements OnChanges {
     this.evidencePictureIndex = 0;
     this.existingFailPictures = [...(this.repair?.failPictures ?? (this.repair?.failPicture ? [this.repair.failPicture] : []))];
     this.existingEvidencePictures = [...(this.repair?.evidencePictures ?? (this.repair?.evidencePicture ? [this.repair.evidencePicture] : []))];
+    this.details = this.repair?.details?.length
+      ? this.repair.details.map((detail) => ({ ...detail }))
+      : [{ custsn: '', family: this.repair?.family ?? '', remark: '' }];
     this.form.reset({
       recordDate: this.repair?.recordDate ?? this.defaultRecordDate(),
       family: this.repair?.family ?? '',
@@ -366,7 +390,14 @@ export class RepairFormComponent implements OnChanges {
       evidencePicture: JSON.stringify(this.existingEvidencePictures),
       failPictureFiles: this.failPictureFiles,
       evidencePictureFiles: this.evidencePictureFiles,
+      details: this.details.map((detail) => ({ ...detail })),
     });
+  }
+
+  updateDetail(index: number, field: keyof RepairDetail, value: string): void {
+    const detail = this.details[index];
+    if (!detail) return;
+    this.details[index] = { ...detail, [field]: value };
   }
 
   scrollGallery(event: Event, gallery: HTMLElement, direction: number): void {

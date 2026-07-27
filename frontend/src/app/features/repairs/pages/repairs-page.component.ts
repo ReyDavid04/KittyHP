@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, OnDestroy, inject } from '@angular/core';
+import { interval, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
-import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
+import { ProductionSnapshot, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UiBadgeComponent, UiIconComponent } from '../../../shared/ui';
 import {
@@ -23,7 +24,7 @@ import { CatalogAutocompleteDirective } from '../components/catalog-autocomplete
   templateUrl: './repairs-page.component.html',
   styleUrl: './repairs-page.component.css',
 })
-export class RepairsPageComponent {
+export class RepairsPageComponent implements OnDestroy {
   readonly repairReportsApi = inject(RepairReportsApiService);
   readonly authService = inject(AuthService);
   readonly router = inject(Router);
@@ -37,6 +38,9 @@ export class RepairsPageComponent {
   pageSize = 8;
   isExportingExcel = false;
   isImporting = false;
+  private activeImportRequest?: Subscription;
+  private repairsRefreshSubscription?: Subscription;
+  private isRefreshingRepairs = false;
   importError = '';
   private importErrorTimer?: ReturnType<typeof setTimeout>;
   importPreview: RepairUpsertPayload[] | null = null;
@@ -49,7 +53,12 @@ export class RepairsPageComponent {
   showImportExclusions = false;
   previewFamilyFilter = '';
   previewFamilyOptions: string[] = [];
+  previewDate = '';
+  previewAnalysisSummary: Record<string, { prioritizedQty: number; totalDefects: number }> = {};
   private previewAllRecords: RepairUpsertPayload[] = [];
+  private previewProductionSnapshot: ProductionSnapshot | null = null;
+  private pendingPreviewExclusionRefresh = false;
+  private previewExclusionRefreshTimer: number | undefined;
   sort: RepairSort = { key: null, direction: null };
   filters: RepairColumnFilters = this.createEmptyFilters();
   availableValues: RepairColumnValues = this.createEmptyFilters();
@@ -57,11 +66,23 @@ export class RepairsPageComponent {
   constructor() {
     this.restoreViewState();
     this.loadRepairs();
+    this.repairsRefreshSubscription = interval(15_000).subscribe(() => this.refreshRepairsSilently());
+  }
+
+  ngOnDestroy(): void {
+    this.repairsRefreshSubscription?.unsubscribe();
+    this.activeImportRequest?.unsubscribe();
+    if (this.previewExclusionRefreshTimer !== undefined) window.clearTimeout(this.previewExclusionRefreshTimer);
+    if (this.importErrorTimer) clearTimeout(this.importErrorTimer);
   }
 
   get activeFilterCount(): number {
     const columnFilterCount = Object.values(this.filters).filter((values) => values.length > 0).length;
     return columnFilterCount + (this.dateFrom || this.dateTo ? 1 : 0);
+  }
+
+  get importPreviewCount(): number {
+    return this.previewAllRecords.length;
   }
 
   get filteredRepairs(): RepairReport[] {
@@ -129,6 +150,22 @@ export class RepairsPageComponent {
     });
   }
 
+  private refreshRepairsSilently(): void {
+    if (this.isImporting || this.isRefreshingRepairs) return;
+    this.isRefreshingRepairs = true;
+    const currentPage = this.currentPage;
+    this.repairReportsApi.getAll().subscribe({
+      next: (repairs) => {
+        this.repairs = repairs;
+        this.availableValues = this.buildAvailableValues(repairs);
+        const maxPage = Math.max(1, Math.ceil(this.filteredRepairs.length / this.pageSize));
+        this.currentPage = Math.min(currentPage, maxPage);
+      },
+      error: () => { this.isRefreshingRepairs = false; },
+      complete: () => { this.isRefreshingRepairs = false; },
+    });
+  }
+
   openNewRepair(): void { void this.router.navigate(['/repairs/new']); }
 
   importExcel(event: Event): void {
@@ -136,35 +173,129 @@ export class RepairsPageComponent {
     const file = input.files?.[0];
     if (!file) return;
     this.dismissImportError();
+    this.activeImportRequest?.unsubscribe();
     this.isImporting = true;
-    this.repairReportsApi.importWorkbook(file, true).subscribe({
-      next: (result) => { this.isImporting = false; input.value = ''; this.importPreviewFile = file; this.setImportPreviewRecords(result.records ?? []); this.previewExclusionOptions = result.exclusionOptions ?? this.previewExclusionOptions; this.repairReportsApi.getCatalogs().subscribe((catalogs) => { this.previewCatalogs = catalogs; }); },
-      error: (error: unknown) => { this.isImporting = false; input.value = ''; this.importError = this.readImportError(error); },
+    this.activeImportRequest = this.repairReportsApi.importWorkbook(file, true).subscribe({
+      next: (result) => { this.activeImportRequest = undefined; this.isImporting = false; input.value = ''; this.importPreviewFile = file; this.previewAnalysisSummary = result.analysisSummary ?? {}; this.previewProductionSnapshot = result.productionSnapshot ?? null; this.setImportPreviewRecords(result.records ?? []); const fileDate = this.dateFromImportFilename(file.name); if (fileDate) { this.previewDate = fileDate; this.applyPreviewDate(); } this.previewExclusionOptions = result.exclusionOptions ?? this.previewExclusionOptions; this.repairReportsApi.getCatalogs().subscribe((catalogs) => { this.previewCatalogs = this.mergePreviewCatalogValues(catalogs); }); },
+      error: (error: unknown) => { this.activeImportRequest = undefined; this.isImporting = false; input.value = ''; this.importError = this.readImportError(error); },
     });
   }
   togglePreviewExclusion(key: string, value: string, checked: boolean): void {
     const values = new Set(this.previewExclusions[key] ?? []);
     checked ? values.add(value) : values.delete(value);
     this.previewExclusions = { ...this.previewExclusions, [key]: [...values] };
-    if (!this.importPreviewFile || this.isImporting) return;
+    if (!this.importPreviewFile) return;
+    if (this.isImporting) {
+      this.pendingPreviewExclusionRefresh = true;
+      return;
+    }
+    this.schedulePreviewExclusionRefresh();
+  }
+  private schedulePreviewExclusionRefresh(): void {
+    if (this.previewExclusionRefreshTimer !== undefined) window.clearTimeout(this.previewExclusionRefreshTimer);
+    this.previewExclusionRefreshTimer = window.setTimeout(() => {
+      this.previewExclusionRefreshTimer = undefined;
+      this.refreshPreviewExclusions();
+    }, 250);
+  }
+  private refreshPreviewExclusions(): void {
+    if (!this.importPreviewFile) return;
+    const selectedDate = this.previewDate || this.dateFromImportFilename(this.importPreviewFile.name) || '';
+    const selectedFamily = this.previewFamilyFilter;
     this.isImporting = true;
-    this.repairReportsApi.importWorkbook(this.importPreviewFile, true, this.previewExclusions).subscribe({
-      next: (result) => { this.isImporting = false; this.setImportPreviewRecords(result.records ?? []); this.previewExclusionOptions = result.exclusionOptions ?? this.previewExclusionOptions; },
-      error: (error: unknown) => { this.isImporting = false; this.importError = this.readImportError(error); },
+    this.activeImportRequest = this.repairReportsApi.importWorkbook(this.importPreviewFile, true, this.previewExclusions).subscribe({
+      next: (result) => { this.activeImportRequest = undefined; this.isImporting = false; this.previewAnalysisSummary = result.analysisSummary ?? {}; this.previewProductionSnapshot = result.productionSnapshot ?? null; this.setImportPreviewRecords(result.records ?? []); if (selectedDate) { this.previewDate = selectedDate; this.applyPreviewDate(); } this.previewFamilyFilter = selectedFamily; this.applyPreviewFamilyFilter(); this.previewExclusionOptions = result.exclusionOptions ?? this.previewExclusionOptions; this.runPendingPreviewExclusionRefresh(); },
+      error: (error: unknown) => { this.activeImportRequest = undefined; this.isImporting = false; this.importError = this.readImportError(error); this.runPendingPreviewExclusionRefresh(); },
     });
   }
+  private runPendingPreviewExclusionRefresh(): void {
+    if (!this.pendingPreviewExclusionRefresh) return;
+    this.pendingPreviewExclusionRefresh = false;
+    this.schedulePreviewExclusionRefresh();
+  }
   confirmImport(): void {
-    if (!this.importPreview?.length || this.isImporting) return;
+    if (!this.previewAllRecords.length || this.isImporting) return;
     this.isImporting = true;
-    this.repairReportsApi.confirmImport(this.importPreview).subscribe({
-      next: () => { this.isImporting = false; this.cancelImportPreview(); this.loadRepairs(); },
-      error: (error: unknown) => { this.isImporting = false; this.importError = this.readImportError(error); },
+    const snapshot = this.previewProductionSnapshot ? { ...this.previewProductionSnapshot, recordDate: this.previewDate || this.previewProductionSnapshot.recordDate } : undefined;
+    this.activeImportRequest = this.repairReportsApi.confirmImport(this.previewAllRecords, snapshot).subscribe({
+      next: () => { this.activeImportRequest = undefined; this.isImporting = false; this.cancelImportPreview(); this.loadRepairs(); },
+      error: (error: unknown) => { this.activeImportRequest = undefined; this.isImporting = false; this.importError = this.readImportError(error); },
     });
   }
 
-  cancelImportPreview(): void { this.importPreview = null; this.importPreviewFile = null; this.originalImportPreview = []; this.importPreviewOriginalByRecord.clear(); this.previewExclusions = { cause: [], majorPart: [], shiftFail: [], repeat: [] }; this.previewExclusionOptions = { cause: [], majorPart: [], shiftFail: [], repeat: [] }; this.showImportExclusions = false; }
+  cancelImportPreview(): void { this.activeImportRequest?.unsubscribe(); this.activeImportRequest = undefined; this.isImporting = false; this.importPreview = null; this.importPreviewFile = null; this.originalImportPreview = []; this.importPreviewOriginalByRecord.clear(); this.previewProductionSnapshot = null; this.previewAnalysisSummary = {}; this.previewExclusions = { cause: [], majorPart: [], shiftFail: [], repeat: [] }; this.previewExclusionOptions = { cause: [], majorPart: [], shiftFail: [], repeat: [] }; this.showImportExclusions = false; }
   toggleImportExclusions(): void { this.showImportExclusions = !this.showImportExclusions; }
-  applyPreviewFamilyFilter(): void { this.importPreview = this.previewFamilyFilter ? this.previewAllRecords.filter((record) => record.family === this.previewFamilyFilter) : structuredClone(this.previewAllRecords); }
+  hasPreviewExclusions(): boolean {
+    return Object.values(this.previewExclusions).some((values) => values.length > 0);
+  }
+  @HostListener('document:click', ['$event'])
+  closeExclusionsOnOutsideClick(event: MouseEvent): void {
+    if (!this.showImportExclusions) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.import-exclusion-panel, .import-preview-modal-tools button')) return;
+    this.showImportExclusions = false;
+  }
+  applyPreviewFamilyFilter(): void {
+    this.importPreview = this.previewFamilyFilter
+      ? this.previewAllRecords.filter((record) => record.family === this.previewFamilyFilter)
+      : [...this.previewAllRecords];
+    this.renderPreviewFrColumn();
+  }
+  previewSummary(): { prioritizedQty: number; totalDefects: number } {
+    const entries = Object.entries(this.previewAnalysisSummary).filter(([family]) => !this.previewFamilyFilter || family === this.previewFamilyFilter);
+    return entries.reduce((summary, [, value]) => ({
+      prioritizedQty: summary.prioritizedQty + Number(value.prioritizedQty ?? 0),
+      totalDefects: summary.totalDefects + Number(value.totalDefects ?? 0),
+    }), { prioritizedQty: 0, totalDefects: 0 });
+  }
+  applyPreviewDate(): void {
+    if (!this.previewDate) return;
+    this.previewAllRecords.forEach((record) => { record.recordDate = this.previewDate; });
+    this.importPreview?.forEach((record) => { record.recordDate = this.previewDate; });
+    this.originalImportPreview.forEach((record) => { record.recordDate = this.previewDate; });
+    this.importPreview?.forEach((record) => { const original = this.importPreviewOriginalByRecord.get(record); if (original) original.recordDate = this.previewDate; });
+    this.previewAllRecords.forEach((record) => { const original = this.importPreviewOriginalByRecord.get(record); if (original) original.recordDate = this.previewDate; });
+  }
+  previewFr(record: RepairUpsertPayload): number {
+    const failure = Number(record.failureQty ?? 0);
+    const build = Number(record.buildQty ?? 0);
+    return build > 0 ? (failure / build) * 100 : 0;
+  }
+  private renderPreviewFrColumn(): void {
+    window.setTimeout(() => {
+      const table = document.querySelector<HTMLTableElement>('.import-preview-modal .import-preview-table');
+      if (!table) return;
+      table.querySelector('thead tr th.preview-fr-header')?.remove();
+      table.querySelectorAll('tbody tr').forEach((row) => row.querySelector('td.preview-fr-cell')?.remove());
+      const header = document.createElement('th');
+      header.className = 'preview-fr-header';
+      header.textContent = 'F/R';
+      table.querySelector('thead tr')?.insertBefore(header, table.querySelector('thead tr')?.children[5] ?? null);
+      this.importPreview?.forEach((record, index) => {
+        const row = table.querySelectorAll('tbody tr')[index];
+        if (!row) return;
+        const cell = document.createElement('td');
+        cell.className = 'preview-fr-cell';
+        const input = document.createElement('input');
+        input.className = 'import-preview-input numeric preview-fr-input';
+        input.type = 'text';
+        input.readOnly = true;
+        input.value = `${this.previewFr(record).toFixed(2)}%`;
+        input.setAttribute('aria-label', 'F/R calculado');
+        cell.appendChild(input);
+        row.insertBefore(cell, row.children[5] ?? null);
+      });
+    });
+  }
+  private dateFromImportFilename(fileName: string): string | null {
+    const match = fileName.match(/(?:reporte\s*)?(\d{2})\s+(\d{2})/i);
+    if (!match) return null;
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    const year = new Date().getFullYear();
+    if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
   dismissImportError(): void {
     this.importError = '';
     if (this.importErrorTimer) {
@@ -182,25 +313,64 @@ export class RepairsPageComponent {
     this.importErrorTimer = setTimeout(() => this.dismissImportError(), 6000);
     return text;
   }
-  removePreviewRecord(index: number): void { this.importPreview?.splice(index, 1); }
+  removePreviewRecord(index: number): void {
+    const record = this.importPreview?.[index];
+    if (!record) return;
+    this.previewAllRecords = this.previewAllRecords.filter((item) => item !== record);
+    this.importPreview = this.importPreview?.filter((item) => item !== record) ?? [];
+    this.renderPreviewFrColumn();
+  }
   resetPreviewRecord(index: number): void {
     const record = this.importPreview?.[index];
     const original = record && this.importPreviewOriginalByRecord.get(record);
     if (!this.importPreview || !original) return;
-    const restored = structuredClone(original);
-    this.importPreview[index] = restored;
-    this.importPreviewOriginalByRecord.set(restored, structuredClone(original));
+    Object.assign(record, structuredClone(original));
+    this.importPreview = [...this.importPreview];
+    this.renderPreviewFrColumn();
   }
-  resetImportPreview(): void { this.setImportPreviewRecords(this.originalImportPreview); }
+  resetImportPreview(): void {
+    const restored = structuredClone(this.originalImportPreview);
+    this.previewAllRecords = structuredClone(restored);
+    this.importPreview = [...this.previewAllRecords];
+    this.previewDate = restored[0]?.recordDate ?? '';
+    this.previewFamilyFilter = '';
+    this.importPreviewOriginalByRecord.clear();
+    this.importPreview.forEach((record, index) => this.importPreviewOriginalByRecord.set(record, structuredClone(restored[index])));
+    this.previewAllRecords.forEach((record, index) => this.importPreviewOriginalByRecord.set(record, structuredClone(restored[index])));
+    this.renderPreviewFrColumn();
+  }
 
   private setImportPreviewRecords(records: RepairUpsertPayload[]): void {
-    this.previewAllRecords = structuredClone(records);
+    const acceptedRecords = records
+      .filter((record) => /^(?:CHIRON|G12\s*800|GEMTREE|MERINO|LAMPAS|CASHMERE)/i.test(record.family ?? ''))
+      .map((record) => ({ ...record, frPercentage: this.previewFr(record) }))
+      .sort((a, b) => Number(b.frPercentage ?? 0) - Number(a.frPercentage ?? 0));
     this.previewFamilyFilter = '';
-    this.previewFamilyOptions = [...new Set(records.map((record) => record.family).filter((family): family is string => Boolean(family)))].sort();
-    this.originalImportPreview = structuredClone(records);
-    this.importPreview = structuredClone(records);
+    this.previewDate = acceptedRecords[0]?.recordDate ?? '';
+    this.previewFamilyOptions = [...new Set(records.map((record) => record.family).filter((family): family is string => Boolean(family)))]
+      .filter((family) => /^(?:CHIRON|G12\s*800|GEMTREE|MERINO|LAMPAS|CASHMERE)/i.test(family))
+      .sort();
+    this.originalImportPreview = structuredClone(acceptedRecords);
+    this.previewAllRecords = acceptedRecords;
+    this.importPreview = [...this.previewAllRecords];
     this.importPreviewOriginalByRecord.clear();
     this.importPreview.forEach((record, index) => this.importPreviewOriginalByRecord.set(record, structuredClone(this.originalImportPreview[index])));
+    this.previewAllRecords.forEach((record, index) => this.importPreviewOriginalByRecord.set(record, structuredClone(this.originalImportPreview[index])));
+    this.renderPreviewFrColumn();
+  }
+  /** Ensure imported values remain selectable even when the catalog is stale or incomplete. */
+  private mergePreviewCatalogValues(catalogs: typeof this.previewCatalogs): typeof this.previewCatalogs {
+    const records = this.previewAllRecords;
+    const merge = (values: string[], key: keyof RepairUpsertPayload): string[] => {
+      const extras = records.map((record) => String(record[key] ?? '').trim()).filter(Boolean);
+      return [...new Set([...(values ?? []), ...extras])].sort((a, b) => a.localeCompare(b));
+    };
+    return {
+      families: merge(catalogs.families, 'family'),
+      topIssues: merge(catalogs.topIssues, 'topIssue'),
+      categories: merge(catalogs.categories, 'category'),
+      majorParts: merge(catalogs.majorParts, 'majorPart'),
+    };
   }
   openEditRepair(repair: RepairReport): void { void this.router.navigate(['/repairs', repair.id, 'edit']); }
 

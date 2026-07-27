@@ -36,12 +36,13 @@ export interface ProductionWeekResponse {
 }
 
 const DEFAULT_PRODUCTION_SERIES = [
-  'BANFF_V72 1.0',
-  'BANFF_X72 1.0',
   'G12 800',
-  'GEMTREE',
+  'CHIRON',
+  'GEMTREE 16',
+  'GEMTREE 18',
   'MERINO',
-  'OBAN30',
+  'LAMPAS',
+  'CASHMERE',
 ];
 
 @Injectable()
@@ -216,19 +217,17 @@ export class ProductionService implements OnModuleInit {
   private async seedProductionSeries(): Promise<void> {
     await this.dataSource.query(`UPDATE production_series SET is_active = 0 WHERE name NOT IN (${DEFAULT_PRODUCTION_SERIES.map(() => '?').join(',')})`, DEFAULT_PRODUCTION_SERIES);
     await this.dataSource.query(`UPDATE production_series SET name = 'CHIRON' WHERE LOWER(name) = 'chiron'`);
-    await this.dataSource.query(`UPDATE production_series SET is_active = 0 WHERE LOWER(name) IN ('gemtree 16', 'gemtree 18') OR (UPPER(name) LIKE 'LAMPAS%' AND UPPER(name) <> 'LAMPAS')`);
     for (let index = 0; index < DEFAULT_PRODUCTION_SERIES.length; index += 1) {
       await this.dataSource.query(
         `INSERT INTO production_series (name, is_active, sort_order)
          VALUES (?, 1, ?)
-         ON DUPLICATE KEY UPDATE sort_order = VALUES(sort_order)`,
+         ON DUPLICATE KEY UPDATE is_active = 1, sort_order = VALUES(sort_order)`,
         [DEFAULT_PRODUCTION_SERIES[index], index + 1],
       );
     }
     // Consolidate historical variants into their canonical family series.
     const prefixes: Array<[string, string[]]> = [
       ['G12 800', ['MACHU%', 'LAPAZ%']],
-      ['GEMTREE', ['GEMTREE%']],
       ['CHIRON', ['CHIRON%']],
       ['MERINO', ['MERINO%']],
       ['LAMPAS', ['LAMPAS%']],

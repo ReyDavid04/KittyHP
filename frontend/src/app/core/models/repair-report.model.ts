@@ -1,3 +1,9 @@
+export interface RepairDetail {
+  custsn: string;
+  family: string;
+  remark: string;
+}
+
 export interface RepairReport {
   id: string;
   review: boolean;
@@ -20,6 +26,7 @@ export interface RepairReport {
   evidencePicture?: string | null;
   evidencePictures?: string[];
   sourcePayload?: Record<string, unknown> | null;
+  details?: RepairDetail[];
 }
 
 export interface RepairUpsertPayload {
@@ -39,4 +46,5 @@ export interface RepairUpsertPayload {
   evidencePicture?: string | null;
   failPictureFiles?: File[];
   evidencePictureFiles?: File[];
+  details?: RepairDetail[];
 }

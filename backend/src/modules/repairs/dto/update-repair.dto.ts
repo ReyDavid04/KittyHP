@@ -70,4 +70,7 @@ export class UpdateRepairDto {
   @IsString()
   @IsOptional()
   evidencePicture?: string | null;
+
+  @IsOptional()
+  details?: string | Record<string, unknown>[];
 }

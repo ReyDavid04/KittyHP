@@ -85,6 +85,8 @@ export class ProductionDefectsPageComponent {
   }
 
   get canExportExcel(): boolean {
+    // Viewer es un rol de solo consulta: no puede descargar datos.
+    if (this.authService.currentUser()?.role === 'viewer') return false;
     return this.viewMode === 'single' ? Boolean(this.week) : this.trendWeeks.length > 0;
   }
 
@@ -220,7 +222,7 @@ export class ProductionDefectsPageComponent {
   }
 
   async exportToExcel(): Promise<void> {
-    if (!this.canExportExcel || this.isExportingExcel || this.isLoading) return;
+    if (this.authService.currentUser()?.role === 'viewer' || !this.canExportExcel || this.isExportingExcel || this.isLoading) return;
 
     this.isExportingExcel = true;
     this.errorMessage = '';

@@ -7,7 +7,7 @@ import { CreateRepairCatalogItemDto } from '../dto/create-repair-catalog-item.dt
 import { CreateRepairDto } from '../dto/create-repair.dto';
 import { UpdateRepairCatalogItemDto } from '../dto/update-repair-catalog-item.dto';
 import { UpdateRepairDto } from '../dto/update-repair.dto';
-import { RepairsService } from '../services/repairs.service';
+import { ProductionSnapshot, RepairsService } from '../services/repairs.service';
 
 function buildUploadName(originalName: string): string {
   const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -150,19 +150,21 @@ export class RepairsController {
   @Post('import')
   @UseGuards(EditorGuard)
   @UseInterceptors(FileInterceptor('file'))
-  importWorkbook(@UploadedFile() file: { buffer: Buffer } | undefined, @Query('preview') preview: string, @Query('exclusions') exclusions: string, @Req() request: RequestWithAuth) {
+  importWorkbook(@UploadedFile() file: { buffer: Buffer; originalname: string } | undefined, @Query('preview') preview: string, @Query('exclusions') exclusions: string, @Req() request: RequestWithAuth) {
     if (!file) throw new NotFoundException('Selecciona un archivo Excel.');
     let parsedExclusions: Record<string, string[]> = {};
     if (exclusions) {
       try { parsedExclusions = JSON.parse(exclusions); } catch { throw new BadRequestException('Las exclusiones de importación no son válidas.'); }
     }
-    return this.repairsService.importWorkbook(file.buffer, request.user!.id, preview === 'true', parsedExclusions);
+    return this.repairsService.importWorkbook(file.buffer, request.user!.id, preview === 'true', parsedExclusions, file.originalname);
   }
 
   @Post('import/confirm')
   @UseGuards(EditorGuard)
-  confirmImport(@Body() records: CreateRepairDto[], @Req() request: RequestWithAuth) {
-    return this.repairsService.confirmImport(records, request.user!.id);
+  confirmImport(@Body() body: CreateRepairDto[] | { records: CreateRepairDto[]; productionSnapshot?: ProductionSnapshot }, @Req() request: RequestWithAuth) {
+    const records = Array.isArray(body) ? body : body.records;
+    const snapshot = Array.isArray(body) ? undefined : body.productionSnapshot;
+    return this.repairsService.confirmImport(records, request.user!.id, snapshot);
   }
 
   @Patch(':id/review')

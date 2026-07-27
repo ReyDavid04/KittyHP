@@ -15,6 +15,9 @@ import { UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../
           <app-ui-icon name="chevron-left"></app-ui-icon>
           <span>Regresar</span>
         </button>
+        <button type="button" class="ui-button ui-button-secondary" (click)="showDetails = !showDetails" [attr.aria-expanded]="showDetails">
+          {{ showDetails ? 'Ocultar detalles' : 'Mostrar detalles' }}
+        </button>
       </app-ui-page-header>
 
       <app-ui-state *ngIf="isLoading" kind="loading" size="lg" message="Cargando reporte..."></app-ui-state>
@@ -74,6 +77,20 @@ import { UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../
           </article>
         </div>
 
+        <section *ngIf="showDetails" class="details-card ui-card" aria-labelledby="repairDetailsTitle">
+          <div class="details-card-heading"><h2 id="repairDetailsTitle">Detalles</h2><span>Información de origen del registro</span></div>
+          <div class="details-table-wrap">
+            <table class="details-table">
+              <thead><tr><th>CUSTSN</th><th>Family</th><th>Remark</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let detail of (item.details?.length ? item.details : [{custsn: '', family: item.family || '', remark: ''}])">
+                  <td>{{ detail.custsn || '—' }}</td><td>{{ detail.family || '—' }}</td><td>{{ detail.remark || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         <div class="text-grid">
           <article class="text-card ui-card">
             <span class="section-label">Repair result</span>
@@ -116,6 +133,7 @@ export class RepairViewPageComponent {
 
   repair: RepairReport | null = null;
   isLoading = true;
+  showDetails = true;
   errorMessage = '';
 
   constructor() {

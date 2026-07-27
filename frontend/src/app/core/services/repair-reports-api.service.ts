@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { RepairReport, RepairUpsertPayload } from '../models/repair-report.model';
+import { RepairDetail, RepairReport, RepairUpsertPayload } from '../models/repair-report.model';
 
 type RepairReportResponse = Omit<RepairReport, 'frPercentage' | 'returnYesQty' | 'returnNoQty'> & {
   frPercentage: string | number;
@@ -34,6 +34,11 @@ export interface RepairCatalogItemPayload {
   value?: string;
   isActive?: boolean;
   sortOrder?: number;
+}
+
+export interface ProductionSnapshot {
+  recordDate: string;
+  segments: Array<{ name: string; inputQuantity: number; defectQuantity: number }>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -82,15 +87,15 @@ export class RepairReportsApiService {
     return this.httpClient.delete<{ deleted: true }>(`${this.baseUrl}/${id}`);
   }
 
-  importWorkbook(file: File, preview = false, exclusions: Record<string, string[]> = {}): Observable<{ created?: number; preview?: boolean; records?: RepairUpsertPayload[]; total?: number; exclusionOptions?: Record<string, string[]> }> {
+  importWorkbook(file: File, preview = false, exclusions: Record<string, string[]> = {}): Observable<{ created?: number; preview?: boolean; records?: RepairUpsertPayload[]; total?: number; analysisSummary?: Record<string, { prioritizedQty: number; totalDefects: number }>; exclusionOptions?: Record<string, string[]>; productionSnapshot?: ProductionSnapshot }> {
     const formData = new FormData();
     formData.append('file', file);
     const encoded = encodeURIComponent(JSON.stringify(exclusions));
-    return this.httpClient.post<{ created?: number; preview?: boolean; records?: RepairUpsertPayload[]; total?: number; exclusionOptions?: Record<string, string[]> }>(`${this.baseUrl}/import?preview=${preview}&exclusions=${encoded}`, formData);
+    return this.httpClient.post<{ created?: number; preview?: boolean; records?: RepairUpsertPayload[]; total?: number; analysisSummary?: Record<string, { prioritizedQty: number; totalDefects: number }>; exclusionOptions?: Record<string, string[]>; productionSnapshot?: ProductionSnapshot }>(`${this.baseUrl}/import?preview=${preview}&exclusions=${encoded}`, formData);
   }
 
-  confirmImport(records: RepairUpsertPayload[]): Observable<{ created: number }> {
-    return this.httpClient.post<{ created: number }>(`${this.baseUrl}/import/confirm`, records);
+  confirmImport(records: RepairUpsertPayload[], productionSnapshot?: ProductionSnapshot): Observable<{ created: number }> {
+    return this.httpClient.post<{ created: number }>(`${this.baseUrl}/import/confirm`, { records, productionSnapshot });
   }
 
   setReview(id: string, review: boolean): Observable<RepairReport> {
@@ -114,7 +119,20 @@ export class RepairReportsApiService {
       returnYesQty: Number(repair.returnYesQty),
       returnNoQty: Number(repair.returnNoQty),
       review: Boolean(repair.review),
+      details: this.normalizeDetails(repair.details ?? repair.sourcePayload?.['details']),
     };
+  }
+
+  private normalizeDetails(value: unknown): RepairDetail[] {
+    if (!Array.isArray(value)) return [];
+    return value.map((item) => {
+      const detail = item as Record<string, unknown>;
+      return {
+        custsn: String(detail['custsn'] ?? detail['CUSTSN'] ?? '').trim(),
+        family: String(detail['family'] ?? detail['Family'] ?? '').trim(),
+        remark: String(detail['remark'] ?? detail['Remark'] ?? '').trim(),
+      };
+    });
   }
 
   private toFormData(payload: RepairUpsertPayload): FormData {
@@ -134,6 +152,7 @@ export class RepairReportsApiService {
     this.appendText(formData, 'actions', payload.actions);
     this.appendText(formData, 'failPicture', payload.failPicture);
     this.appendText(formData, 'evidencePicture', payload.evidencePicture);
+    if (payload.details?.length) formData.append('details', JSON.stringify(payload.details));
 
     for (const file of payload.failPictureFiles ?? []) formData.append('failPicture', file);
     for (const file of payload.evidencePictureFiles ?? []) formData.append('evidencePicture', file);

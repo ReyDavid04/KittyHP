@@ -11,7 +11,7 @@
         <strong class="week-label">{{ weekLabel }}</strong>
         <button type="button" class="ui-icon-button" (click)="changeWeek(1)" [disabled]="isLoading || isSaving" aria-label="Semana siguiente"><app-ui-icon name="chevron-right"></app-ui-icon></button>
         <button type="button" class="ui-button ui-button-secondary" (click)="goToCurrentWeek()" [disabled]="isLoading || isSaving">Semana actual</button>
-        <button
+        <button *ngIf="authService.currentUser()?.role !== 'viewer'"
           type="button"
           class="ui-button ui-button-secondary"
           (click)="exportToExcel()"
@@ -42,7 +42,7 @@
           </select>
         </label>
         <button type="button" class="ui-button ui-button-secondary" (click)="goToCurrentWeek()" [disabled]="isLoading">Periodo actual</button>
-        <button
+        <button *ngIf="authService.currentUser()?.role !== 'viewer'"
           type="button"
           class="ui-button ui-button-secondary"
           (click)="exportToExcel()"
@@ -63,7 +63,7 @@
         <button type="button" class="ui-button ui-button-primary" (click)="addComparisonWeek()" [disabled]="isLoading || selectedComparisonStarts.length >= maxComparisonWeeks">
           <app-ui-icon name="add"></app-ui-icon> Agregar semana
         </button>
-        <button
+        <button *ngIf="authService.currentUser()?.role !== 'viewer'"
           type="button"
           class="ui-button ui-button-secondary"
           (click)="exportToExcel()"

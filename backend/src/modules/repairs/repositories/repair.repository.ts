@@ -34,6 +34,22 @@ function calculateFrPercentage(failureQty: number, buildQty: number): string {
   return frPercentage.toFixed(2);
 }
 
+function parseDetails(value: unknown): Record<string, string>[] {
+  let parsed: unknown = value;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch { parsed = []; }
+  }
+  if (!Array.isArray(parsed)) return [];
+  return parsed.map((item) => {
+    const detail = item as Record<string, unknown>;
+    return {
+      custsn: String(detail?.custsn ?? detail?.CUSTSN ?? '').trim(),
+      family: String(detail?.family ?? detail?.Family ?? '').trim(),
+      remark: String(detail?.remark ?? detail?.Remark ?? '').trim(),
+    };
+  });
+}
+
 function calculateReturnQuantities(failureQty: number, returnYesQty: number): { returnYesQty: number; returnNoQty: number } {
   if (!Number.isInteger(failureQty) || failureQty < 0) {
     throw new BadRequestException('Failure qty debe ser un número entero válido.');
@@ -69,6 +85,7 @@ export class RepairRepository implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.ensureCreatedByUserIdColumn();
     await this.ensureReviewColumn();
+    await this.ensureNullableReturnColumns();
   }
 
   async setReview(id: string, review: boolean): Promise<RepairEntity | null> {
@@ -84,13 +101,19 @@ export class RepairRepository implements OnModuleInit {
     }
   }
 
+  private async ensureNullableReturnColumns(): Promise<void> {
+    await this.dataSource.query('ALTER TABLE repairs MODIFY COLUMN return_yes_qty INT UNSIGNED NULL DEFAULT NULL');
+    await this.dataSource.query('ALTER TABLE repairs MODIFY COLUMN return_no_qty INT UNSIGNED NULL DEFAULT NULL');
+  }
+
   async create(data: CreateRepairDto, createdByUserId: number): Promise<RepairEntity> {
     const failureQty = data.failureQty ?? 0;
     const buildQty = data.buildQty ?? 0;
-    const returnYesQty = data.returnYesQty ?? 0;
     const frPercentage = calculateFrPercentage(failureQty, buildQty);
-    const returns = calculateReturnQuantities(failureQty, returnYesQty);
-    const returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+    const returns = data.returnYesQty === undefined || data.returnYesQty === null
+      ? null
+      : calculateReturnQuantities(failureQty, data.returnYesQty);
+    const returnStatus = returns ? `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}` : null;
     const [family, topIssue, category, majorPart, failureFactor] = await Promise.all([
       this.resolveCatalogReference('family', data.family, false),
       this.resolveCatalogReference('top_issue', data.topIssue, false),
@@ -111,8 +134,8 @@ export class RepairRepository implements OnModuleInit {
       category: category?.value ?? 'N/A',
       categoryCatalogItemId: category?.id ?? null,
       returnStatus,
-      returnYesQty: returns.returnYesQty,
-      returnNoQty: returns.returnNoQty,
+      returnYesQty: returns?.returnYesQty ?? null,
+      returnNoQty: returns?.returnNoQty ?? null,
       failPicture: data.failPicture ?? null,
       majorPart: majorPart?.value ?? null,
       majorPartCatalogItemId: majorPart?.id ?? null,
@@ -135,9 +158,10 @@ export class RepairRepository implements OnModuleInit {
         failureFactor: failureFactor?.value ?? null,
         failureFactorCatalogItemId: failureFactor?.id ?? null,
         frPercentage: Number(frPercentage),
-        returnYesQty: returns.returnYesQty,
-        returnNoQty: returns.returnNoQty,
+        returnYesQty: returns?.returnYesQty ?? null,
+        returnNoQty: returns?.returnNoQty ?? null,
         createdByUserId,
+        details: parseDetails(data.details),
       },
     });
 
@@ -180,11 +204,17 @@ export class RepairRepository implements OnModuleInit {
       entity.categoryCatalogItemId = reference!.id;
     }
 
-    if (hasValidQuantities) {
-      const returns = calculateReturnQuantities(entity.failureQty, data.returnYesQty ?? entity.returnYesQty);
-      entity.returnYesQty = returns.returnYesQty;
-      entity.returnNoQty = returns.returnNoQty;
-      entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+    if (hasValidQuantities && data.returnYesQty !== undefined) {
+      if (data.returnYesQty === null) {
+        entity.returnYesQty = null;
+        entity.returnNoQty = null;
+        entity.returnStatus = null;
+      } else {
+        const returns = calculateReturnQuantities(entity.failureQty, data.returnYesQty);
+        entity.returnYesQty = returns.returnYesQty;
+        entity.returnNoQty = returns.returnNoQty;
+        entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
+      }
     }
 
     if (data.failPicture !== undefined) entity.failPicture = data.failPicture ?? null;
@@ -223,6 +253,7 @@ export class RepairRepository implements OnModuleInit {
       returnYesQty: entity.returnYesQty,
       returnNoQty: entity.returnNoQty,
       createdByUserId: entity.createdByUserId,
+      details: data.details !== undefined ? parseDetails(data.details) : ((entity.sourcePayload?.['details'] as Record<string, string>[] | undefined) ?? []),
     };
 
     return this.repository.save(entity);

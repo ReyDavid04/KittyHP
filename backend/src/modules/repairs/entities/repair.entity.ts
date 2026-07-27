@@ -41,11 +41,11 @@ export class RepairEntity {
   @Column({ name: 'return_status', type: 'varchar', length: 50, nullable: true })
   returnStatus!: string | null;
 
-  @Column({ name: 'return_yes_qty', type: 'int', unsigned: true, default: 0 })
-  returnYesQty!: number;
+  @Column({ name: 'return_yes_qty', type: 'int', unsigned: true, nullable: true, default: null })
+  returnYesQty!: number | null;
 
-  @Column({ name: 'return_no_qty', type: 'int', unsigned: true, default: 0 })
-  returnNoQty!: number;
+  @Column({ name: 'return_no_qty', type: 'int', unsigned: true, nullable: true, default: null })
+  returnNoQty!: number | null;
 
   @Column({ name: 'fail_picture', type: 'text', nullable: true })
   failPicture!: string | null;

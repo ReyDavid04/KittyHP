@@ -1,4 +1,5 @@
-import { AfterViewInit, Directive, DoCheck, ElementRef, Input, OnDestroy } from '@angular/core';
+import { AfterViewInit, Directive, DoCheck, ElementRef, Input, OnDestroy, Optional, Self } from '@angular/core';
+import { NgControl } from '@angular/forms';
 
 @Directive({
   selector: 'select[appCatalogAutocomplete]',
@@ -13,7 +14,7 @@ export class CatalogAutocompleteDirective implements AfterViewInit, DoCheck, OnD
   private input?: HTMLInputElement;
   private panel?: HTMLDivElement;
 
-  constructor(elementRef: ElementRef<HTMLSelectElement>) {
+  constructor(elementRef: ElementRef<HTMLSelectElement>, @Optional() @Self() private readonly ngControl?: NgControl) {
     this.select = elementRef.nativeElement;
   }
 
@@ -25,6 +26,14 @@ export class CatalogAutocompleteDirective implements AfterViewInit, DoCheck, OnD
     if (!this.input || !this.wrapper) return;
 
     this.input.disabled = this.select.disabled;
+    const modelValue = this.ngControl?.control?.value;
+    if (typeof modelValue === 'string' && modelValue.trim() && !this.exactOption(modelValue)) {
+      const option = document.createElement('option');
+      option.value = modelValue;
+      option.textContent = modelValue;
+      this.select.appendChild(option);
+      this.select.value = modelValue;
+    }
     if (document.activeElement !== this.input && this.input.value !== this.select.value) {
       this.input.value = this.select.value;
     }
@@ -94,12 +103,22 @@ export class CatalogAutocompleteDirective implements AfterViewInit, DoCheck, OnD
       if (!wrapper.contains(event.target as Node | null)) this.close();
     }, { signal });
 
+    this.ensureCurrentOption();
     input.value = this.select.value;
     input.disabled = this.select.disabled;
   }
 
   private availableOptions(): HTMLOptionElement[] {
     return Array.from(this.select.options).filter((option) => Boolean(option.value));
+  }
+
+  private ensureCurrentOption(): void {
+    const value = this.select.value?.trim();
+    if (!value || this.exactOption(value)) return;
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    this.select.appendChild(option);
   }
 
   private exactOption(value: string): HTMLOptionElement | undefined {

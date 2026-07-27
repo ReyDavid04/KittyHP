@@ -63,4 +63,7 @@ export class CreateRepairDto {
   @IsString()
   @IsOptional()
   evidencePicture?: string | null;
+
+  @IsOptional()
+  details?: string | Record<string, unknown>[];
 }
