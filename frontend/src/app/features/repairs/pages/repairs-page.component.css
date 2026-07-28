@@ -8,11 +8,11 @@
 }
 
 .toolbar {
-  @apply flex w-full flex-wrap items-center gap-2.5;
+  @apply flex w-full flex-nowrap items-center gap-2.5;
 }
 
 .search-field {
-  @apply relative flex min-w-[13.75rem] max-w-[32.5rem] flex-[0_1_32.5rem] items-center max-md:max-w-none max-md:flex-1;
+  @apply relative flex min-w-[13.75rem] max-w-[22rem] flex-[0_1_22rem] items-center max-md:max-w-none max-md:flex-1;
 }
 
 .search-icon {
@@ -42,7 +42,11 @@
 }
 
 .toolbar-actions {
-  @apply ml-auto gap-2;
+  @apply ml-auto flex-none gap-2;
+}
+
+@media (max-width: 64rem) {
+  .toolbar { @apply flex-wrap; }
 }
 
 .repair-list-host {

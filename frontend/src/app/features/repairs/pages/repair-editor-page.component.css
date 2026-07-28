@@ -3,7 +3,7 @@
 }
 
 .editor-workspace {
-  @apply m-0 min-h-[calc(100dvh-3.25rem)] w-full max-w-none overflow-hidden p-0 max-md:min-h-0;
+  @apply m-0 min-h-[calc(100dvh-3.25rem)] w-full max-w-none overflow-visible p-0 max-md:min-h-0;
 }
 
 .loading-card {
@@ -24,6 +24,18 @@
 
 .loading-card span {
   @apply mt-auto;
+}
+
+.save-feedback {
+  @apply fixed bottom-5 right-5 z-50 max-w-md rounded-md border px-4 py-3 text-sm font-medium shadow-lg;
+}
+
+.save-feedback-success {
+  @apply border-success/30 bg-success-soft text-success;
+}
+
+.save-feedback-error {
+  @apply border-danger/30 bg-danger-soft text-danger;
 }
 
 @media (max-width: 720px) {

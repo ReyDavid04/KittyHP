@@ -1,5 +1,5 @@
-import { Type } from 'class-transformer';
-import { IsDateString, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class CreateRepairDto {
   @IsDateString()
@@ -36,9 +36,20 @@ export class CreateRepairDto {
   category?: string;
 
   @IsInt()
-  @Type(() => Number)
+  @Transform(({ value }) => value === '' || value === null ? null : Number(value))
   @IsOptional()
-  returnYesQty?: number;
+  returnYesQty?: number | null;
+
+  @IsInt()
+  @Transform(({ value }) => value === '' || value === null ? null : Number(value))
+  @Min(0)
+  @IsOptional()
+  returnNoQty?: number | null;
+
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsOptional()
+  returnNoManual?: boolean;
 
   @IsString()
   @IsOptional()

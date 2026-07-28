@@ -81,10 +81,10 @@ import { UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../
           <div class="details-card-heading"><h2 id="repairDetailsTitle">Detalles</h2><span>Información de origen del registro</span></div>
           <div class="details-table-wrap">
             <table class="details-table">
-              <thead><tr><th>CUSTSN</th><th>Family</th><th>Remark</th></tr></thead>
+              <thead><tr><th>Family</th><th>SN</th><th>Remark</th></tr></thead>
               <tbody>
-                <tr *ngFor="let detail of (item.details?.length ? item.details : [{custsn: '', family: item.family || '', remark: ''}])">
-                  <td>{{ detail.custsn || '—' }}</td><td>{{ detail.family || '—' }}</td><td>{{ detail.remark || '—' }}</td>
+                <tr *ngFor="let detail of (item.details?.length ? item.details : [{custsn: '', family: item.family || '', remark: '', category: item.category || ''}])">
+                  <td>{{ detail.family || '—' }}</td><td>{{ detail.custsn || '—' }}</td><td>{{ detail.remark || '—' }}</td>
                 </tr>
               </tbody>
             </table>

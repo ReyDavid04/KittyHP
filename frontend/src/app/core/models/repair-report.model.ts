@@ -2,6 +2,7 @@ export interface RepairDetail {
   custsn: string;
   family: string;
   remark: string;
+  category: string;
 }
 
 export interface RepairReport {
@@ -14,8 +15,9 @@ export interface RepairReport {
   buildQty: number;
   frPercentage: number;
   category: string;
-  returnYesQty: number;
-  returnNoQty: number;
+  returnYesQty: number | null;
+  returnNoQty: number | null;
+  returnNoManual?: boolean;
   returnStatus?: string | null;
   failPicture?: string | null;
   failPictures?: string[];
@@ -37,7 +39,9 @@ export interface RepairUpsertPayload {
   buildQty?: number;
   frPercentage?: number;
   category: string;
-  returnYesQty: number;
+  returnYesQty: number | null;
+  returnNoQty?: number | null;
+  returnNoManual?: boolean;
   majorPart?: string | null;
   repairResult?: string | null;
   failureFactor?: string | null;

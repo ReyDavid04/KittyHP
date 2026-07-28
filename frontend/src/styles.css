@@ -95,7 +95,7 @@
   }
 
   .ui-page-header {
-    @apply flex min-h-[3.625rem] items-center gap-3 border-b border-line bg-surface px-6 py-3 shadow-xs max-md:flex-wrap max-md:px-4;
+    @apply sticky top-[3.25rem] z-40 flex min-h-[3.625rem] items-center gap-3 border-b border-line bg-surface px-6 py-3 shadow-xs max-md:flex-wrap max-md:px-4;
   }
 
   .ui-page-title {

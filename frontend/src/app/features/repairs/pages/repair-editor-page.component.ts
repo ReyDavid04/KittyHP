@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
@@ -16,6 +17,16 @@ import { RepairFormComponent } from '../components/repair-form.component';
           <button uiHeaderLeading type="button" class="back-button ui-button ui-button-secondary" aria-label="Regresar a reportes" (click)="goBack()">
             <app-ui-icon name="chevron-left"></app-ui-icon>
             <span>Regresar</span>
+          </button>
+
+          <button
+            type="button"
+            class="ui-button ui-button-secondary"
+            [disabled]="isLoading"
+            (click)="repairForm?.toggleDetails()"
+            [attr.aria-expanded]="repairForm?.showDetails"
+          >
+            {{ repairForm?.showDetails ? 'Ocultar detalles' : 'Mostrar detalles' }}
           </button>
 
           <button
@@ -43,13 +54,20 @@ import { RepairFormComponent } from '../components/repair-form.component';
           (save)="saveRepair($event)"
           (cancel)="goBack()"
         ></app-repair-form>
+
+        <div *ngIf="saveMessage" class="save-feedback save-feedback-success" role="status" aria-live="polite">
+          {{ saveMessage }}
+        </div>
+        <div *ngIf="saveError" class="save-feedback save-feedback-error" role="alert">
+          {{ saveError }}
+        </div>
       </section>
     </section>
   `,
   styleUrl: './repair-editor-page.component.css',
 })
 export class RepairEditorPageComponent {
-  @ViewChild(RepairFormComponent) private repairForm?: RepairFormComponent;
+  @ViewChild(RepairFormComponent) repairForm?: RepairFormComponent;
 
   private readonly repairReportsApi = inject(RepairReportsApiService);
   private readonly router = inject(Router);
@@ -58,6 +76,9 @@ export class RepairEditorPageComponent {
   repairId: string | null = this.route.snapshot.paramMap.get('id');
   repair: RepairReport | null = null;
   isLoading = Boolean(this.repairId);
+  isSaving = false;
+  saveMessage = '';
+  saveError = '';
 
   constructor() {
     if (this.repairId) {
@@ -69,7 +90,7 @@ export class RepairEditorPageComponent {
   }
 
   get isSaveDisabled(): boolean {
-    return this.isLoading || !this.repairForm;
+    return this.isLoading || this.isSaving || !this.repairForm;
   }
 
   submitRepair(): void {
@@ -77,11 +98,36 @@ export class RepairEditorPageComponent {
   }
 
   saveRepair(payload: RepairUpsertPayload): void {
+    if (this.isSaving) return;
+
+    this.isSaving = true;
+    this.saveMessage = '';
+    this.saveError = '';
     const request$ = this.repairId
       ? this.repairReportsApi.update(this.repairId, payload)
       : this.repairReportsApi.create(payload);
 
-    request$.subscribe(() => this.goBack());
+    request$.subscribe({
+      next: () => {
+        this.saveMessage = this.repairId
+          ? 'Cambios guardados. Las unidades fueron reasignadas por categoría cuando fue necesario.'
+          : 'Reporte guardado correctamente.';
+        window.setTimeout(() => this.goBack(), 900);
+      },
+      error: (error: unknown) => {
+        this.isSaving = false;
+        this.saveError = this.getErrorMessage(error);
+      },
+    });
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const message = error.error?.message;
+      if (Array.isArray(message)) return message.join(' ');
+      if (typeof message === 'string') return message;
+    }
+    return 'No fue posible guardar el reporte. Inténtalo nuevamente.';
   }
 
   goBack(): void {

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { RepairDetail, RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairCatalogs, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
 import { UiIconComponent } from '../../../shared/ui';
@@ -35,7 +35,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
 @Component({
   selector: 'app-repair-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CatalogAutocompleteDirective, UiIconComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, CatalogAutocompleteDirective, UiIconComponent],
   host: { class: 'block' },
   template: `
     <form class="form-shell" [formGroup]="form" (ngSubmit)="submit()">
@@ -43,12 +43,12 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
       <div class="form-body">
         <div class="form-grid">
           <label class="field grid-date ui-field">
-            <span>Date <b>*</b></span>
+            <span>Date</span>
             <input class="ui-control" type="date" formControlName="recordDate" [class.invalid]="isInvalid('recordDate')" [attr.aria-invalid]="isInvalid('recordDate')">
           </label>
 
           <label class="field grid-family ui-field">
-            <span>Family <b>*</b></span>
+            <span>Family</span>
             <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona Family" class="ui-control" formControlName="family" [class.invalid]="isInvalid('family')" [attr.aria-invalid]="isInvalid('family')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona Family' }}</option>
               <option *ngFor="let option of familyOptions" [value]="option">{{ option }}</option>
@@ -56,7 +56,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </label>
 
           <label class="field grid-top-issue ui-field">
-            <span>Top issue <b>*</b></span>
+            <span>Top issue</span>
             <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona el top issue" class="ui-control" formControlName="topIssue" [class.invalid]="isInvalid('topIssue')" [attr.aria-invalid]="isInvalid('topIssue')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona el top issue' }}</option>
               <option *ngFor="let option of topIssueOptions" [value]="option">{{ option }}</option>
@@ -64,7 +64,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </label>
 
           <label class="field grid-failure-qty ui-field">
-            <span>Failure qty <b>*</b></span>
+            <span>Failure qty</span>
             <input
               class="ui-control"
               type="number"
@@ -78,7 +78,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </label>
 
           <label class="field grid-build-qty ui-field">
-            <span>Build qty <b>*</b></span>
+            <span>Build qty</span>
             <input
               class="ui-control"
               type="number"
@@ -92,7 +92,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </label>
 
           <label class="field grid-fr ui-field">
-            <span>F/R <b>*</b></span>
+            <span>F/R</span>
             <div class="suffix-input">
               <input
                 class="ui-control"
@@ -111,7 +111,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </label>
 
           <label class="field grid-category ui-field">
-            <span>Category <b>*</b></span>
+            <span>Category</span>
             <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona la categoría" class="ui-control" formControlName="category" [class.invalid]="isInvalid('category')" [attr.aria-invalid]="isInvalid('category')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la categoría' }}</option>
               <option *ngFor="let option of categoryOptions" [value]="option">{{ option }}</option>
@@ -120,7 +120,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
 
           <div class="return-group grid-return">
             <label class="field ui-field">
-              <span>Return Yes <b>*</b></span>
+              <span class="return-yes-heading"><span aria-hidden="true"></span><span>Return Yes</span></span>
               <input
                 class="ui-control"
                 type="number"
@@ -134,22 +134,27 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             </label>
 
             <label class="field ui-field">
-              <span>Return No</span>
+              <span class="return-no-heading"><button type="button" class="return-mode-button" (click)="toggleReturnNoMode()" [attr.aria-pressed]="returnNoManual">{{ returnNoManual ? 'Usar automático' : 'Editar manualmente' }}</button><span>Return No</span></span>
               <input
                 class="ui-control"
-                type="text"
+                type="number"
+                min="0"
+                step="1"
                 formControlName="returnNoQty"
-                readonly
-                placeholder="Automático"
-                aria-label="Return No calculado automáticamente"
-                title="Calculado automáticamente: Failure qty - Return Yes"
+                [readonly]="!returnNoManual"
+                [class.invalid]="isReturnNoInvalid"
+                [attr.aria-invalid]="isReturnNoInvalid"
+                [placeholder]="returnNoManual ? 'Cantidad No' : 'Automático'"
+                [attr.aria-label]="returnNoManual ? 'Return No editable manualmente' : 'Return No calculado automáticamente'"
+                [title]="returnNoManual ? 'Valor manual' : 'Calculado automáticamente: Failure qty - Return Yes'"
               >
             </label>
             <small *ngIf="isReturnQuantityInvalid">Return Yes no puede ser mayor que Failure qty.</small>
+            <small *ngIf="isReturnNoInvalid">Return No debe ser un entero entre 0 y Failure qty.</small>
           </div>
 
           <label class="field grid-major-part ui-field">
-            <span>Major part <b>*</b></span>
+            <span>Major part</span>
             <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona la parte principal" class="ui-control" formControlName="majorPart" [class.invalid]="isInvalid('majorPart')" [attr.aria-invalid]="isInvalid('majorPart')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona la parte principal' }}</option>
               <option *ngFor="let option of majorPartOptions" [value]="option">{{ option }}</option>
@@ -157,7 +162,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </label>
 
           <label class="field grid-failure-factor ui-field">
-            <span>Failure factor <b>*</b></span>
+            <span>Failure factor</span>
             <select appCatalogAutocomplete catalogAutocompletePlaceholder="Escribe o selecciona el factor de falla" class="ui-control" formControlName="failureFactor" [class.invalid]="isInvalid('failureFactor')" [attr.aria-invalid]="isInvalid('failureFactor')">
               <option value="" disabled>{{ catalogsLoading ? 'Cargando catálogo...' : 'Selecciona el factor de falla' }}</option>
               <option *ngFor="let option of failureFactorOptions" [value]="option">{{ option }}</option>
@@ -168,21 +173,21 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             <input type="file" accept="image/*" multiple (change)="onFileSelected($event, 'failPicture')" [attr.aria-invalid]="isInvalid('failPicture')">
             <ng-container *ngIf="failPicturePreviewUrls.length; else failPictureEmpty">
               <span class="image-preview image-preview-shell"><span #failGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'failPicture')"><img *ngFor="let preview of failPicturePreviewUrls" [src]="preview" alt="Vista previa de la imagen de falla"></span><span class="gallery-position">{{ failPictureIndex + 1 }} / {{ failPicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'failPicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, failGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, failGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ failPictureCount }}/10)</span></span>
-              <span class="upload-content"><strong>Fail picture <b>*</b></strong></span>
+              <span class="upload-content"><strong>Fail picture</strong></span>
             </ng-container>
             <ng-template #failPictureEmpty>
               <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path></svg></span>
-              <span class="upload-content"><strong>Fail picture <b>*</b></strong><span>Selecciona una imagen de la falla</span></span>
+              <span class="upload-content"><strong>Fail picture</strong><span>Selecciona una imagen de la falla</span></span>
             </ng-template>
           </label>
 
           <label class="field grid-repair-result ui-field">
-            <span>Repair result <b>*</b></span>
+            <span>Repair result</span>
             <textarea class="ui-control" rows="4" formControlName="repairResult" placeholder="Resultado de la reparación" [class.invalid]="isInvalid('repairResult')" [attr.aria-invalid]="isInvalid('repairResult')"></textarea>
           </label>
 
           <label class="field grid-actions ui-field">
-            <span>Actions <b>*</b></span>
+            <span>Actions</span>
             <textarea class="ui-control" rows="4" formControlName="actions" placeholder="Detalla las acciones realizadas" [class.invalid]="isInvalid('actions')" [attr.aria-invalid]="isInvalid('actions')"></textarea>
           </label>
 
@@ -190,33 +195,36 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             <input type="file" accept="image/*" multiple (change)="onFileSelected($event, 'evidencePicture')" [attr.aria-invalid]="isInvalid('evidencePicture')">
             <ng-container *ngIf="evidencePicturePreviewUrls.length; else evidencePictureEmpty">
               <span class="image-preview image-preview-shell"><span #evidenceGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'evidencePicture')"><img *ngFor="let preview of evidencePicturePreviewUrls" [src]="preview" alt="Vista previa de la evidencia final"></span><span class="gallery-position">{{ evidencePictureIndex + 1 }} / {{ evidencePicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'evidencePicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, evidenceGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, evidenceGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ evidencePictureCount }}/10)</span></span>
-              <span class="upload-content"><strong>Evidence <b>*</b></strong></span>
+              <span class="upload-content"><strong>Evidence</strong></span>
             </ng-container>
             <ng-template #evidencePictureEmpty>
               <span class="upload-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v6h14v-6"></path></svg></span>
-              <span class="upload-content"><strong>Evidence <b>*</b></strong><span>Selecciona la evidencia final de la reparación</span></span>
+              <span class="upload-content"><strong>Evidence</strong><span>Selecciona la evidencia final de la reparación</span></span>
             </ng-template>
           </label>
         </div>
 
-        <section class="details-section" aria-labelledby="repairDetailsTitle">
+        <div class="details-container">
+        <section *ngIf="showDetails" class="details-section" aria-labelledby="repairDetailsTitle">
           <div class="details-section-heading">
             <h2 id="repairDetailsTitle">Detalles</h2>
-            <div class="details-section-actions"><span>Información de origen del registro</span><button type="button" class="ui-button ui-button-secondary details-toggle" (click)="showDetails = !showDetails" [attr.aria-expanded]="showDetails">{{ showDetails ? 'Ocultar' : 'Mostrar' }}</button></div>
+            <span>{{ detailCategoryMessage || 'Información de origen del registro' }}</span>
           </div>
           <div class="details-table-wrap" *ngIf="showDetails">
             <table class="details-table">
-              <thead><tr><th>CUSTSN</th><th>Family</th><th>Remark</th></tr></thead>
+              <thead><tr><th>Family</th><th>SN</th><th>Remark</th><th *ngIf="repair">Category</th></tr></thead>
               <tbody>
                 <tr *ngFor="let detail of details; let detailIndex = index">
-                  <td><input class="ui-control" [value]="detail.custsn" (input)="updateDetail(detailIndex, 'custsn', $any($event.target).value)" placeholder="CUSTSN"></td>
                   <td><input class="ui-control" [value]="detail.family" (input)="updateDetail(detailIndex, 'family', $any($event.target).value)" placeholder="Family completa"></td>
+                  <td><input class="ui-control" [value]="detail.custsn" (input)="updateDetail(detailIndex, 'custsn', $any($event.target).value)" placeholder="CUSTSN"></td>
                   <td><input class="ui-control" [value]="detail.remark" (input)="updateDetail(detailIndex, 'remark', $any($event.target).value)" placeholder="Remark"></td>
+                  <td *ngIf="repair"><select class="ui-control" [ngModel]="detailCategoryValue(detail)" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onDetailCategoryChange(detailIndex, $event)"><option value="">Selecciona una categoría</option><option *ngFor="let option of detailCategoryOptions(detailCategoryValue(detail))" [value]="option">{{ option }}</option></select></td>
                 </tr>
               </tbody>
             </table>
           </div>
         </section>
+        </div>
       </div>
 
     </form>
@@ -238,11 +246,20 @@ export class RepairFormComponent implements OnChanges {
   existingEvidencePictures: string[] = [];
   failPictureIndex = 0;
   evidencePictureIndex = 0;
-  details: RepairDetail[] = [{ custsn: '', family: '', remark: '' }];
+  details: RepairDetail[] = [{ custsn: '', family: '', remark: '', category: '' }];
   showDetails = true;
+  // Return No starts in manual mode. Automatic calculation is opt-in through
+  // the mode toggle, so opening a new or existing report never overwrites the
+  // value shown to the user.
+  returnNoManual = true;
   catalogs: RepairCatalogs = { ...EMPTY_CATALOGS };
   catalogsLoading = true;
   catalogError = '';
+  detailCategoryMessage = '';
+
+  toggleDetails(): void {
+    this.showDetails = !this.showDetails;
+  }
 
   readonly form = new FormBuilder().nonNullable.group({
     recordDate: [''],
@@ -265,16 +282,26 @@ export class RepairFormComponent implements OnChanges {
   constructor(private readonly repairReportsApi: RepairReportsApiService) {
     this.form.controls.failureQty.valueChanges.subscribe(() => {
       this.updateFrPercentage();
-      this.updateReturnNoQty();
+      if (!this.returnNoManual) this.updateReturnNoQty();
     });
     this.form.controls.buildQty.valueChanges.subscribe(() => this.updateFrPercentage());
-    this.form.controls.returnYesQty.valueChanges.subscribe(() => this.updateReturnNoQty());
+    this.form.controls.returnYesQty.valueChanges.subscribe(() => {
+      if (!this.returnNoManual) this.updateReturnNoQty();
+    });
     this.loadCatalogs();
   }
 
   get familyOptions(): string[] { return this.withCurrentValue(this.catalogs.families, this.form.controls.family.value); }
   get topIssueOptions(): string[] { return this.withCurrentValue(this.catalogs.topIssues, this.form.controls.topIssue.value); }
   get categoryOptions(): string[] { return this.withCurrentValue(this.catalogs.categories, this.form.controls.category.value); }
+  detailCategoryOptions(value: string): string[] { return this.withCurrentValue(this.catalogs.categories, value); }
+  detailCategoryValue(detail: RepairDetail): string {
+    return detail.category?.trim()
+      || this.repair?.category?.trim()
+      || String(this.repair?.sourcePayload?.['category'] ?? '').trim()
+      || this.form.controls.category.value?.trim()
+      || '';
+  }
   get majorPartOptions(): string[] { return this.withCurrentValue(this.catalogs.majorParts, this.form.controls.majorPart.value); }
   get failureFactorOptions(): string[] { return this.withCurrentValue(this.catalogs.failureFactors, this.form.controls.failureFactor.value); }
   get failPicturePreviewUrl(): string { return this.failPicturePreview || this.repair?.failPicture || ''; }
@@ -287,6 +314,13 @@ export class RepairFormComponent implements OnChanges {
   get isReturnQuantityInvalid(): boolean {
     const touched = this.form.controls.returnYesQty.touched || this.form.controls.failureQty.touched;
     return this.isInvalid('returnYesQty') || (touched && this.form.hasError('returnYesExceedsFailureQty'));
+  }
+
+  get isReturnNoInvalid(): boolean {
+    if (!this.returnNoManual) return false;
+    const failureQty = Number(this.form.controls.failureQty.value);
+    const returnNoQty = Number(this.form.controls.returnNoQty.value);
+    return !Number.isInteger(returnNoQty) || returnNoQty < 0 || returnNoQty > failureQty;
   }
 
   isInvalid(controlName: keyof typeof this.form.controls): boolean {
@@ -307,9 +341,23 @@ export class RepairFormComponent implements OnChanges {
     this.evidencePictureIndex = 0;
     this.existingFailPictures = [...(this.repair?.failPictures ?? (this.repair?.failPicture ? [this.repair.failPicture] : []))];
     this.existingEvidencePictures = [...(this.repair?.evidencePictures ?? (this.repair?.evidencePicture ? [this.repair.evidencePicture] : []))];
+    // Keep the form in manual mode when it is opened. Existing values are
+    // preserved, while new reports remain blank until the user enters them.
+    this.returnNoManual = true;
     this.details = this.repair?.details?.length
-      ? this.repair.details.map((detail) => ({ ...detail }))
-      : [{ custsn: '', family: this.repair?.family ?? '', remark: '' }];
+      ? this.repair.details.map((detail) => ({
+        ...detail,
+        category: detail.category?.trim()
+          || this.repair?.category
+          || String(this.repair?.sourcePayload?.['category'] ?? ''),
+      }))
+      : [{
+        custsn: '',
+        family: this.repair?.family ?? '',
+        remark: '',
+        category: this.repair?.category ?? String(this.repair?.sourcePayload?.['category'] ?? ''),
+      }];
+    this.detailCategoryMessage = '';
     this.form.reset({
       recordDate: this.repair?.recordDate ?? this.defaultRecordDate(),
       family: this.repair?.family ?? '',
@@ -321,8 +369,8 @@ export class RepairFormComponent implements OnChanges {
         this.repair?.buildQty ?? '',
       ),
       category: this.repair?.category ?? '',
-      returnYesQty: this.repair ? String(this.repair.returnYesQty ?? 0) : '',
-      returnNoQty: this.repair ? String(this.repair.returnNoQty ?? 0) : '',
+      returnYesQty: this.repair?.returnYesQty == null ? '' : String(this.repair.returnYesQty),
+      returnNoQty: this.repair?.returnNoQty == null ? '' : String(this.repair.returnNoQty),
       failPicture: this.repair?.failPicture ?? '',
       majorPart: this.repair?.majorPart ?? '',
       repairResult: this.repair?.repairResult ?? '',
@@ -331,7 +379,7 @@ export class RepairFormComponent implements OnChanges {
       evidencePicture: this.repair?.evidencePicture ?? '',
     });
     this.updateFrPercentage();
-    this.updateReturnNoQty();
+    if (!this.returnNoManual) this.updateReturnNoQty();
   }
 
   onFileSelected(event: Event, field: 'failPicture' | 'evidencePicture'): void {
@@ -372,6 +420,8 @@ export class RepairFormComponent implements OnChanges {
     const failureQty = Number(value.failureQty || this.repair?.failureQty || 0);
     const buildQty = Number(value.buildQty || this.repair?.buildQty || 0);
     const frPercentage = Number(this.calculateFrPercentage(failureQty, buildQty));
+    const returnYesText = String(value.returnYesQty ?? '').trim();
+    const returnNoText = String(value.returnNoQty ?? '').trim();
 
     this.save.emit({
       recordDate: value.recordDate,
@@ -381,7 +431,11 @@ export class RepairFormComponent implements OnChanges {
       failureQty: this.repair && this.repair.failureQty < 1 ? undefined : failureQty,
       buildQty: this.repair && this.repair.buildQty < 1 ? undefined : buildQty,
       frPercentage: this.repair && this.repair.frPercentage < 0.01 ? undefined : frPercentage,
-      returnYesQty: Number(value.returnYesQty),
+      returnYesQty: returnYesText === '' ? null : Number(returnYesText),
+      returnNoQty: this.returnNoManual
+        ? (returnNoText === '' ? null : Number(returnNoText))
+        : undefined,
+      returnNoManual: this.returnNoManual,
       failPicture: JSON.stringify(this.existingFailPictures),
       majorPart: value.majorPart,
       repairResult: value.repairResult,
@@ -398,6 +452,25 @@ export class RepairFormComponent implements OnChanges {
     const detail = this.details[index];
     if (!detail) return;
     this.details[index] = { ...detail, [field]: value };
+  }
+
+  onDetailCategoryChange(index: number, category: string): void {
+    const detail = this.details[index];
+    if (!detail) return;
+
+    const nextCategory = category.trim();
+    this.details = this.details.map((item, itemIndex) => itemIndex === index
+      ? { ...item, category: nextCategory }
+      : item);
+    this.detailCategoryMessage = nextCategory
+      ? `Categoría cambiada a ${nextCategory}. Guarda cambios para reasignar la unidad.`
+      : 'Selecciona una categoría para reasignar la unidad.';
+  }
+
+  toggleReturnNoMode(): void {
+    this.returnNoManual = !this.returnNoManual;
+    if (!this.returnNoManual) this.updateReturnNoQty();
+    this.form.controls.returnNoQty.markAsTouched();
   }
 
   scrollGallery(event: Event, gallery: HTMLElement, direction: number): void {

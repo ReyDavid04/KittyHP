@@ -74,7 +74,7 @@
         <div class="toolbar-actions">
           <input #excelImport type="file" accept=".xlsx,.xls" class="sr-only" (change)="importExcel($event)">
           <button *ngIf="authService.currentUser()?.role !== 'viewer'" type="button" class="ui-button ui-button-secondary" (click)="excelImport.click()" [disabled]="isImporting">
-            <app-ui-icon name="download"></app-ui-icon>
+            <app-ui-icon name="upload"></app-ui-icon>
             {{ isImporting ? 'Importando...' : 'Importar Excel' }}
           </button>
           <button

@@ -46,11 +46,12 @@ function parseDetails(value: unknown): Record<string, string>[] {
       custsn: String(detail?.custsn ?? detail?.CUSTSN ?? '').trim(),
       family: String(detail?.family ?? detail?.Family ?? '').trim(),
       remark: String(detail?.remark ?? detail?.Remark ?? '').trim(),
+      category: String(detail?.category ?? detail?.Category ?? '').trim(),
     };
   });
 }
 
-function calculateReturnQuantities(failureQty: number, returnYesQty: number): { returnYesQty: number; returnNoQty: number } {
+function calculateReturnQuantities(failureQty: number, returnYesQty: number, manualReturnNoQty?: number): { returnYesQty: number; returnNoQty: number } {
   if (!Number.isInteger(failureQty) || failureQty < 0) {
     throw new BadRequestException('Failure qty debe ser un número entero válido.');
   }
@@ -63,9 +64,13 @@ function calculateReturnQuantities(failureQty: number, returnYesQty: number): { 
     throw new BadRequestException('Return Yes no puede ser mayor que Failure qty.');
   }
 
+  if (manualReturnNoQty !== undefined && (!Number.isInteger(manualReturnNoQty) || manualReturnNoQty < 0 || manualReturnNoQty > failureQty)) {
+    throw new BadRequestException('Return No debe ser un entero entre 0 y Failure qty.');
+  }
+
   return {
     returnYesQty,
-    returnNoQty: failureQty - returnYesQty,
+    returnNoQty: manualReturnNoQty ?? failureQty - returnYesQty,
   };
 }
 
@@ -112,7 +117,11 @@ export class RepairRepository implements OnModuleInit {
     const frPercentage = calculateFrPercentage(failureQty, buildQty);
     const returns = data.returnYesQty === undefined || data.returnYesQty === null
       ? null
-      : calculateReturnQuantities(failureQty, data.returnYesQty);
+      : calculateReturnQuantities(
+        failureQty,
+        data.returnYesQty,
+        data.returnNoManual ? (data.returnNoQty ?? undefined) : undefined,
+      );
     const returnStatus = returns ? `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}` : null;
     const [family, topIssue, category, majorPart, failureFactor] = await Promise.all([
       this.resolveCatalogReference('family', data.family, false),
@@ -160,6 +169,7 @@ export class RepairRepository implements OnModuleInit {
         frPercentage: Number(frPercentage),
         returnYesQty: returns?.returnYesQty ?? null,
         returnNoQty: returns?.returnNoQty ?? null,
+        returnNoManual: Boolean(data.returnNoManual),
         createdByUserId,
         details: parseDetails(data.details),
       },
@@ -178,6 +188,10 @@ export class RepairRepository implements OnModuleInit {
     if (!entity) {
       return null;
     }
+
+    const incomingDetails = data.details !== undefined ? parseDetails(data.details) : null;
+    const reassigned = incomingDetails?.length ? await this.reassignDetailCategories(entity, incomingDetails) : null;
+    if (reassigned) return reassigned;
 
     if (data.recordDate !== undefined) entity.recordDate = data.recordDate;
 
@@ -204,13 +218,15 @@ export class RepairRepository implements OnModuleInit {
       entity.categoryCatalogItemId = reference!.id;
     }
 
-    if (hasValidQuantities && data.returnYesQty !== undefined) {
+    if (hasValidQuantities && (data.returnYesQty !== undefined || data.returnNoQty !== undefined || data.returnNoManual !== undefined)) {
       if (data.returnYesQty === null) {
         entity.returnYesQty = null;
         entity.returnNoQty = null;
         entity.returnStatus = null;
       } else {
-        const returns = calculateReturnQuantities(entity.failureQty, data.returnYesQty);
+        const returnYesQty = data.returnYesQty ?? entity.returnYesQty ?? 0;
+        const manualReturnNoQty = data.returnNoManual ? (data.returnNoQty ?? entity.returnNoQty ?? 0) : undefined;
+        const returns = calculateReturnQuantities(entity.failureQty, returnYesQty, manualReturnNoQty);
         entity.returnYesQty = returns.returnYesQty;
         entity.returnNoQty = returns.returnNoQty;
         entity.returnStatus = `Yes: ${returns.returnYesQty} | No: ${returns.returnNoQty}`;
@@ -252,10 +268,114 @@ export class RepairRepository implements OnModuleInit {
       frPercentage: Number(entity.frPercentage),
       returnYesQty: entity.returnYesQty,
       returnNoQty: entity.returnNoQty,
+      returnNoManual: Boolean(data.returnNoManual ?? entity.sourcePayload?.['returnNoManual']),
       createdByUserId: entity.createdByUserId,
       details: data.details !== undefined ? parseDetails(data.details) : ((entity.sourcePayload?.['details'] as Record<string, string>[] | undefined) ?? []),
     };
 
+    return this.repository.save(entity);
+  }
+
+  /**
+   * Reassigns detail units by category. A repair is a group identified by
+   * Date + Family + Top Issue + Category, so a category change can move a
+   * unit into an existing group or create a new one.
+   */
+  private async reassignDetailCategories(entity: RepairEntity, incomingDetails: Record<string, string>[]): Promise<RepairEntity | null> {
+    // Details imported before category editing may not have a category value yet;
+    // treat those units as belonging to the current parent group.
+    const detailsWithCategory = incomingDetails.map((detail) => ({
+      ...detail,
+      category: String(detail.category ?? '').trim() || entity.category,
+    }));
+    const categories = [...new Set(detailsWithCategory.map((detail) => detail.category).filter(Boolean))];
+    if (!categories.length || categories.every((category) => catalogValuesEqual(category, entity.category))) return null;
+
+    const sourceCategory = detailsWithCategory.find((detail) => catalogValuesEqual(detail.category, entity.category))?.category ?? entity.category;
+    const sourceDetails = detailsWithCategory.filter((detail) => catalogValuesEqual(detail.category, sourceCategory));
+    const movedGroups = categories.filter((category) => !catalogValuesEqual(category, sourceCategory));
+    if (!movedGroups.length) return null;
+
+    const sourceCategoryRef = await this.resolveCatalogReference('category', sourceCategory, true);
+    let destination: RepairEntity | null = null;
+    for (const category of movedGroups) {
+      const details = detailsWithCategory.filter((detail) => catalogValuesEqual(detail.category, category));
+      if (!details.length) continue;
+      const targetCategoryRef = await this.resolveCatalogReference('category', category, true);
+      const target = await this.repository.findOne({
+        where: {
+          recordDate: entity.recordDate,
+          family: entity.family ?? undefined,
+          topIssue: entity.topIssue,
+          category: targetCategoryRef!.value,
+        },
+      });
+      if (target && target.id !== entity.id) {
+        target.failureQty += details.length;
+        target.returnNoQty = Math.max(0, target.failureQty - (target.returnYesQty ?? 0));
+        target.returnStatus = `Yes: ${target.returnYesQty ?? 0} | No: ${target.returnNoQty}`;
+        target.frPercentage = calculateFrPercentage(target.failureQty, target.buildQty);
+        target.sourcePayload = {
+          ...(target.sourcePayload ?? {}),
+          category: targetCategoryRef!.value,
+          categoryCatalogItemId: targetCategoryRef!.id,
+          failureQty: target.failureQty,
+          frPercentage: Number(target.frPercentage),
+          returnNoQty: target.returnNoQty,
+          details: [...parseDetails(target.sourcePayload?.['details']), ...details],
+        };
+        destination = await this.repository.save(target);
+      } else if (!target) {
+        // Keep the reassigned units even when no destination group exists yet.
+        const created: RepairEntity = this.repository.create({
+          ...(entity as any),
+          id: undefined,
+          category: targetCategoryRef!.value,
+          categoryCatalogItemId: targetCategoryRef!.id,
+          failureQty: details.length,
+          returnYesQty: 0,
+          returnNoQty: details.length,
+          returnStatus: `Yes: 0 | No: ${details.length}`,
+          frPercentage: calculateFrPercentage(details.length, entity.buildQty),
+          sourcePayload: {
+            ...(entity.sourcePayload ?? {}),
+            category: targetCategoryRef!.value,
+            categoryCatalogItemId: targetCategoryRef!.id,
+            failureQty: details.length,
+            frPercentage: Number(calculateFrPercentage(details.length, entity.buildQty)),
+            returnYesQty: 0,
+            returnNoQty: details.length,
+            details,
+          },
+        } as RepairEntity);
+        destination = await this.repository.save(created);
+      }
+    }
+
+    // All units were reassigned: the original group must not remain as an
+    // empty repair with a stale quantity.
+    if (!sourceDetails.length) {
+      await this.repository.delete(entity.id);
+      return destination;
+    }
+
+    entity.failureQty = sourceDetails.length;
+    entity.category = sourceCategoryRef!.value;
+    entity.categoryCatalogItemId = sourceCategoryRef!.id;
+    entity.returnYesQty = Math.min(entity.returnYesQty ?? 0, entity.failureQty);
+    entity.returnNoQty = Math.max(0, entity.failureQty - (entity.returnYesQty ?? 0));
+    entity.returnStatus = `Yes: ${entity.returnYesQty ?? 0} | No: ${entity.returnNoQty}`;
+    entity.frPercentage = calculateFrPercentage(entity.failureQty, entity.buildQty);
+    entity.sourcePayload = {
+      ...(entity.sourcePayload ?? {}),
+      category: entity.category,
+      categoryCatalogItemId: entity.categoryCatalogItemId,
+      failureQty: entity.failureQty,
+      frPercentage: Number(entity.frPercentage),
+      returnYesQty: entity.returnYesQty,
+      returnNoQty: entity.returnNoQty,
+      details: sourceDetails,
+    };
     return this.repository.save(entity);
   }
 

@@ -9,6 +9,7 @@ export type UiIconName =
   | 'close'
   | 'delete'
   | 'download'
+  | 'upload'
   | 'edit'
   | 'first-page'
   | 'last-page'
@@ -34,6 +35,10 @@ export type UiIconName =
         <path *ngSwitchCase="'delete'" d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5"></path>
         <g *ngSwitchCase="'download'">
           <path d="M12 3v12m0 0 4-4m-4 4-4-4"></path>
+          <path d="M5 19h14"></path>
+        </g>
+        <g *ngSwitchCase="'upload'">
+          <path d="M12 15V3m0 0 4 4m-4-4L8 7"></path>
           <path d="M5 19h14"></path>
         </g>
         <g *ngSwitchCase="'edit'">

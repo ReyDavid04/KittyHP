@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsDateString, IsInt, IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
 
 export class UpdateRepairDto {
@@ -43,9 +43,20 @@ export class UpdateRepairDto {
 
   @IsInt()
   @IsOptional()
-  @Type(() => Number)
+  @Transform(({ value }) => value === '' || value === null ? null : Number(value))
   @Min(0)
-  returnYesQty?: number;
+  returnYesQty?: number | null;
+
+  @IsInt()
+  @IsOptional()
+  @Transform(({ value }) => value === '' || value === null ? null : Number(value))
+  @Min(0)
+  returnNoQty?: number | null;
+
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsOptional()
+  returnNoManual?: boolean;
 
   @IsString()
   @IsOptional()

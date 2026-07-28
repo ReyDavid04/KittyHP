@@ -59,6 +59,7 @@ type AccessMode = 'login' | 'register' | 'forgot';
           </button>
 
           <div class="access-footer">¿No tienes una cuenta? <a routerLink="/register">Registrarse</a></div>
+          <div class="support-contact">Problemas o errores: <a href="mailto:Ramos.Rey&#64;inventec.com">Ramos.Rey&#64;inventec.com</a></div>
         </form>
 
         <form *ngIf="mode === 'register'" [formGroup]="registrationCodeSent ? registrationCodeForm : registrationForm" (ngSubmit)="submitRegistration()" novalidate>

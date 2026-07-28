@@ -446,6 +446,7 @@ export class RepairsService implements OnModuleInit {
                 custsn: this.text(row, ['CUSTSN']),
                 family: this.text(row, ['Family', 'FAMILY']),
                 remark: this.text(row, ['Remark', 'REMARK']),
+                category: this.normalizeImportedCategory(this.importedCause(row)),
               })),
             });
           });

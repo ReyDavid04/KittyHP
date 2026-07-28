@@ -64,6 +64,7 @@ import { AuthService } from './core/services/auth.service';
       </header>
 
       <main class="app-content"><router-outlet></router-outlet></main>
+      <footer class="app-footer">2026 - <a href="mailto:Ramos.Rey&#64;inventec.com">Ramos.Rey&#64;inventec.com</a></footer>
     </div>
   `,
   styleUrl: './app.component.css',

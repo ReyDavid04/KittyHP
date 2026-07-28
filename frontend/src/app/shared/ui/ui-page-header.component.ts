@@ -5,7 +5,10 @@ import { Component, Input } from '@angular/core';
   selector: 'app-ui-page-header',
   standalone: true,
   imports: [CommonModule],
-  host: { class: 'block' },
+  // `display: contents` keeps the sticky header from being constrained by a
+  // one-row custom-element host. The header can now remain pinned throughout
+  // the complete page workspace.
+  host: { class: 'contents' },
   template: `
     <header class="ui-page-header justify-between" [class.border-b-0]="flush" [class.shadow-none]="flush">
       <div class="flex min-w-0 items-center gap-3 max-md:w-full">

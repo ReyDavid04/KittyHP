@@ -97,3 +97,5 @@ input {
 .sent-to {
   @apply rounded-md border border-line bg-surface-subtle px-3 py-2.5 text-sm text-ink-secondary;
 }
+.support-contact { @apply mt-3 text-center text-xs text-ink-muted; }
+.support-contact a { @apply text-brand-600 hover:underline; }

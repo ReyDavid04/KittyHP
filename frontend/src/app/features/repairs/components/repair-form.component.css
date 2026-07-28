@@ -35,6 +35,27 @@
   @apply col-span-full -mt-0.5 text-caption font-medium text-danger;
 }
 
+.return-yes-heading,
+.return-no-heading {
+  @apply relative block min-h-[1.125rem] min-w-0;
+}
+
+.return-yes-heading > span:first-child {
+  @apply hidden;
+}
+
+.return-yes-heading > span:last-child {
+  @apply block;
+}
+
+.return-no-heading > span:last-child {
+  @apply block;
+}
+
+.return-mode-button {
+  @apply absolute bottom-[calc(100%+0.25rem)] right-0 w-fit whitespace-nowrap border-0 bg-transparent p-0 text-right text-[10px] font-medium leading-4 text-brand-800 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600;
+}
+
 .field {
   @apply min-w-0;
 }
@@ -252,7 +273,8 @@
   }
 }
 .form-error-alert { @apply mb-4 rounded-lg border border-danger-border bg-danger-soft px-4 py-3 text-sm font-medium text-danger; }
-.details-section { @apply mt-6 rounded-xl border border-line bg-surface p-5; }
+.details-container { @apply mt-6; }
+.details-section { @apply rounded-xl border border-line bg-surface p-5; }
 .details-section-heading { @apply mb-4 flex items-baseline justify-between gap-4; }
 .details-section-actions { @apply flex items-center gap-3; }
 .details-toggle { @apply px-3 py-1.5 text-xs; }

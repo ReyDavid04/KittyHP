@@ -5,8 +5,8 @@ import { RepairDetail, RepairReport, RepairUpsertPayload } from '../models/repai
 
 type RepairReportResponse = Omit<RepairReport, 'frPercentage' | 'returnYesQty' | 'returnNoQty'> & {
   frPercentage: string | number;
-  returnYesQty: string | number;
-  returnNoQty: string | number;
+  returnYesQty: string | number | null;
+  returnNoQty: string | number | null;
   review: boolean | number;
 };
 
@@ -116,14 +116,22 @@ export class RepairReportsApiService {
       failPictures,
       evidencePictures,
       frPercentage: Number(repair.frPercentage),
-      returnYesQty: Number(repair.returnYesQty),
-      returnNoQty: Number(repair.returnNoQty),
+      returnYesQty: repair.returnYesQty === null || repair.returnYesQty === undefined
+        ? null
+        : Number(repair.returnYesQty),
+      returnNoQty: repair.returnNoQty === null || repair.returnNoQty === undefined
+        ? null
+        : Number(repair.returnNoQty),
+      returnNoManual: Boolean(repair.sourcePayload?.['returnNoManual']),
       review: Boolean(repair.review),
-      details: this.normalizeDetails(repair.details ?? repair.sourcePayload?.['details']),
+      details: this.normalizeDetails(
+        repair.details ?? repair.sourcePayload?.['details'],
+        String(repair.category ?? repair.sourcePayload?.['category'] ?? ''),
+      ),
     };
   }
 
-  private normalizeDetails(value: unknown): RepairDetail[] {
+  private normalizeDetails(value: unknown, fallbackCategory = ''): RepairDetail[] {
     if (!Array.isArray(value)) return [];
     return value.map((item) => {
       const detail = item as Record<string, unknown>;
@@ -131,6 +139,7 @@ export class RepairReportsApiService {
         custsn: String(detail['custsn'] ?? detail['CUSTSN'] ?? '').trim(),
         family: String(detail['family'] ?? detail['Family'] ?? '').trim(),
         remark: String(detail['remark'] ?? detail['Remark'] ?? '').trim(),
+        category: String(detail['category'] ?? detail['Category'] ?? fallbackCategory).trim() || fallbackCategory,
       };
     });
   }
@@ -145,11 +154,15 @@ export class RepairReportsApiService {
     this.appendText(formData, 'buildQty', payload.buildQty);
     this.appendText(formData, 'frPercentage', payload.frPercentage);
     this.appendText(formData, 'category', payload.category);
-    this.appendText(formData, 'returnYesQty', payload.returnYesQty);
+    this.appendNullableNumber(formData, 'returnYesQty', payload.returnYesQty);
+    this.appendNullableNumber(formData, 'returnNoQty', payload.returnNoQty);
+    this.appendText(formData, 'returnNoManual', payload.returnNoManual);
     this.appendText(formData, 'majorPart', payload.majorPart);
-    this.appendText(formData, 'repairResult', payload.repairResult);
+    // These fields are editable and may intentionally be cleared. Always send
+    // an empty string so PATCH can replace the previous database value.
+    formData.append('repairResult', payload.repairResult ?? '');
     this.appendText(formData, 'failureFactor', payload.failureFactor);
-    this.appendText(formData, 'actions', payload.actions);
+    formData.append('actions', payload.actions ?? '');
     this.appendText(formData, 'failPicture', payload.failPicture);
     this.appendText(formData, 'evidencePicture', payload.evidencePicture);
     if (payload.details?.length) formData.append('details', JSON.stringify(payload.details));
@@ -166,5 +179,10 @@ export class RepairReportsApiService {
     }
 
     formData.append(key, String(value));
+  }
+
+  private appendNullableNumber(formData: FormData, key: string, value: number | null | undefined): void {
+    if (value === undefined) return;
+    formData.append(key, value === null ? '' : String(value));
   }
 }
