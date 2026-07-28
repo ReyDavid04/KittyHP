@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+  <head>
+    <title>SpeedVitals</title>
+    <meta charset="UTF-8">
+    <script src="popup.js" ></script>
+    <style>
+
+      body {
+        width: 250px;
+        font-family: -apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+      }
+      .website-logo-link {
+        margin-right: auto;
+        margin-left: auto;
+      }
+      .website-logo {
+        margin-bottom: 5%;
+        margin-top: 4%;
+        padding-bottom: 4%;
+        border-bottom: 1px solid rgba(0,0,0,.06);
+        display: flex;
+      }
+      .form-container {
+        padding: 4% 8%;
+      }
+      .button-container {
+        display: flex;
+      }
+      .form-select.select-sm {
+          font-size: .75rem;
+          height: 1.8rem;
+          padding: .05rem 1.3rem .05rem .65rem;
+          font-weight: 500;
+      }
+      .form-select.select-sm {
+          font-size: .7rem;
+          height: 1.5rem;
+          padding: .13rem 1.1rem .05rem .3rem;
+          padding-left: 10px;
+      }
+      .device-select {
+          margin-right: 2.2%;
+          border-radius: 12px;
+      }
+      .form-select {
+          margin: 0 .4%;
+      }
+      .form-select {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background: #fff;
+          border: .05rem solid #bcc3ce;
+          border-radius: .1rem;
+          color: inherit;
+          font-size: .8rem;
+          height: 1.8rem;
+          line-height: 1.2rem;
+          outline: 0;
+          padding: .25rem .4rem;
+          vertical-align: middle;
+          width: 100%;
+      }
+
+      .form-select:not([multiple]):not([size]) {
+          background: #fff url("data:image/svg+xml;charset=utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%204%205'%3E%3Cpath%20fill='%23667189'%20d='M2%200L0%202h4zm0%205L0%203h4z'/%3E%3C/svg%3E") no-repeat right .35rem center/.4rem .5rem;
+          padding-right: 1.2rem;
+      }
+
+      button, select {
+          text-transform: none;
+      }
+      .btn.btn-lg {
+          font-size: .9rem;
+          height: 2rem;
+          padding: .16rem .3rem;
+      }
+      .btn {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background: #fff;
+          cursor: pointer;
+          display: inline-block;
+          font-size: .8rem;
+          line-height: 1.2rem;
+          outline: 0;
+          padding: .25rem .4rem;
+          text-align: center;
+          text-decoration: none;
+          transition: background .2s,border .2s,box-shadow .2s,color .2s;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          vertical-align: middle;
+          white-space: nowrap;
+      }
+      .test-button {
+          width: 100%;
+          background: #337ed3;
+          border-color: #337ed3;
+          color: #fff;
+          font-size: 95% !important;
+          font-weight: 500;
+          height: 1.5rem!important;
+          margin-top: 6%;
+          border-radius: 50px;
+          border: none;
+          margin-left: 1%;
+          margin-right: 1%;
+      }
+
+      .location-select {
+        margin-top: 3%;
+      }
+
+      .device-select, .location-select {
+        cursor: pointer;
+        border-radius: 50px;
+      }
+
+      #error-messages {
+        text-align: center;
+        display: none;
+        margin: 6% 0%;
+        font-weight: 500;
+        color:rgb(220, 53, 69);
+      }
+
+      a, a:hover, a:visited {
+        color:#6d758d;
+        text-decoration: none;
+      }
+
+      button.btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .footer-section {
+        border-top: 1px solid rgba(0,0,0,.06);
+        text-align: center;
+        padding-top: 4.5%;
+        padding-bottom: 1.8%;
+        margin-top: 5%;
+        font-size: 95%;
+      }
+
+      .footer-section a {
+        margin-left: 3%;
+        margin-right: 3%;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div class="website-logo">
+     <a class="website-logo-link" href="https://speedvitals.com" target="_blank"><img src="SpeedVitals-Logo.png" height="35px"></a>
+    </div>
+    <div class="form-container">
+      <select class="form-select select-sm device-select" id="query-device" name="device">
+        <optgroup id="standard-optgroup" label="Standard">
+          <option value="mobile">Mobile</option>
+          <option value="desktop">Desktop</option>
+        </optgroup>
+        <optgroup id="desktop-optgroup" label="Desktop/Laptop">
+          <option value="macbookAirM1">MacBook Air (2020)</option>
+          <option value="highEndLaptop">High-End Laptop</option>
+        </optgroup>
+        <optgroup id="tablet-optgroup" label="Tablet">
+          <option value="ipad102">iPad 10.2</option>
+          <option value="galaxyTabS7">Samsung Galaxy Tab S7</option>
+        </optgroup>
+        <optgroup id="mobile-optgroup" label="Mobile">
+          <option value="iphone13ProMax">iPhone 13 Pro Max</option>
+          <option value="redmiNote8Pro">Xiaomi Redmi Note 8 Pro</option>
+          <option value="galaxyA50">Samsung Galaxy A50</option>
+          <option value="redmi5A">Xiaomi Redmi 5A</option>
+        </optgroup>
+      </select>
+      <select class="form-select select-sm location-select" id="query-location" name="location">
+        <optgroup id="america-optgroup" label="America">
+          <option value="us">South Carolina, US</option>
+          <option value="ca">Montreal, Canada</option>
+          <option value="br">São Paulo, Brazil</option>
+        </optgroup>
+        <optgroup id="europe-optgroup" label="Europe">
+          <option value="de">Frankfurt, Germany</option>
+          <option value="uk">London, UK</option>
+          <option value="nl">Netherlands</option>
+        </optgroup>
+        <optgroup id="asia-optgroup" label="Asia Pacific">
+          <option value="jp">Tokyo, Japan</option>
+          <option value="in">Mumbai, India</option>
+          <option value="au">Sydney, Australia</option>
+          <option value="id">Jakarta, Indonesia</option>
+        </optgroup>
+      </select>
+      <div class="button-container">
+        <button id="submitBtn" class="btn btn-lg test-button" disabled type="submit">Web Vitals Test</button>
+        <button id="ttfbBtn" class="btn btn-lg test-button" disabled type="submit">TTFB Test</button>
+      </div>
+    </div>
+      <div id="error-messages"></div>
+      <div class="footer-section">
+        <a href="https://speedvitals.com" target="_blank">Visit Website</a>
+        <a href="https://speedvitals.com/contact-us" target="_blank">Contact Us</a>
+      </div>
+  </body>
+</html>

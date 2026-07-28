@@ -1,0 +1,6 @@
+2026/07/28-11:01:01.922 6d10 Reusing MANIFEST C:\Users\IMP102595\Projects\KittyHP\tools\manual\.edge-manual-profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/07/28-11:01:01.929 6d10 Recovering log #3
+2026/07/28-11:01:01.934 6d10 Reusing old log C:\Users\IMP102595\Projects\KittyHP\tools\manual\.edge-manual-profile\Default\EdgeCoupons/coupons_data.db/000003.log 
+2026/07/28-11:01:02.045 2214 Level-0 table #5: started
+2026/07/28-11:01:02.061 2214 Level-0 table #5: 683041 bytes OK
+2026/07/28-11:01:02.066 2214 Delete type=0 #3

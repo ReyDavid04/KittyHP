@@ -7,7 +7,7 @@ import {
   RepairCatalogType,
   RepairReportsApiService,
 } from '../../../core/services/repair-reports-api.service';
-import { UiAlertComponent, UiBadgeComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
+import { UiAlertComponent, UiBadgeComponent, UiConfirmToastService, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
 
 type CatalogDefinition = {
   type: RepairCatalogType;
@@ -93,6 +93,7 @@ const CATALOGS: CatalogDefinition[] = [
 export class CatalogManagementPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly repairReportsApi = inject(RepairReportsApiService);
+  private readonly confirmToast = inject(UiConfirmToastService);
 
   currentCatalog: CatalogDefinition = CATALOGS[0];
   items: RepairCatalogItem[] = [];
@@ -154,8 +155,14 @@ export class CatalogManagementPageComponent {
     });
   }
 
-  deleteItem(item: RepairCatalogItem): void {
-    if (!window.confirm(`¿Eliminar "${item.value}" del catálogo ${this.currentCatalog.title}?`)) return;
+  async deleteItem(item: RepairCatalogItem): Promise<void> {
+    const confirmed = await this.confirmToast.confirm({
+      title: `¿Eliminar “${item.value}”?`,
+      message: `Se eliminará del catálogo ${this.currentCatalog.title}. Esta acción no se puede deshacer.`,
+      confirmLabel: 'Eliminar',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     this.saving = true;
     this.errorMessage = '';
     this.repairReportsApi.deleteCatalogItem(this.currentCatalog.type, item.id).subscribe({

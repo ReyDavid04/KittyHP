@@ -79,14 +79,14 @@
               </span>
 
               <ng-container *ngSwitchCase="'failPicture'">
-                <div *ngIf="repair.failPictures?.length; else noImage" class="table-gallery">
+                <div *ngIf="repair.failPictures?.length; else noImage" class="table-gallery" tabindex="0" role="group" aria-label="Carrusel de imágenes de falla" (keydown)="handleGalleryKeydown($event, repair, 'failPicture')">
                   <a class="image-link" [href]="currentImage(repair, 'failPicture')" target="_blank" rel="noopener"><img [src]="currentImage(repair, 'failPicture')" alt="Evidencia de falla" class="thumbnail"></a>
                   <button *ngIf="repair.failPictures!.length > 1" type="button" class="table-gallery-arrow left" (click)="shiftImage($event, repair, 'failPicture', -1)">‹</button><button *ngIf="repair.failPictures!.length > 1" type="button" class="table-gallery-arrow right" (click)="shiftImage($event, repair, 'failPicture', 1)">›</button><span class="table-gallery-position">{{ imagePosition(repair, 'failPicture') + 1 }}/{{ repair.failPictures!.length }}</span>
                 </div>
               </ng-container>
 
               <ng-container *ngSwitchCase="'evidencePicture'">
-                <div *ngIf="repair.evidencePictures?.length; else noImage" class="table-gallery">
+                <div *ngIf="repair.evidencePictures?.length; else noImage" class="table-gallery" tabindex="0" role="group" aria-label="Carrusel de evidencias" (keydown)="handleGalleryKeydown($event, repair, 'evidencePicture')">
                 <a class="image-link" [href]="currentImage(repair, 'evidencePicture')" target="_blank" rel="noopener">
                   <img [src]="repair.evidencePicture" alt="Evidencia de reparación" class="thumbnail">
                 </a><button *ngIf="repair.evidencePictures!.length > 1" type="button" class="table-gallery-arrow left" (click)="shiftImage($event, repair, 'evidencePicture', -1)">‹</button><button *ngIf="repair.evidencePictures!.length > 1" type="button" class="table-gallery-arrow right" (click)="shiftImage($event, repair, 'evidencePicture', 1)">›</button><span class="table-gallery-position">{{ imagePosition(repair, 'evidencePicture') + 1 }}/{{ repair.evidencePictures!.length }}</span></div>

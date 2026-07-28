@@ -186,6 +186,7 @@ export class CatalogAutocompleteDirective implements AfterViewInit, DoCheck, OnD
       }
     } else if (event.key === 'Escape' && isOpen) {
       event.preventDefault();
+      event.stopPropagation();
       this.close();
     }
   }

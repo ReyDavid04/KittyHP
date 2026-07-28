@@ -20,6 +20,10 @@ tbody tr.row-highlighted td {
   @apply bg-warning-soft text-ink;
 }
 
+tbody tr.row-highlighted td:first-child {
+  @apply border-l-2 border-l-warning;
+}
+
 tbody tr.row-highlighted td.sticky-left,
 tbody tr.row-highlighted td.sticky-right {
   @apply bg-warning-soft;
@@ -44,6 +48,15 @@ th {
 
 td {
   @apply bg-surface;
+}
+
+tbody tr:nth-child(even):not(.row-highlighted) td {
+  @apply bg-surface-subtle/50;
+}
+
+tbody tr:nth-child(even):not(.row-highlighted) td.sticky-left,
+tbody tr:nth-child(even):not(.row-highlighted) td.sticky-right {
+  @apply bg-surface-subtle;
 }
 
 .th-cell,

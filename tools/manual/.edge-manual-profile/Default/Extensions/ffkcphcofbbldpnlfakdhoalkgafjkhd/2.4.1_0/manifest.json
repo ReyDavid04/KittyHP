@@ -1,0 +1,22 @@
+{
+   "action": {
+      "default_icon": "icon.png",
+      "default_popup": "popup.html"
+   },
+   "author": "contact@speedvitals.com",
+   "description": "Perform Web Vitals & TTFB Test on Multiple Locations & Devices",
+   "host_permissions": [ "https://app.speedvitals.com/" ],
+   "icons": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtT5DDw79qQmlAH0je5Rp0BTKZGzMKkqZOeLPx+q1GnU0MN0UOyemYlHEFYzuoGMkOkVeggNrt2D/mHhhAZHbUgf86teEkNqvYs/GK7QmPgg0Pz+/jO7xAVA0T3oeYS8A+OUcatc+EDlmqdxDb7POZFD8Jn/g4eahr8nqoWVtpi97KSvDBMQdaDy0TElf9JjnYqOKwvxTGpZ71r79aDSm928qbZEwwiGNYq0jN24y6lsvmErjiGfLVDwI7jxrQLX6B5Zzv7lhIWCuSMTht68OGwDlC5WUjAebDkzYNK2UD7TdckEKjtJOISvhQU849Ozrp5NawRerffSO09CrSxgVpwIDAQAB",
+   "manifest_version": 3,
+   "name": "SpeedVitals",
+   "permissions": [ "activeTab", "storage", "cookies" ],
+   "update_URL": "https://edge.microsoft.com/extensionwebstorebase/v1/crx",
+   "update_url": "https://edge.microsoft.com/extensionwebstorebase/v1/crx",
+   "version": "2.4.1"
+}

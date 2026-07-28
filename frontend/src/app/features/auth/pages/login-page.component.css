@@ -53,15 +53,25 @@ a {
 }
 
 .input-shell {
-  @apply flex items-center gap-2.5 focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/15;
+  @apply flex items-center gap-2.5 overflow-hidden bg-surface focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/15;
 }
 
 .input-shell > svg {
   @apply size-[1.125rem] flex-none fill-none stroke-ink-muted [stroke-linecap:round] [stroke-linejoin:round] [stroke-width:1.75];
 }
 
-input {
-  @apply h-full min-w-0 flex-1 border-0 bg-transparent text-base font-normal text-ink placeholder:text-ink-placeholder focus:ring-0;
+.input-shell input {
+  @apply h-full min-w-0 flex-1 appearance-none rounded-none border-0 bg-transparent p-0 text-base font-normal text-ink shadow-none outline-none placeholder:text-ink-placeholder focus:ring-0;
+  background-color: transparent !important;
+  -webkit-appearance: none;
+}
+
+.input-shell input:-webkit-autofill,
+.input-shell input:-webkit-autofill:hover,
+.input-shell input:-webkit-autofill:focus {
+  -webkit-text-fill-color: theme('colors.ink.DEFAULT');
+  box-shadow: 0 0 0 1000px theme('colors.surface.DEFAULT') inset;
+  transition: background-color 9999s ease-out;
 }
 
 .email-shell {

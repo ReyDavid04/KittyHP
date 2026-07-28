@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { ProductionSnapshot, RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { UiBadgeComponent, UiIconComponent } from '../../../shared/ui';
+import { UiBadgeComponent, UiConfirmToastService, UiIconComponent } from '../../../shared/ui';
 import {
   FILTER_BLANK_VALUE,
   RepairColumnFilters,
@@ -29,6 +29,7 @@ export class RepairsPageComponent implements OnDestroy {
   readonly authService = inject(AuthService);
   readonly router = inject(Router);
   private readonly repairExcelExport = inject(RepairExcelExportService);
+  private readonly confirmToast = inject(UiConfirmToastService);
 
   repairs: RepairReport[] = [];
   searchTerm = '';
@@ -235,6 +236,20 @@ export class RepairsPageComponent implements OnDestroy {
     if (target?.closest('.import-exclusion-panel, .import-preview-modal-tools button')) return;
     this.showImportExclusions = false;
   }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  closeImportLayerOnEscape(event: KeyboardEvent): void {
+    if (document.body.classList.contains('ui-confirm-toast-open')) return;
+    if (this.showImportExclusions) {
+      event.preventDefault();
+      this.showImportExclusions = false;
+      return;
+    }
+    if (this.importPreview) {
+      event.preventDefault();
+      this.cancelImportPreview();
+    }
+  }
   applyPreviewFamilyFilter(): void {
     this.importPreview = this.previewFamilyFilter
       ? this.previewAllRecords.filter((record) => record.family === this.previewFamilyFilter)
@@ -384,18 +399,21 @@ export class RepairsPageComponent implements OnDestroy {
     } catch (error) {
       console.error('No fue posible generar el archivo Excel.', error);
       const detail = this.errorMessage(error);
-      window.alert(`No fue posible generar el archivo Excel con las imágenes.\n\nDetalle: ${detail}`);
+      this.importError = this.readImportError({ message: `No fue posible generar el archivo Excel con las imágenes. Detalle: ${detail}` });
     } finally {
       this.isExportingExcel = false;
     }
   }
 
-  removeRepair(id: string): void {
+  async removeRepair(id: string): Promise<void> {
     const repair = this.repairs.find((item) => item.id === id);
-    const detail = repair?.topIssue ? `\n\nTop Issue: ${repair.topIssue}` : '';
-    const confirmed = window.confirm(
-      `¿Estás seguro de eliminar el reporte #${id}?${detail}\n\nEsta acción no se puede deshacer.`,
-    );
+    const detail = repair?.topIssue ? `Top Issue: ${repair.topIssue}. Esta acción no se puede deshacer.` : 'Esta acción no se puede deshacer.';
+    const confirmed = await this.confirmToast.confirm({
+      title: `¿Eliminar el reporte #${id}?`,
+      message: detail,
+      confirmLabel: 'Eliminar',
+      tone: 'danger',
+    });
 
     if (!confirmed) return;
 

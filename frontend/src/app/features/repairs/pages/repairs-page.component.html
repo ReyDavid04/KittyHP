@@ -16,6 +16,7 @@
           <input
             class="ui-control ui-search-input"
             id="globalSearch"
+            data-global-search
             type="search"
             [value]="searchTerm"
             (input)="setSearch($any($event.target).value)"
@@ -102,9 +103,10 @@
       </div>
     </div>
 
-    <div *ngIf="importError" class="import-error-alert import-toast" role="alert">
+    <div *ngIf="importError" class="ui-toast ui-toast-danger" role="alert" aria-live="assertive">
+      <app-ui-icon name="warning" aria-hidden="true"></app-ui-icon>
       <span>{{ importError }}</span>
-      <button type="button" class="ui-icon-button" aria-label="Cerrar alerta" (click)="dismissImportError()">×</button>
+      <button type="button" class="ui-icon-button ui-toast-close" aria-label="Cerrar alerta" (click)="dismissImportError()">×</button>
     </div>
 
     <section *ngIf="importPreview && showImportExclusions" class="import-exclusion-panel import-exclusion-panel-legacy">

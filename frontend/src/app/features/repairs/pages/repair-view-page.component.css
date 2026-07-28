@@ -7,7 +7,7 @@
 }
 
 .report-content {
-  @apply grid gap-5 px-6 py-5 max-md:px-4 max-md:py-4;
+  @apply grid gap-4 px-6 py-4 max-md:px-4;
 }
 
 .summary-grid {
@@ -15,7 +15,7 @@
 }
 
 .detail-card {
-  @apply col-span-1 grid min-h-[5.125rem] content-center gap-2 bg-transparent max-md:col-auto;
+  @apply col-span-1 grid min-h-[4.75rem] content-center gap-1.5 bg-transparent max-md:col-auto;
 }
 
 .detail-card.ui-card,
@@ -49,7 +49,7 @@
 
 .text-card,
 .image-card {
-  @apply grid content-start gap-3;
+  @apply grid content-start gap-2.5;
 }
 
 .image-gallery { @apply grid grid-cols-3 gap-3; }
@@ -84,14 +84,18 @@
 }
 
 .no-image {
-  @apply grid min-h-52 place-items-center px-6 py-8 text-center text-sm text-ink-muted min-h-72 bg-surface-subtle max-md:min-h-56;
+  @apply grid min-h-36 place-items-center bg-surface-subtle px-6 py-6 text-center text-sm text-ink-muted max-md:min-h-32;
 }
-.details-card { @apply p-5; }
-.details-card-heading { @apply mb-4 flex items-baseline justify-between gap-4; }
+.details-card { @apply p-4; }
+.details-card-heading { @apply mb-3 flex items-baseline justify-between gap-4; }
 .details-card-heading h2 { @apply m-0 text-base font-semibold text-ink; }
 .details-card-heading span { @apply text-sm text-ink-secondary; }
 .details-table-wrap { @apply overflow-x-auto; }
-.details-table { @apply w-full min-w-[42rem] border-collapse text-sm; }
+.details-table { @apply w-full min-w-[42rem] table-fixed border-collapse text-sm; }
+.details-table th:nth-child(1) { width: 26%; }
+.details-table th:nth-child(2) { width: 22%; }
+.details-table th:nth-child(3) { width: 52%; }
 .details-table th { @apply border-b border-line bg-brand-100 px-3 py-2 text-left font-semibold text-brand-800; }
 .details-table td { @apply border-b border-line px-3 py-2 text-ink-secondary; }
 .details-table tr:last-child td { @apply border-b-0; }
+.details-table tbody tr:nth-child(even) td { @apply bg-surface-subtle/50; }

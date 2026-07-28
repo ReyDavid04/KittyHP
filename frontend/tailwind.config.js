@@ -63,7 +63,7 @@ module.exports = {
         '2xl': ['1.75rem', { lineHeight: '2.125rem' }],
       },
       spacing: {
-        control: '2.5rem',
+        control: '2.75rem',
         'control-sm': '2.25rem',
         navbar: '3.25rem',
       },

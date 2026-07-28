@@ -2,14 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/services/auth.service';
+import { UiConfirmToastComponent, UiConfirmToastService } from './shared/ui';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, UiConfirmToastComponent],
   template: `
     <div class="app-shell">
-      <header class="app-header ui-navbar" *ngIf="authService.isAuthenticated()">
+      <header class="app-header ui-navbar" *ngIf="authService.isAuthenticated()" [attr.inert]="confirmToast.request() ? '' : null">
         <a class="brand" routerLink="/" aria-label="Ir al inicio de KittyHP">
           <img class="brand-icon" src="assets/laptop-repair.svg" alt="">
           <strong>KittyHP</strong>
@@ -63,14 +64,16 @@ import { AuthService } from './core/services/auth.service';
         </div>
       </header>
 
-      <main class="app-content"><router-outlet></router-outlet></main>
-      <footer class="app-footer">2026 - <a href="mailto:Ramos.Rey&#64;inventec.com">Ramos.Rey&#64;inventec.com</a></footer>
+      <main class="app-content" [attr.inert]="confirmToast.request() ? '' : null"><router-outlet></router-outlet></main>
+      <footer class="app-footer" [attr.inert]="confirmToast.request() ? '' : null">2026 - <a href="mailto:Ramos.Rey&#64;inventec.com">Ramos.Rey&#64;inventec.com</a></footer>
+      <app-ui-confirm-toast></app-ui-confirm-toast>
     </div>
   `,
   styleUrl: './app.component.css',
 })
 export class AppComponent {
   readonly authService = inject(AuthService);
+  readonly confirmToast = inject(UiConfirmToastService);
   private readonly router = inject(Router);
 
   @HostListener('document:click', ['$event'])
@@ -80,6 +83,24 @@ export class AppComponent {
     document.querySelectorAll<HTMLDetailsElement>('.settings-menu[open]').forEach((menu) => {
       menu.open = false;
     });
+  }
+
+  @HostListener('document:keydown.escape')
+  closeSettingsOnEscape(): void {
+    document.querySelectorAll<HTMLDetailsElement>('.settings-menu[open]').forEach((menu) => {
+      menu.open = false;
+    });
+  }
+
+  @HostListener('document:keydown.control.k', ['$event'])
+  focusPageSearch(event: KeyboardEvent): void {
+    if (this.confirmToast.request() || document.querySelector('.import-preview-backdrop, .import-blocking-backdrop')) return;
+    const search = Array.from(document.querySelectorAll<HTMLInputElement>('input[data-global-search], input[type="search"]'))
+      .find((input) => !input.disabled && input.offsetParent !== null);
+    if (!search) return;
+    event.preventDefault();
+    search.focus();
+    search.select();
   }
 
   logout(): void {

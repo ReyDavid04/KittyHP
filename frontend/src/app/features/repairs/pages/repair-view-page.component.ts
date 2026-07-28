@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RepairReport } from '../../../core/models/repair-report.model';
 import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
@@ -15,7 +15,7 @@ import { UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../
           <app-ui-icon name="chevron-left"></app-ui-icon>
           <span>Regresar</span>
         </button>
-        <button type="button" class="ui-button ui-button-secondary" (click)="showDetails = !showDetails" [attr.aria-expanded]="showDetails">
+        <button type="button" class="ui-button ui-button-ghost text-ink-muted" (click)="showDetails = !showDetails" [attr.aria-expanded]="showDetails">
           {{ showDetails ? 'Ocultar detalles' : 'Mostrar detalles' }}
         </button>
       </app-ui-page-header>
@@ -148,6 +148,19 @@ export class RepairViewPageComponent {
       next: (repair) => { this.repair = repair; this.isLoading = false; },
       error: () => { this.isLoading = false; this.errorMessage = 'El registro no existe o no está disponible.'; },
     });
+  }
+
+  @HostListener('document:keydown.control.d', ['$event'])
+  toggleDetailsWithKeyboard(event: KeyboardEvent): void {
+    event.preventDefault();
+    this.showDetails = !this.showDetails;
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  goBackWithKeyboard(event: KeyboardEvent): void {
+    if (document.body.classList.contains('ui-confirm-toast-open')) return;
+    event.preventDefault();
+    this.goBack();
   }
 
   goBack(): void { void this.router.navigate(['/']); }

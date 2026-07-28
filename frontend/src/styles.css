@@ -95,7 +95,7 @@
   }
 
   .ui-page-header {
-    @apply sticky top-[3.25rem] z-40 flex min-h-[3.625rem] items-center gap-3 border-b border-line bg-surface px-6 py-3 shadow-xs max-md:flex-wrap max-md:px-4;
+    @apply sticky top-[3.25rem] z-40 flex min-h-[3.625rem] items-center gap-3 border-b border-line bg-surface/95 px-6 py-3 shadow-sm backdrop-blur-md max-md:flex-wrap max-md:px-4;
   }
 
   .ui-page-title {
@@ -198,6 +198,10 @@
     @apply h-control w-full rounded-md border border-line-strong bg-surface px-3 text-base font-normal text-ink shadow-xs transition-colors duration-150 placeholder:text-ink-placeholder hover:border-brand-600/50 focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-ink-muted disabled:opacity-80 disabled:shadow-none;
   }
 
+  .ui-control[readonly] {
+    @apply cursor-default border-line bg-surface-subtle text-ink-secondary shadow-none;
+  }
+
   .ui-search-input {
     @apply pl-9 pr-12;
   }
@@ -208,7 +212,7 @@
   }
 
   .ui-card {
-    @apply rounded-lg border border-line bg-surface p-5 shadow-xs max-md:p-4;
+    @apply rounded-lg border border-line bg-surface p-4 shadow-xs;
   }
 
   .ui-table-shell {
@@ -226,6 +230,10 @@
 
   .ui-table-shell tbody td {
     @apply border-b border-surface-muted px-3 py-2 align-middle text-sm text-ink-secondary transition-colors duration-150;
+  }
+
+  .ui-table-shell tbody tr:nth-child(even):not([aria-selected="true"]):not(.selected) td {
+    @apply bg-surface-subtle/50;
   }
 
   .ui-table-shell tbody tr:last-child td {
@@ -380,6 +388,79 @@
   app-repair-form .catalog-toggle svg,
   app-repair-form .catalog-option-check svg {
     @apply block size-full fill-none stroke-current [stroke-linecap:round] [stroke-linejoin:round];
+  }
+}
+
+@layer components {
+  .ui-toast {
+    @apply fixed left-1/2 top-4 z-[600] flex w-[min(36rem,calc(100vw-2rem))] -translate-x-1/2 items-start gap-3 rounded-lg border px-4 py-3 text-sm font-medium shadow-xl;
+  }
+
+  .ui-toast app-ui-icon {
+    @apply mt-0.5 size-4 shrink-0;
+  }
+
+  .ui-toast > span {
+    @apply min-w-0 flex-1;
+  }
+
+  .ui-toast-success {
+    @apply border-success/30 bg-success-soft text-success;
+  }
+
+  .ui-toast-warning {
+    @apply border-warning-border bg-warning-soft text-warning;
+  }
+
+  .ui-toast-danger {
+    @apply border-danger/30 bg-danger-soft text-danger;
+  }
+
+  .ui-toast .ui-toast-close {
+    @apply -mr-1 -mt-1 size-7 flex-none border-transparent bg-transparent p-0 shadow-none hover:border-current hover:bg-white/60;
+  }
+
+  .ui-confirm-toast {
+    @apply z-[700] w-[min(44rem,calc(100vw-2rem))] items-center;
+  }
+
+  .ui-confirm-toast-backdrop {
+    @apply fixed inset-0 z-[650] bg-ink/45 backdrop-blur-[1px];
+  }
+
+  .ui-confirm-toast-content {
+    @apply flex min-w-0 flex-1 flex-col gap-1;
+  }
+
+  .ui-confirm-toast-content strong {
+    @apply text-sm font-semibold text-current;
+  }
+
+  .ui-confirm-toast-content span {
+    @apply text-xs font-normal opacity-90;
+  }
+
+  .ui-confirm-toast-actions {
+    @apply flex flex-none items-center gap-2;
+  }
+
+  .ui-confirm-toast-actions .ui-button {
+    @apply h-9 gap-2 px-3 text-xs;
+  }
+
+}
+
+body.ui-confirm-toast-open {
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .ui-confirm-toast {
+    @apply flex-wrap items-start;
+  }
+
+  .ui-confirm-toast-actions {
+    @apply w-full justify-end;
   }
 }
 

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, ViewChild, inject } from '@angular/core';
+import { Component, HostListener, ViewChild, inject } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RepairReport, RepairUpsertPayload } from '../../../core/models/repair-report.model';
 import { RepairReportsApiService } from '../../../core/services/repair-reports-api.service';
@@ -21,7 +21,7 @@ import { RepairFormComponent } from '../components/repair-form.component';
 
           <button
             type="button"
-            class="ui-button ui-button-secondary"
+            class="details-header-action ui-button ui-button-ghost"
             [disabled]="isLoading"
             (click)="repairForm?.toggleDetails()"
             [attr.aria-expanded]="repairForm?.showDetails"
@@ -55,11 +55,13 @@ import { RepairFormComponent } from '../components/repair-form.component';
           (cancel)="goBack()"
         ></app-repair-form>
 
-        <div *ngIf="saveMessage" class="save-feedback save-feedback-success" role="status" aria-live="polite">
-          {{ saveMessage }}
+        <div *ngIf="saveMessage" class="ui-toast ui-toast-success" role="status" aria-live="polite">
+          <app-ui-icon name="check"></app-ui-icon>
+          <span>{{ saveMessage }}</span>
         </div>
-        <div *ngIf="saveError" class="save-feedback save-feedback-error" role="alert">
-          {{ saveError }}
+        <div *ngIf="saveError" class="ui-toast ui-toast-danger" role="alert" aria-live="assertive">
+          <app-ui-icon name="warning"></app-ui-icon>
+          <span>{{ saveError }}</span>
         </div>
       </section>
     </section>
@@ -95,6 +97,27 @@ export class RepairEditorPageComponent {
 
   submitRepair(): void {
     this.repairForm?.submit();
+  }
+
+  @HostListener('document:keydown.control.s', ['$event'])
+  saveWithKeyboard(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (this.isSaveDisabled) return;
+    this.submitRepair();
+  }
+
+  @HostListener('document:keydown.control.d', ['$event'])
+  toggleDetailsWithKeyboard(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (this.isLoading) return;
+    this.repairForm?.toggleDetails();
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  goBackWithKeyboard(event: KeyboardEvent): void {
+    if (document.body.classList.contains('ui-confirm-toast-open')) return;
+    event.preventDefault();
+    this.goBack();
   }
 
   saveRepair(payload: RepairUpsertPayload): void {

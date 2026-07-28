@@ -1,0 +1,24 @@
+[2026-07-28T17:01:00.673Z] [INFO] ========================================================================================================================
+[2026-07-28T17:01:00.673Z] [INFO] Initializing MAM Client.
+App: com.microsoft.edge 150.0.4078.83
+SDK: 2.1.367.0
+OS: windows 10.0.26200.8875
+DeviceType: Desktop
+Manufacturer: HP
+Model: HP EliteBook 840 14 inch G10 Notebook PC
+Telemetry: yes
+Managed device support: enabled
+[2026-07-28T17:01:00.673Z] [INFO] Telemetry session 155c9b77-c833-4615-811c-58414ee3ce9a.
+[2026-07-28T17:01:00.675Z] [INFO] Initializing cache (v1).
+[2026-07-28T17:03:45.479Z] [INFO] ========================================================================================================================
+[2026-07-28T17:03:45.479Z] [INFO] Initializing MAM Client.
+App: com.microsoft.edge 150.0.4078.83
+SDK: 2.1.367.0
+OS: windows 10.0.26200.8875
+DeviceType: Desktop
+Manufacturer: HP
+Model: HP EliteBook 840 14 inch G10 Notebook PC
+Telemetry: yes
+Managed device support: enabled
+[2026-07-28T17:03:45.479Z] [INFO] Telemetry session ca178490-64c6-4389-a272-0a5d81cbd2c1.
+[2026-07-28T17:03:45.495Z] [INFO] Reinitialized cache (v1).

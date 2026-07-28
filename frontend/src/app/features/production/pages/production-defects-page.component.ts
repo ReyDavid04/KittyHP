@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import { finalize } from 'rxjs';
 import {
   ProductionDefectCell,
@@ -9,7 +9,7 @@ import {
 } from '../../../core/services/production-defects-api.service';
 import { ProductionDefectsExcelExportService } from '../services/production-defects-excel-export.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { UiAlertComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
+import { UiAlertComponent, UiConfirmToastService, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
 
 type QuantityField = 'inputQuantity' | 'defectQuantity';
 type ProductionViewMode = 'single' | 'recent' | 'compare';
@@ -22,6 +22,7 @@ type ProductionViewMode = 'single' | 'recent' | 'compare';
 })
 export class ProductionDefectsPageComponent {
   private readonly productionApi = inject(ProductionDefectsApiService);
+  private readonly confirmToast = inject(UiConfirmToastService);
   readonly authService = inject(AuthService);
   private readonly excelExport = inject(ProductionDefectsExcelExportService);
 
@@ -90,9 +91,9 @@ export class ProductionDefectsPageComponent {
     return this.viewMode === 'single' ? Boolean(this.week) : this.trendWeeks.length > 0;
   }
 
-  setViewMode(mode: ProductionViewMode): void {
+  async setViewMode(mode: ProductionViewMode): Promise<void> {
     if (mode === this.viewMode) return;
-    if (!this.confirmDiscardChanges()) return;
+    if (!(await this.confirmDiscardChanges())) return;
 
     this.isDirty = false;
     this.viewMode = mode;
@@ -437,13 +438,26 @@ export class ProductionDefectsPageComponent {
       });
   }
 
-  private navigateToWeek(start: string): void {
-    if (!this.confirmDiscardChanges()) return;
+  private async navigateToWeek(start: string): Promise<void> {
+    if (!(await this.confirmDiscardChanges())) return;
     this.loadWeek(start);
   }
 
-  private confirmDiscardChanges(): boolean {
-    return !this.isDirty || window.confirm('Hay cambios sin guardar. ¿Deseas continuar?');
+  @HostListener('document:keydown.control.s', ['$event'])
+  saveWeekWithKeyboard(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (this.authService.currentUser()?.role === 'viewer' || !this.isDirty || this.isLoading || this.isSaving) return;
+    this.saveWeek();
+  }
+
+  private confirmDiscardChanges(): Promise<boolean> {
+    if (!this.isDirty) return Promise.resolve(true);
+    return this.confirmToast.confirm({
+      title: 'Hay cambios sin guardar',
+      message: 'Si continúas, los cambios realizados en esta semana se perderán.',
+      confirmLabel: 'Continuar',
+      tone: 'warning',
+    });
   }
 
   private findInvalidCell(): { seriesName: string; date: string } | null {

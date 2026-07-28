@@ -118,9 +118,6 @@
 .import-blocking-dialog { @apply flex w-full max-w-md flex-col items-center gap-3 rounded-xl border border-line bg-surface p-8 text-center shadow-xl; }
 .import-blocking-dialog h2 { @apply m-0 text-lg font-semibold text-ink; }
 .import-blocking-dialog p { @apply m-0 text-sm text-ink-secondary; }
-.import-error-alert { @apply mx-6 mt-4 flex items-center justify-between gap-4 rounded-lg border border-danger-border bg-danger-soft px-4 py-3 text-sm font-medium text-danger; }
-.import-error-alert .ui-icon-button { @apply flex-none; }
-.import-toast { @apply fixed right-6 top-6 z-[200] m-0 w-[min(42rem,calc(100vw-3rem))] shadow-lg; }
 .import-exclusion-panel { @apply rounded-lg border border-line bg-surface p-4 shadow-lg; }
 .import-exclusion-panel-legacy { @apply hidden; }
 .import-exclusion-panel-inline { @apply relative mx-4 my-3 w-auto flex-none; }

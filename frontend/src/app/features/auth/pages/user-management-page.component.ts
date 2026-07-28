@@ -4,7 +4,7 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { AuthService, UserRole } from '../../../core/services/auth.service';
-import { UiAlertComponent, UiBadgeComponent, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
+import { UiAlertComponent, UiBadgeComponent, UiConfirmToastService, UiIconComponent, UiPageHeaderComponent, UiStateComponent } from '../../../shared/ui';
 import {
   CreateUserPayload,
   ManagedUser,
@@ -136,6 +136,7 @@ import {
 })
 export class UserManagementPageComponent {
   private readonly userApi = inject(UserManagementApiService);
+  private readonly confirmToast = inject(UiConfirmToastService);
   readonly authService = inject(AuthService);
 
   readonly form = new FormBuilder().nonNullable.group({
@@ -235,9 +236,14 @@ export class UserManagementPageComponent {
     });
   }
 
-  deleteUser(user: ManagedUser): void {
+  async deleteUser(user: ManagedUser): Promise<void> {
     if (this.isCurrentUser(user)) return;
-    const confirmed = window.confirm(`¿Estás seguro de eliminar el correo ${user.email}?\n\nEsta acción no se puede deshacer.`);
+    const confirmed = await this.confirmToast.confirm({
+      title: `¿Eliminar el usuario ${user.email}?`,
+      message: 'Esta acción no se puede deshacer.',
+      confirmLabel: 'Eliminar',
+      tone: 'danger',
+    });
     if (!confirmed) return;
 
     this.pageError = '';

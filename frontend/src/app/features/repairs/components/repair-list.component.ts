@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, inject, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { UiIconComponent, UiStateComponent } from '../../../shared/ui';
 import { RepairReport } from '../../../core/models/repair-report.model';
@@ -215,6 +215,16 @@ export class RepairListComponent {
     if (!images.length) return;
     const key = `${repair.id}:${field}`;
     this.imagePositions.set(key, (this.imagePosition(repair, field) + direction + images.length) % images.length);
+  }
+
+  handleGalleryKeydown(event: KeyboardEvent, repair: RepairReport, field: 'failPicture' | 'evidencePicture'): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    this.shiftImage(event, repair, field, event.key === 'ArrowLeft' ? -1 : 1);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeFilterOnEscape(): void {
+    if (this.activeFilterKey) this.closeFilter();
   }
 
   private isFilterable(key: RepairColumnKey): boolean { return this.columns.find((column) => column.key === key)?.filterable !== false; }

@@ -14,6 +14,7 @@ export type UiIconName =
   | 'first-page'
   | 'last-page'
   | 'save'
+  | 'warning'
   | 'view';
 
 @Component({
@@ -29,6 +30,10 @@ export type UiIconName =
       <ng-container [ngSwitch]="name">
         <path *ngSwitchCase="'add'" d="M12 5v14M5 12h14"></path>
         <path *ngSwitchCase="'check'" d="m5 12.5 4.2 4.2L19 7"></path>
+        <g *ngSwitchCase="'warning'">
+          <path d="M12 3 2.8 20h18.4L12 3Z"></path>
+          <path d="M12 9v4m0 3h.01"></path>
+        </g>
         <path *ngSwitchCase="'chevron-left'" d="m15 18-6-6 6-6"></path>
         <path *ngSwitchCase="'chevron-right'" d="m9 18 6-6-6-6"></path>
         <path *ngSwitchCase="'close'" d="M6 6l12 12M18 6 6 18"></path>

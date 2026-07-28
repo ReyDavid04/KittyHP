@@ -91,7 +91,8 @@
 }
 
 .search-box input {
-  @apply h-full border-0 bg-transparent p-0 shadow-none focus:ring-0;
+  @apply h-full min-w-0 flex-1 border-0 bg-transparent p-0 shadow-none focus:ring-0;
+  appearance: none;
 }
 
 .record-count {

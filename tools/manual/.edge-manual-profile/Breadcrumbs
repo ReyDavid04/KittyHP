@@ -1,0 +1,49 @@
+0:00:05 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:05 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:05 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:05 Microsoft.ENP.Framework.CourtesyEngine.FrequencyCappingAllowed
+0:00:05 Microsoft.Nurturing.Framework.CourtesyEngine.FrequencyCappingAllowed
+0:00:06 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:06 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:06 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:06 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:07 Tab1 StartNav10 #typed
+0:00:07 Tab1 FinishNav10
+0:00:07 Tab1 StartNav11 #renderer-script #link
+0:00:07 Tab1 FinishNav11
+0:00:07 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:07 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:07 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:07 Tab1 PageLoad
+0:00:07 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:07 Tab1 StartNav12 #typed
+0:00:07 Tab1 FinishNav12
+0:00:07 Tab1 StartNav13 #renderer-script #link
+0:00:07 Tab1 FinishNav13
+0:00:07 Tab1 PageLoad
+0:00:09 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:09 Microsoft.Autofill.Password.SignIn.NoAutofillSuggestions
+0:00:10 Tab1 StartNav14 #typed
+0:00:10 Tab1 FinishNav14
+0:00:10 Tab1 StartNav15 #renderer-script #link
+0:00:10 Tab1 FinishNav15
+0:00:10 Tab1 PageLoad
+0:00:12 Tab1 StartNav16 #typed
+0:00:12 Tab1 FinishNav16
+0:00:12 Tab3 StartNav17 #link
+0:00:12 Browser1 Insert active Tab3 at 2
+0:00:12 Tab1 StartNav18 #renderer-script #link
+0:00:12 Tab1 FinishNav18
+0:00:12 Tab3 FinishNav17
+0:00:12 Tab1 PageLoad
+0:00:12 Tab3 PageLoad
+0:00:14 Tab1 StartNav19 #typed
+0:00:15 Tab1 FinishNav19
+0:00:15 Tab1 StartNav20 #renderer-script #link
+0:00:15 Tab1 FinishNav20
+0:00:15 Tab1 PageLoad
+0:00:17 Tab1 StartNav21 #typed
+0:00:17 Tab1 FinishNav21
+0:00:17 Tab1 StartNav22 #renderer-script #link
+0:00:17 Tab1 FinishNav22
+0:00:17 Tab1 PageLoad

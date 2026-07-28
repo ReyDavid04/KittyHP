@@ -134,7 +134,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             </label>
 
             <label class="field ui-field">
-              <span class="return-no-heading"><button type="button" class="return-mode-button" (click)="toggleReturnNoMode()" [attr.aria-pressed]="returnNoManual">{{ returnNoManual ? 'Usar automático' : 'Editar manualmente' }}</button><span>Return No</span></span>
+              <span class="return-no-heading"><button type="button" class="return-mode-button" (click)="toggleReturnNoMode()" [attr.aria-pressed]="returnNoManual" [attr.aria-label]="returnNoManual ? 'Cambiar Return No a modo automático' : 'Cambiar Return No a modo manual'"><span class="return-mode-dot" aria-hidden="true"></span>{{ returnNoManual ? 'Manual' : 'Automático' }}</button><span>Return No</span></span>
               <input
                 class="ui-control"
                 type="number"
@@ -172,7 +172,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           <label class="upload-zone grid-fail-picture" [class.has-file]="failPicturePreviewUrls.length" [class.invalid]="isInvalid('failPicture')">
             <input type="file" accept="image/*" multiple (change)="onFileSelected($event, 'failPicture')" [attr.aria-invalid]="isInvalid('failPicture')">
             <ng-container *ngIf="failPicturePreviewUrls.length; else failPictureEmpty">
-              <span class="image-preview image-preview-shell"><span #failGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'failPicture')"><img *ngFor="let preview of failPicturePreviewUrls" [src]="preview" alt="Vista previa de la imagen de falla"></span><span class="gallery-position">{{ failPictureIndex + 1 }} / {{ failPicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'failPicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, failGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, failGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ failPictureCount }}/10)</span></span>
+              <span class="image-preview image-preview-shell" tabindex="0" role="group" aria-label="Carrusel de imágenes de falla" (keydown)="handleGalleryKeydown($event, failGallery)"><span #failGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'failPicture')"><img *ngFor="let preview of failPicturePreviewUrls" [src]="preview" alt="Vista previa de la imagen de falla"></span><span class="gallery-position">{{ failPictureIndex + 1 }} / {{ failPicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'failPicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, failGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, failGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ failPictureCount }}/10)</span></span>
               <span class="upload-content"><strong>Fail picture</strong></span>
             </ng-container>
             <ng-template #failPictureEmpty>
@@ -194,7 +194,7 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           <label class="upload-zone grid-evidence" [class.has-file]="evidencePicturePreviewUrls.length" [class.invalid]="isInvalid('evidencePicture')">
             <input type="file" accept="image/*" multiple (change)="onFileSelected($event, 'evidencePicture')" [attr.aria-invalid]="isInvalid('evidencePicture')">
             <ng-container *ngIf="evidencePicturePreviewUrls.length; else evidencePictureEmpty">
-              <span class="image-preview image-preview-shell"><span #evidenceGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'evidencePicture')"><img *ngFor="let preview of evidencePicturePreviewUrls" [src]="preview" alt="Vista previa de la evidencia final"></span><span class="gallery-position">{{ evidencePictureIndex + 1 }} / {{ evidencePicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'evidencePicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, evidenceGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, evidenceGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ evidencePictureCount }}/10)</span></span>
+              <span class="image-preview image-preview-shell" tabindex="0" role="group" aria-label="Carrusel de evidencias" (keydown)="handleGalleryKeydown($event, evidenceGallery)"><span #evidenceGallery class="image-preview-gallery" (scroll)="updateGalleryIndex($event, 'evidencePicture')"><img *ngFor="let preview of evidencePicturePreviewUrls" [src]="preview" alt="Vista previa de la evidencia final"></span><span class="gallery-position">{{ evidencePictureIndex + 1 }} / {{ evidencePicturePreviewUrls.length }}</span><button type="button" class="gallery-delete" (click)="removeImage($event, 'evidencePicture')" aria-label="Eliminar imagen actual">×</button><button type="button" class="gallery-arrow gallery-arrow-left" (click)="scrollGallery($event, evidenceGallery, -1)" aria-label="Imagen anterior">‹</button><button type="button" class="gallery-arrow gallery-arrow-right" (click)="scrollGallery($event, evidenceGallery, 1)" aria-label="Imagen siguiente">›</button><span class="image-change">Agregar imágenes ({{ evidencePictureCount }}/10)</span></span>
               <span class="upload-content"><strong>Evidence</strong></span>
             </ng-container>
             <ng-template #evidencePictureEmpty>
@@ -208,13 +208,16 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
         <section *ngIf="showDetails" class="details-section" aria-labelledby="repairDetailsTitle">
           <div class="details-section-heading">
             <h2 id="repairDetailsTitle">Detalles</h2>
-            <span>{{ detailCategoryMessage || 'Información de origen del registro' }}</span>
+            <div class="details-heading-meta">
+              <span *ngIf="hasModifiedDetails" class="details-unsaved-badge"><span aria-hidden="true"></span>Cambios sin guardar</span>
+              <span>Información de origen del registro</span>
+            </div>
           </div>
           <div class="details-table-wrap" *ngIf="showDetails">
             <table class="details-table">
               <thead><tr><th>Family</th><th>SN</th><th>Remark</th><th *ngIf="repair">Category</th></tr></thead>
               <tbody>
-                <tr *ngFor="let detail of details; let detailIndex = index">
+                <tr *ngFor="let detail of details; let detailIndex = index" [class.detail-row-modified]="isDetailModified(detailIndex)">
                   <td><input class="ui-control" [value]="detail.family" (input)="updateDetail(detailIndex, 'family', $any($event.target).value)" placeholder="Family completa"></td>
                   <td><input class="ui-control" [value]="detail.custsn" (input)="updateDetail(detailIndex, 'custsn', $any($event.target).value)" placeholder="CUSTSN"></td>
                   <td><input class="ui-control" [value]="detail.remark" (input)="updateDetail(detailIndex, 'remark', $any($event.target).value)" placeholder="Remark"></td>
@@ -224,6 +227,10 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
             </table>
           </div>
         </section>
+        </div>
+        <div *ngIf="detailCategoryMessage" class="ui-toast ui-toast-warning" role="status" aria-live="polite">
+          <app-ui-icon name="warning" aria-hidden="true"></app-ui-icon>
+          <span>{{ detailCategoryMessage }}</span>
         </div>
       </div>
 
@@ -256,6 +263,9 @@ export class RepairFormComponent implements OnChanges {
   catalogsLoading = true;
   catalogError = '';
   detailCategoryMessage = '';
+  modifiedDetailIndexes = new Set<number>();
+  private originalDetails: RepairDetail[] = [];
+  private detailMessageTimer?: number;
 
   toggleDetails(): void {
     this.showDetails = !this.showDetails;
@@ -310,6 +320,7 @@ export class RepairFormComponent implements OnChanges {
   get evidencePicturePreviewUrls(): string[] { return [...this.existingEvidencePictures, ...this.evidencePicturePreviews]; }
   get failPictureCount(): number { return Math.min(10, this.existingFailPictures.length + this.failPictureFiles.length); }
   get evidencePictureCount(): number { return Math.min(10, this.existingEvidencePictures.length + this.evidencePictureFiles.length); }
+  get hasModifiedDetails(): boolean { return this.modifiedDetailIndexes.size > 0; }
 
   get isReturnQuantityInvalid(): boolean {
     const touched = this.form.controls.returnYesQty.touched || this.form.controls.failureQty.touched;
@@ -357,7 +368,9 @@ export class RepairFormComponent implements OnChanges {
         remark: '',
         category: this.repair?.category ?? String(this.repair?.sourcePayload?.['category'] ?? ''),
       }];
+    this.originalDetails = this.details.map((detail) => ({ ...detail }));
     this.detailCategoryMessage = '';
+    this.modifiedDetailIndexes.clear();
     this.form.reset({
       recordDate: this.repair?.recordDate ?? this.defaultRecordDate(),
       family: this.repair?.family ?? '',
@@ -451,7 +464,9 @@ export class RepairFormComponent implements OnChanges {
   updateDetail(index: number, field: keyof RepairDetail, value: string): void {
     const detail = this.details[index];
     if (!detail) return;
+    if (String(detail[field] ?? '') === value) return;
     this.details[index] = { ...detail, [field]: value };
+    this.updateDetailModifiedState(index);
   }
 
   onDetailCategoryChange(index: number, category: string): void {
@@ -462,9 +477,18 @@ export class RepairFormComponent implements OnChanges {
     this.details = this.details.map((item, itemIndex) => itemIndex === index
       ? { ...item, category: nextCategory }
       : item);
-    this.detailCategoryMessage = nextCategory
+    this.updateDetailModifiedState(index);
+    if (!this.modifiedDetailIndexes.has(index)) {
+      this.detailCategoryMessage = '';
+      return;
+    }
+    this.showDetailMessage(nextCategory
       ? `Categoría cambiada a ${nextCategory}. Guarda cambios para reasignar la unidad.`
-      : 'Selecciona una categoría para reasignar la unidad.';
+      : 'Selecciona una categoría para reasignar la unidad.');
+  }
+
+  isDetailModified(index: number): boolean {
+    return this.modifiedDetailIndexes.has(index);
   }
 
   toggleReturnNoMode(): void {
@@ -477,6 +501,11 @@ export class RepairFormComponent implements OnChanges {
     event.preventDefault();
     event.stopPropagation();
     gallery.scrollBy({ left: direction * gallery.clientWidth, behavior: 'smooth' });
+  }
+
+  handleGalleryKeydown(event: KeyboardEvent, gallery: HTMLElement): void {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    this.scrollGallery(event, gallery, event.key === 'ArrowLeft' ? -1 : 1);
   }
 
   updateGalleryIndex(event: Event, field: 'failPicture' | 'evidencePicture'): void {
@@ -548,6 +577,32 @@ export class RepairFormComponent implements OnChanges {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private showDetailMessage(message: string): void {
+    this.detailCategoryMessage = message;
+    if (this.detailMessageTimer) window.clearTimeout(this.detailMessageTimer);
+    this.detailMessageTimer = window.setTimeout(() => {
+      this.detailCategoryMessage = '';
+      this.detailMessageTimer = undefined;
+    }, 4200);
+  }
+
+  private updateDetailModifiedState(index: number): void {
+    const current = this.details[index];
+    const original = this.originalDetails[index];
+    if (!current || !original) return;
+
+    const normalized = (value: unknown): string => String(value ?? '').trim();
+    const currentCategory = normalized(current.category || this.repair?.category || this.form.controls.category.value);
+    const originalCategory = normalized(original.category || this.repair?.category || this.form.controls.category.value);
+    const changed = normalized(current.family) !== normalized(original.family)
+      || normalized(current.custsn) !== normalized(original.custsn)
+      || normalized(current.remark) !== normalized(original.remark)
+      || currentCategory !== originalCategory;
+
+    if (changed) this.modifiedDetailIndexes.add(index);
+    else this.modifiedDetailIndexes.delete(index);
   }
 
   private loadCatalogs(): void {

@@ -26,17 +26,7 @@
   @apply mt-auto;
 }
 
-.save-feedback {
-  @apply fixed bottom-5 right-5 z-50 max-w-md rounded-md border px-4 py-3 text-sm font-medium shadow-lg;
-}
-
-.save-feedback-success {
-  @apply border-success/30 bg-success-soft text-success;
-}
-
-.save-feedback-error {
-  @apply border-danger/30 bg-danger-soft text-danger;
-}
+.details-header-action { @apply text-ink-muted; }
 
 @media (max-width: 720px) {
   .back-button span {
