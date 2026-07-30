@@ -1,5 +1,6 @@
 export interface RepairDetail {
   custsn: string;
+  oldMb: string;
   family: string;
   remark: string;
   category: string;

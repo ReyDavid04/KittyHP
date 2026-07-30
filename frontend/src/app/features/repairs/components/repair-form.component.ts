@@ -215,11 +215,12 @@ const returnQuantitiesValidator: ValidatorFn = (control: AbstractControl): Valid
           </div>
           <div class="details-table-wrap" *ngIf="showDetails">
             <table class="details-table">
-              <thead><tr><th>Family</th><th>SN</th><th>Remark</th><th *ngIf="repair">Category</th></tr></thead>
+              <thead><tr><th>Family</th><th>SN</th><th>MB</th><th>Remark</th><th *ngIf="repair">Category</th></tr></thead>
               <tbody>
                 <tr *ngFor="let detail of details; let detailIndex = index" [class.detail-row-modified]="isDetailModified(detailIndex)">
                   <td><input class="ui-control" [value]="detail.family" (input)="updateDetail(detailIndex, 'family', $any($event.target).value)" placeholder="Family completa"></td>
                   <td><input class="ui-control" [value]="detail.custsn" (input)="updateDetail(detailIndex, 'custsn', $any($event.target).value)" placeholder="CUSTSN"></td>
+                  <td><input class="ui-control" [value]="detail.oldMb" (input)="updateDetail(detailIndex, 'oldMb', $any($event.target).value)" placeholder="OldMB"></td>
                   <td><input class="ui-control" [value]="detail.remark" (input)="updateDetail(detailIndex, 'remark', $any($event.target).value)" placeholder="Remark"></td>
                   <td *ngIf="repair"><select class="ui-control" [ngModel]="detailCategoryValue(detail)" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onDetailCategoryChange(detailIndex, $event)"><option value="">Selecciona una categoría</option><option *ngFor="let option of detailCategoryOptions(detailCategoryValue(detail))" [value]="option">{{ option }}</option></select></td>
                 </tr>
@@ -253,7 +254,7 @@ export class RepairFormComponent implements OnChanges {
   existingEvidencePictures: string[] = [];
   failPictureIndex = 0;
   evidencePictureIndex = 0;
-  details: RepairDetail[] = [{ custsn: '', family: '', remark: '', category: '' }];
+  details: RepairDetail[] = [{ custsn: '', oldMb: '', family: '', remark: '', category: '' }];
   showDetails = true;
   // Return No starts in manual mode. Automatic calculation is opt-in through
   // the mode toggle, so opening a new or existing report never overwrites the
@@ -364,6 +365,7 @@ export class RepairFormComponent implements OnChanges {
       }))
       : [{
         custsn: '',
+        oldMb: '',
         family: this.repair?.family ?? '',
         remark: '',
         category: this.repair?.category ?? String(this.repair?.sourcePayload?.['category'] ?? ''),

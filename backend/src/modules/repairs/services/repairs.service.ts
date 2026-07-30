@@ -444,6 +444,7 @@ export class RepairsService implements OnModuleInit {
               buildQty: buildByFamily.get(family) ?? inputRows.length,
               details: rows.map((row) => ({
                 custsn: this.text(row, ['CUSTSN']),
+                oldMb: this.text(row, ['OldMB']),
                 family: this.text(row, ['Family', 'FAMILY']),
                 remark: this.text(row, ['Remark', 'REMARK']),
                 category: this.normalizeImportedCategory(this.importedCause(row)),

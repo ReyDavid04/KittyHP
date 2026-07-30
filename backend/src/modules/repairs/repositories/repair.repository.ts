@@ -44,6 +44,7 @@ function parseDetails(value: unknown): Record<string, string>[] {
     const detail = item as Record<string, unknown>;
     return {
       custsn: String(detail?.custsn ?? detail?.CUSTSN ?? '').trim(),
+      oldMb: String(detail?.oldMb ?? detail?.OldMB ?? '').trim(),
       family: String(detail?.family ?? detail?.Family ?? '').trim(),
       remark: String(detail?.remark ?? detail?.Remark ?? '').trim(),
       category: String(detail?.category ?? detail?.Category ?? '').trim(),
