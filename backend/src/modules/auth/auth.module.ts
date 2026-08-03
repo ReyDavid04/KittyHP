@@ -13,6 +13,6 @@ import { ActivityService } from './activity.service';
 @Module({
   controllers: [AuthController, UsersController, ActivityController],
   providers: [AuthService, ActivityService, AccountAccessService, MailService, AuthGuard, AdminGuard, EditorGuard],
-  exports: [AuthService, AuthGuard, AdminGuard, EditorGuard],
+  exports: [AuthService, ActivityService, AuthGuard, AdminGuard, EditorGuard],
 })
 export class AuthModule {}
