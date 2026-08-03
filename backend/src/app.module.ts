@@ -5,6 +5,7 @@ import { validateEnvironment } from './config/environment.validation';
 import { ProductionModule } from './modules/production/production.module';
 import { RepairEntity } from './modules/repairs/entities/repair.entity';
 import { RepairsModule } from './modules/repairs/repairs.module';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -30,5 +31,6 @@ import { RepairsModule } from './modules/repairs/repairs.module';
     RepairsModule,
     ProductionModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}
