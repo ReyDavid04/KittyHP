@@ -24,14 +24,32 @@ export class ActivityService implements OnModuleInit {
     );
   }
 
-  async activeUsers(): Promise<{ count: number; windowMinutes: number; checkedAt: string }> {
+  async activeUsers(): Promise<{
+    count: number;
+    windowMinutes: number;
+    checkedAt: string;
+    users: Array<{ id: number; email: string; role: string; lastSeenAt: string }>;
+  }> {
     const windowMinutes = 5;
     const rows = await this.dataSource.query(
-      `SELECT COUNT(*) AS total
-       FROM user_activity
-       WHERE last_seen_at >= (CURRENT_TIMESTAMP - INTERVAL 5 MINUTE)`,
-    ) as Array<{ total: number | string }>;
+      `SELECT u.id, u.email, u.role, ua.last_seen_at AS lastSeenAt
+       FROM user_activity ua
+       INNER JOIN users u ON u.id = ua.user_id
+       WHERE ua.last_seen_at >= (CURRENT_TIMESTAMP - INTERVAL 5 MINUTE)
+         AND u.is_active = 1
+       ORDER BY ua.last_seen_at DESC`,
+    ) as Array<{ id: number | string; email: string; role: string; lastSeenAt: Date | string }>;
 
-    return { count: Number(rows[0]?.total ?? 0), windowMinutes, checkedAt: new Date().toISOString() };
+    return {
+      count: rows.length,
+      windowMinutes,
+      checkedAt: new Date().toISOString(),
+      users: rows.map((row) => ({
+        id: Number(row.id),
+        email: row.email,
+        role: row.role,
+        lastSeenAt: new Date(row.lastSeenAt).toISOString(),
+      })),
+    };
   }
 }
