@@ -49,4 +49,10 @@ export class AuthController {
   me(@Req() request: RequestWithAuth) {
     return request.user ?? null;
   }
+
+  @Post('heartbeat')
+  @UseGuards(AuthGuard)
+  heartbeat(@Req() request: RequestWithAuth) {
+    return { ok: true, userId: request.user?.id ?? null };
+  }
 }

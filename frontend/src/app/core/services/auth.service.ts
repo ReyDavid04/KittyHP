@@ -36,7 +36,13 @@ export class AuthService {
 
   readonly currentUser = signal<AuthUser | null>(this.toAuthUser(this.currentSession()));
 
-  constructor(private readonly httpClient: HttpClient) {}
+  constructor(private readonly httpClient: HttpClient) {
+    window.setInterval(() => {
+      if (this.isAuthenticated()) {
+        this.httpClient.post('/api/auth/heartbeat', {}).subscribe({ error: () => undefined });
+      }
+    }, 60_000);
+  }
 
   login(email: string, password: string): Observable<LoginResponse> {
     return this.httpClient.post<LoginResponse>('/api/auth/login', { email: this.toCorporateEmail(email), password }).pipe(

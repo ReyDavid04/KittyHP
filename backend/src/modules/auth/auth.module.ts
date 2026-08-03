@@ -7,10 +7,12 @@ import { AuthGuard } from './auth.guard';
 import { AuthService } from './auth.service';
 import { MailService } from './mail.service';
 import { UsersController } from './users.controller';
+import { ActivityController } from './activity.controller';
+import { ActivityService } from './activity.service';
 
 @Module({
-  controllers: [AuthController, UsersController],
-  providers: [AuthService, AccountAccessService, MailService, AuthGuard, AdminGuard, EditorGuard],
+  controllers: [AuthController, UsersController, ActivityController],
+  providers: [AuthService, ActivityService, AccountAccessService, MailService, AuthGuard, AdminGuard, EditorGuard],
   exports: [AuthService, AuthGuard, AdminGuard, EditorGuard],
 })
 export class AuthModule {}

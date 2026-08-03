@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthenticatedUser, AuthService } from './auth.service';
+import { ActivityService } from './activity.service';
 
 export interface RequestWithAuth {
   headers: Record<string, string | string[] | undefined>;
@@ -8,7 +9,10 @@ export interface RequestWithAuth {
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly activityService: ActivityService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestWithAuth>();
@@ -27,6 +31,7 @@ export class AuthGuard implements CanActivate {
     }
 
     request.user = user;
+    await this.activityService.record(user.id);
     return true;
   }
 }
